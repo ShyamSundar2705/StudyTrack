@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Subject Details - Mathematics</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-variant": "#32343c",
+                        "on-secondary-container": "#d0e1ff",
+                        "tertiary-fixed": "#ffdbcb",
+                        "outline": "#8d909f",
+                        "surface-dim": "#11131a",
+                        "secondary-container": "#0164b4",
+                        "on-tertiary-fixed": "#341100",
+                        "on-secondary-fixed": "#001c39",
+                        "inverse-on-surface": "#2e3038",
+                        "surface-container-high": "#282a31",
+                        "on-background": "#e1e2ec",
+                        "secondary-fixed": "#d4e3ff",
+                        "secondary": "#a4c9ff",
+                        "tertiary": "#ffb691",
+                        "on-secondary-fixed-variant": "#004883",
+                        "on-secondary": "#00315d",
+                        "on-primary-fixed-variant": "#00409f",
+                        "inverse-surface": "#e1e2ec",
+                        "primary-fixed": "#dae2ff",
+                        "inverse-primary": "#0156cf",
+                        "tertiary-fixed-dim": "#ffb691",
+                        "primary-fixed-dim": "#b1c5ff",
+                        "outline-variant": "#424654",
+                        "tertiary-container": "#bd5100",
+                        "on-tertiary-container": "#fff6f3",
+                        "error-container": "#93000a",
+                        "on-error": "#690005",
+                        "primary-container": "#2d6be4",
+                        "surface-container": "#1d1f27",
+                        "on-surface": "#e1e2ec",
+                        "error": "#ffb4ab",
+                        "secondary-fixed-dim": "#a4c9ff",
+                        "surface-bright": "#373941",
+                        "on-surface-variant": "#c3c6d6",
+                        "primary": "#b1c5ff",
+                        "on-primary": "#002c71",
+                        "on-primary-fixed": "#001847",
+                        "background": "#11131a",
+                        "on-primary-container": "#f8f7ff",
+                        "surface-tint": "#b1c5ff",
+                        "surface-container-lowest": "#0c0e15",
+                        "on-tertiary": "#552000",
+                        "on-error-container": "#ffdad6",
+                        "surface": "#11131a",
+                        "surface-container-low": "#191b23",
+                        "surface-container-highest": "#32343c",
+                        "on-tertiary-fixed-variant": "#793100"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "stack-md": "16px",
+                        "stack-sm": "8px",
+                        "stack-lg": "32px",
+                        "gutter": "16px",
+                        "unit": "8px",
+                        "container-padding": "24px"
+                    },
+                    "fontFamily": {
+                        "h2": ["Lexend"],
+                        "h3": ["Lexend"],
+                        "h1": ["Lexend"],
+                        "body-md": ["Lexend"],
+                        "label-md": ["Lexend"],
+                        "caption": ["Lexend"],
+                        "body-lg": ["Lexend"]
+                    },
+                    "fontSize": {
+                        "h2": ["32px", {"lineHeight": "1.3", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                        "h3": ["24px", {"lineHeight": "1.4", "letterSpacing": "0", "fontWeight": "600"}],
+                        "h1": ["40px", {"lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                        "body-md": ["16px", {"lineHeight": "1.6", "letterSpacing": "0", "fontWeight": "400"}],
+                        "label-md": ["14px", {"lineHeight": "1.0", "letterSpacing": "0.02em", "fontWeight": "500"}],
+                        "caption": ["12px", {"lineHeight": "1.4", "letterSpacing": "0", "fontWeight": "400"}],
+                        "body-lg": ["18px", {"lineHeight": "1.6", "letterSpacing": "0", "fontWeight": "400"}]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body {
+            background-color: #0F0F0F;
+            color: #e1e2ec;
+            font-family: 'Lexend', sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .custom-glow {
+            background: radial-gradient(circle at 50% -20%, rgba(74, 144, 226, 0.15) 0%, rgba(15, 15, 15, 0) 60%);
+        }
+        .subject-hero-gradient {
+            background: linear-gradient(135deg, #1E3A6E 0%, #0D1526 100%);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+</head>
+<body class="min-h-screen overflow-x-hidden">
+<!-- Atmosphere Glow -->
+<div class="fixed inset-0 pointer-events-none custom-glow z-0"></div>
+<!-- Top App Bar -->
+<header class="bg-[#0F0F0F] border-b border-[#2C2C2C] docked full-width top-0 sticky z-50 flex justify-between items-center w-full px-4 h-16">
+<div class="flex items-center gap-4">
+<button class="hover:bg-zinc-900 transition-colors duration-200 p-2 rounded-full active:scale-95 transition-transform">
+<span class="material-symbols-outlined text-[#2D6BE4]">arrow_back</span>
+</button>
+<h1 class="text-lg font-semibold font-['Lexend'] text-zinc-100">Mathematics</h1>
+</div>
+<div class="flex items-center gap-2">
+<button class="hover:bg-zinc-900 transition-colors duration-200 p-2 rounded-full active:scale-95 transition-transform">
+<span class="material-symbols-outlined text-[#2D6BE4]">edit</span>
+</button>
+<button class="hover:bg-zinc-900 transition-colors duration-200 p-2 rounded-full active:scale-95 transition-transform">
+<span class="material-symbols-outlined text-[#2D6BE4]">more_vert</span>
+</button>
+</div>
+</header>
+<main class="relative z-10 max-w-5xl mx-auto px-4 md:px-6 py-6 space-y-8">
+<!-- Subject Hero Card -->
+<section class="subject-hero-gradient border border-[#2D6BE4] rounded-xl p-6 shadow-2xl">
+<div class="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 rounded-full bg-[#4A90E2] flex items-center justify-center text-white font-bold text-xl">M</div>
+<div>
+<h2 class="font-h2 text-h2 text-white">Mathematics</h2>
+<p class="font-caption text-caption text-zinc-400">Created Jan 2024</p>
+</div>
+</div>
+<button class="px-4 py-2 bg-[#1E1E1E] border border-[#2C2C2C] rounded-lg text-sm font-label-md hover:bg-zinc-800 transition-colors">
+                    Change color
+                </button>
+</div>
+<!-- Stats Grid -->
+<div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+<div class="bg-black/20 p-4 rounded-lg border border-[#2C2C2C]/50">
+<p class="font-caption text-caption text-zinc-400 mb-1">Total</p>
+<p class="font-h3 text-h3 text-white">48h 22m</p>
+</div>
+<div class="bg-black/20 p-4 rounded-lg border border-[#2C2C2C]/50">
+<p class="font-caption text-caption text-zinc-400 mb-1">Sessions</p>
+<p class="font-h3 text-h3 text-white">94</p>
+</div>
+<div class="bg-black/20 p-4 rounded-lg border border-[#2C2C2C]/50">
+<p class="font-caption text-caption text-zinc-400 mb-1">Streak</p>
+<p class="font-h3 text-h3 text-white">21 days</p>
+</div>
+<div class="bg-black/20 p-4 rounded-lg border border-[#2C2C2C]/50">
+<p class="font-caption text-caption text-zinc-400 mb-1">Avg</p>
+<p class="font-h3 text-h3 text-white">3h 12m</p>
+</div>
+</div>
+<!-- Actions -->
+<div class="flex flex-wrap gap-3">
+<button class="bg-[#2D6BE4] text-white px-6 py-3 rounded-lg font-label-md font-bold flex items-center gap-2 hover:bg-blue-600 transition-colors">
+<span class="material-symbols-outlined text-sm" data-weight="fill">play_arrow</span>
+                    Study now
+                </button>
+<button class="bg-transparent border-2 border-[#4A90E2] text-[#4A90E2] px-6 py-3 rounded-lg font-label-md font-bold hover:bg-[#4A90E2]/10 transition-colors">
+                    Set goal
+                </button>
+<button class="text-zinc-400 px-4 py-3 rounded-lg font-label-md font-bold hover:text-white transition-colors flex items-center gap-2">
+<span class="material-symbols-outlined text-sm">add</span>
+                    Add note
+                </button>
+</div>
+</section>
+<!-- Bento Layout for Insights -->
+<div class="grid grid-cols-1 md:grid-cols-12 gap-6">
+<!-- Weekly Trend -->
+<section class="md:col-span-8 bg-[#1E1E1E] border border-[#2C2C2C] rounded-xl p-6">
+<div class="flex items-center justify-between mb-6">
+<div>
+<h3 class="font-label-md text-zinc-400 uppercase tracking-wider mb-1">Weekly Trend</h3>
+<p class="font-h3 text-h3 text-white">12h 44m</p>
+</div>
+<div class="flex gap-2">
+<button class="p-2 rounded-lg hover:bg-zinc-800"><span class="material-symbols-outlined text-zinc-400">chevron_left</span></button>
+<button class="p-2 rounded-lg hover:bg-zinc-800"><span class="material-symbols-outlined text-zinc-400">chevron_right</span></button>
+</div>
+</div>
+<!-- Bar Chart -->
+<div class="flex items-end justify-between h-48 gap-2 pt-4">
+<div class="flex-1 flex flex-col items-center gap-2">
+<div class="w-full bg-[#4A90E2]/20 rounded-t-sm h-[40%] transition-all hover:bg-[#4A90E2]/40"></div>
+<span class="font-caption text-zinc-500">M</span>
+</div>
+<div class="flex-1 flex flex-col items-center gap-2">
+<div class="w-full bg-[#4A90E2]/20 rounded-t-sm h-[60%] transition-all hover:bg-[#4A90E2]/40"></div>
+<span class="font-caption text-zinc-500">T</span>
+</div>
+<div class="flex-1 flex flex-col items-center gap-2">
+<div class="w-full bg-[#4A90E2]/20 rounded-t-sm h-[35%] transition-all hover:bg-[#4A90E2]/40"></div>
+<span class="font-caption text-zinc-500">W</span>
+</div>
+<div class="flex-1 flex flex-col items-center gap-2">
+<div class="w-full bg-[#4A90E2]/20 rounded-t-sm h-[85%] transition-all hover:bg-[#4A90E2]/40"></div>
+<span class="font-caption text-zinc-500">T</span>
+</div>
+<div class="flex-1 flex flex-col items-center gap-2">
+<div class="w-full bg-[#4A90E2]/20 rounded-t-sm h-[55%] transition-all hover:bg-[#4A90E2]/40"></div>
+<span class="font-caption text-zinc-500">F</span>
+</div>
+<div class="flex-1 flex flex-col items-center gap-2">
+<div class="w-full bg-[#4A90E2] rounded-t-sm h-[75%] shadow-[0_-4px_12px_rgba(74,144,226,0.3)]"></div>
+<span class="font-caption text-white font-bold">S</span>
+</div>
+<div class="flex-1 flex flex-col items-center gap-2">
+<div class="w-full bg-[#4A90E2]/20 rounded-t-sm h-[20%] transition-all hover:bg-[#4A90E2]/40"></div>
+<span class="font-caption text-zinc-500">S</span>
+</div>
+</div>
+</section>
+<!-- Daily Goal -->
+<section class="md:col-span-4 bg-[#1E1E1E] border border-[#2C2C2C] rounded-xl p-6 relative overflow-hidden">
+<div class="absolute left-0 top-0 bottom-0 w-[3px] bg-[#2D6BE4]"></div>
+<h3 class="font-label-md text-zinc-400 uppercase tracking-wider mb-4">Daily Goal</h3>
+<div class="space-y-4">
+<div class="flex justify-between items-end">
+<p class="font-h1 text-h1 text-white">65%</p>
+<p class="font-caption text-zinc-400 mb-2">2h 00m / day</p>
+</div>
+<!-- Progress Bar -->
+<div class="w-full h-3 bg-[#2C2C2C] rounded-full overflow-hidden">
+<div class="h-full bg-[#4A90E2] rounded-full" style="width: 65%"></div>
+</div>
+<p class="font-body-md text-zinc-300">1h 18m studied today</p>
+</div>
+</section>
+</div>
+<!-- Session History -->
+<section class="space-y-4">
+<div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+<h2 class="font-h3 text-h3 text-white">Session History</h2>
+<div class="flex gap-2 p-1 bg-[#1E1E1E] rounded-lg w-fit">
+<button class="px-4 py-1.5 bg-[#2D6BE4] text-white rounded-md font-label-md text-sm">All</button>
+<button class="px-4 py-1.5 text-zinc-400 hover:text-white rounded-md font-label-md text-sm transition-colors">Week</button>
+<button class="px-4 py-1.5 text-zinc-400 hover:text-white rounded-md font-label-md text-sm transition-colors">Month</button>
+</div>
+</div>
+<!-- List Groups -->
+<div class="space-y-6">
+<!-- Group: Today -->
+<div class="space-y-3">
+<p class="font-label-md text-zinc-500 font-bold uppercase text-xs tracking-widest">Today</p>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+<div class="bg-[#1E1E1E] border border-[#2C2C2C] rounded-xl p-4 relative overflow-hidden flex items-center justify-between">
+<div class="absolute left-0 top-0 bottom-0 w-[3px] bg-[#4A90E2]"></div>
+<div>
+<h4 class="font-body-lg font-semibold text-white">Calculus III Practice</h4>
+<p class="font-caption text-zinc-400">09:15 AM - 10:45 AM</p>
+</div>
+<p class="font-body-md font-bold text-[#4A90E2]">1h 30m</p>
+</div>
+<div class="bg-[#1E1E1E] border border-[#2C2C2C] rounded-xl p-4 relative overflow-hidden flex items-center justify-between">
+<div class="absolute left-0 top-0 bottom-0 w-[3px] bg-[#4A90E2]"></div>
+<div>
+<h4 class="font-body-lg font-semibold text-white">Linear Algebra Review</h4>
+<p class="font-caption text-zinc-400">02:00 PM - 02:45 PM</p>
+</div>
+<p class="font-body-md font-bold text-[#4A90E2]">45m</p>
+</div>
+</div>
+</div>
+<!-- Group: Yesterday -->
+<div class="space-y-3">
+<p class="font-label-md text-zinc-500 font-bold uppercase text-xs tracking-widest">Yesterday</p>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+<div class="bg-[#1E1E1E] border border-[#2C2C2C] rounded-xl p-4 relative overflow-hidden flex items-center justify-between">
+<div class="absolute left-0 top-0 bottom-0 w-[3px] bg-[#4A90E2]"></div>
+<div>
+<h4 class="font-body-lg font-semibold text-white">Advanced Statistics</h4>
+<p class="font-caption text-zinc-400">03:30 PM - 05:30 PM</p>
+</div>
+<p class="font-body-md font-bold text-[#4A90E2]">2h 00m</p>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Notes Section -->
+<section class="space-y-4 pb-12">
+<h2 class="font-h3 text-h3 text-white">Notes</h2>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+<!-- Note Card -->
+<article class="bg-[#1E1E1E] border border-[#2C2C2C] rounded-xl p-6 hover:border-[#2D6BE4]/50 transition-all cursor-pointer group">
+<div class="flex justify-between items-start mb-4">
+<span class="px-3 py-1 bg-[#2D6BE4]/10 text-[#4A90E2] rounded-full font-caption font-bold text-[10px] uppercase tracking-wider">#exam-prep</span>
+<span class="material-symbols-outlined text-zinc-600 group-hover:text-zinc-400 transition-colors">sticky_note_2</span>
+</div>
+<h4 class="font-body-lg font-bold text-white mb-2">Partial Derivatives Review</h4>
+<p class="font-caption text-zinc-400 line-clamp-3">Focus on the chain rule for multivariable functions. Key formulas included for the upcoming mid-term evaluation. Remember to check boundary conditions for extrema...</p>
+<div class="mt-4 pt-4 border-t border-[#2C2C2C] flex justify-between items-center">
+<span class="font-caption text-zinc-500 italic">2 days ago</span>
+<span class="material-symbols-outlined text-zinc-500 text-sm">open_in_new</span>
+</div>
+</article>
+<!-- Subject Chip Mockup / Additional Cards -->
+<div class="bg-dashed border-2 border-dashed border-[#2C2C2C] rounded-xl p-6 flex flex-col items-center justify-center text-center hover:border-[#4A90E2]/30 transition-all group cursor-pointer">
+<span class="material-symbols-outlined text-zinc-600 mb-2 group-hover:text-[#4A90E2]">add_circle</span>
+<p class="font-label-md text-zinc-500 group-hover:text-zinc-300">Create new note</p>
+</div>
+</div>
+</section>
+</main>
+</body></html>

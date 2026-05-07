@@ -1,0 +1,167 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum SessionType {
+  FOCUS
+  POMODORO
+}
+
+enum AchievementType {
+  FIRST_SESSION
+  STREAK_3
+  STREAK_7
+  TOTAL_1H
+  TOTAL_10H
+  TOTAL_100H
+  EARLY_BIRD
+  NIGHT_OWL
+}
+
+model User {
+  id               String           @id @default(cuid())
+  supabaseUid      String?          @unique
+  email            String           @unique
+  name             String
+  handle           String           @unique
+  avatar           String?
+  passwordHash     String?
+  dailyGoalSeconds Int              @default(3600)
+  createdAt        DateTime         @default(now())
+  lastLoginAt      DateTime?
+  subjects         Subject[]
+  sessions         Session[]
+  tasks            Task[]
+  achievements     Achievement[]
+  groupMembers     GroupMember[]
+  preferences      UserPreferences?
+  scheduleEvents   ScheduleEvent[]
+}
+
+model UserPreferences {
+  id                   String   @id @default(cuid())
+  userId               String   @unique
+  user                 User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Pomodoro
+  focusMinutes         Int      @default(25)
+  shortBreakMinutes    Int      @default(5)
+  longBreakMinutes     Int      @default(15)
+  longBreakAfterRounds Int      @default(4)
+  autoStartBreaks      Boolean  @default(false)
+  breakSound           String   @default("soft_chime")
+
+  // Daily goal
+  dailyGoalSeconds     Int      @default(3600)
+
+  // Notifications
+  notificationsEnabled Boolean  @default(true)
+  studyReminders       Boolean  @default(true)
+  reminderTime         String   @default("20:00")
+  groupActivityAlerts  Boolean  @default(true)
+  achievementAlerts    Boolean  @default(true)
+  pomodoroSounds       Boolean  @default(true)
+
+  // Appearance
+  theme                String   @default("dark")
+  compactMode          Boolean  @default(false)
+  hideTimerDigits      Boolean  @default(false)
+  motivationalQuotes   Boolean  @default(true)
+  exitConfirmation     Boolean  @default(true)
+
+  // Privacy
+  profilePublic        Boolean  @default(true)
+  showInLeaderboard    Boolean  @default(true)
+  shareStudyStats      Boolean  @default(true)
+
+  // Analytics
+  shareAnalytics       Boolean  @default(true)
+
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+}
+
+model Subject {
+  id             String          @id @default(cuid())
+  userId         String
+  name           String
+  colorHex       String
+  createdAt      DateTime        @default(now())
+  user           User            @relation(fields: [userId], references: [id])
+  sessions       Session[]
+  tasks          Task[]
+  scheduleEvents ScheduleEvent[]
+}
+
+model Session {
+  id              String      @id @default(cuid())
+  userId          String
+  subjectId       String
+  startedAt       DateTime    @default(now())
+  endedAt         DateTime?
+  durationSeconds Int?
+  pomodoroRound   Int?
+  type            SessionType
+  note            String?
+  user            User        @relation(fields: [userId], references: [id])
+  subject         Subject     @relation(fields: [subjectId], references: [id])
+}
+
+model Task {
+  id               String    @id @default(cuid())
+  userId           String
+  title            String
+  subjectId        String?
+  dueDate          DateTime?
+  completed        Boolean   @default(false)
+  completedAt      DateTime?
+  carriedOver      Boolean   @default(false)
+  estimatedMinutes Int?
+  user             User      @relation(fields: [userId], references: [id])
+  subject          Subject?  @relation(fields: [subjectId], references: [id])
+}
+
+model Achievement {
+  id         String          @id @default(cuid())
+  userId     String
+  type       AchievementType
+  unlockedAt DateTime        @default(now())
+  user       User            @relation(fields: [userId], references: [id])
+}
+
+model Group {
+  id        String        @id @default(cuid())
+  name      String
+  createdAt DateTime      @default(now())
+  members   GroupMember[]
+}
+
+model GroupMember {
+  id       String   @id @default(cuid())
+  groupId  String
+  userId   String
+  joinedAt DateTime @default(now())
+  group    Group    @relation(fields: [groupId], references: [id])
+  user     User     @relation(fields: [userId], references: [id])
+}
+
+model ScheduleEvent {
+  id              String   @id @default(cuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title           String
+  date            String
+  startTime       String
+  durationMinutes Int      @default(60)
+  subjectId       String?
+  subject         Subject? @relation(fields: [subjectId], references: [id], onDelete: SetNull)
+  isRecurring     Boolean  @default(false)
+  recurringDays   Int[]
+  color           String?
+  createdAt       DateTime @default(now())
+}

@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Session Complete - StudyTrack</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "primary-fixed-dim": "#b1c5ff",
+                        "on-secondary-container": "#d0e1ff",
+                        "on-surface-variant": "#c3c6d6",
+                        "on-error": "#690005",
+                        "inverse-surface": "#e1e2ec",
+                        "on-background": "#e1e2ec",
+                        "inverse-primary": "#0156cf",
+                        "surface-bright": "#373941",
+                        "on-primary-fixed-variant": "#00409f",
+                        "surface-dim": "#11131a",
+                        "surface": "#11131a",
+                        "on-secondary-fixed-variant": "#004883",
+                        "outline-variant": "#424654",
+                        "on-secondary-fixed": "#001c39",
+                        "tertiary-fixed": "#ffdbcb",
+                        "primary": "#b1c5ff",
+                        "on-primary": "#002c71",
+                        "tertiary-container": "#bd5100",
+                        "inverse-on-surface": "#2e3038",
+                        "primary-fixed": "#dae2ff",
+                        "surface-tint": "#b1c5ff",
+                        "primary-container": "#2d6be4",
+                        "on-tertiary": "#552000",
+                        "secondary-fixed": "#d4e3ff",
+                        "on-tertiary-container": "#fff6f3",
+                        "secondary": "#a4c9ff",
+                        "surface-variant": "#32343c",
+                        "on-error-container": "#ffdad6",
+                        "surface-container-highest": "#32343c",
+                        "on-tertiary-fixed": "#341100",
+                        "on-primary-fixed": "#001847",
+                        "surface-container-high": "#282a31",
+                        "outline": "#8d909f",
+                        "on-surface": "#e1e2ec",
+                        "on-tertiary-fixed-variant": "#793100",
+                        "tertiary-fixed-dim": "#ffb691",
+                        "surface-container-low": "#191b23",
+                        "secondary-container": "#0164b4",
+                        "error": "#ffb4ab",
+                        "secondary-fixed-dim": "#a4c9ff",
+                        "tertiary": "#ffb691",
+                        "surface-container-lowest": "#0c0e15",
+                        "surface-container": "#1d1f27",
+                        "error-container": "#93000a",
+                        "on-primary-container": "#f8f7ff",
+                        "background": "#0F0F0F",
+                        "on-secondary": "#00315d"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "stack-sm": "8px",
+                        "stack-lg": "32px",
+                        "gutter": "16px",
+                        "unit": "8px",
+                        "stack-md": "16px",
+                        "container-padding": "24px"
+                    },
+                    "fontFamily": {
+                        "h2": ["Lexend"],
+                        "label-md": ["Lexend"],
+                        "h1": ["Lexend"],
+                        "caption": ["Lexend"],
+                        "body-lg": ["Lexend"],
+                        "h3": ["Lexend"],
+                        "body-md": ["Lexend"],
+                        "mono": ["JetBrains Mono"]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .glow-blue {
+            box-shadow: 0 0 20px rgba(45, 107, 228, 0.3);
+        }
+        .achievement-glow {
+            box-shadow: -8px 0 8px -4px rgba(45, 107, 228, 0.2);
+        }
+    </style>
+<style>
+        body {
+            min-height: max(884px, 100dvh);
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body-md antialiased min-h-screen">
+<!-- TopAppBar -->
+<header class="sticky top-0 z-50 bg-[#0F0F0F] border-b border-[#2C2C2C] flex justify-between items-center w-full px-6 h-16">
+<div class="active:scale-95 cursor-pointer hover:bg-[#1E1E1E] hover:text-[#FFFFFF] transition-all duration-200 rounded-full p-2">
+<span class="material-symbols-outlined text-[#9E9E9E]">close</span>
+</div>
+<h1 class="font-['Lexend'] font-semibold tracking-tight text-white text-[15px]">Session Complete</h1>
+<div class="active:scale-95 cursor-pointer hover:bg-[#1E1E1E] hover:text-[#FFFFFF] transition-all duration-200 rounded-full p-2">
+<span class="material-symbols-outlined text-[#9E9E9E]">share</span>
+</div>
+</header>
+<main class="px-6 py-8 space-y-stack-lg max-w-md mx-auto">
+<!-- Celebration Header -->
+<section class="flex flex-col items-center text-center space-y-4">
+<div class="relative">
+<div class="w-[88px] h-[88px] bg-[#1A2744] border-2 border-[#2D6BE4] rounded-full flex items-center justify-center glow-blue">
+<span class="material-symbols-outlined text-[#2D6BE4] text-4xl" style="font-variation-settings: 'FILL' 1, 'wght' 700;">check_circle</span>
+</div>
+</div>
+<div class="space-y-1">
+<h2 class="text-h2 font-h2 text-white">Great work!</h2>
+<p class="text-[#4A90E2] font-label-md">Mathematics • Focus Session</p>
+</div>
+</section>
+<!-- Primary Stat Card -->
+<div class="bg-[#0D1526] border border-[#2C2C2C] rounded-xl p-6 overflow-hidden">
+<div class="text-center pb-6">
+<span class="text-caption text-outline uppercase tracking-widest block mb-2">TOTAL DURATION</span>
+<span class="font-mono text-[56px] font-bold text-white tracking-tight leading-none">1h 46m</span>
+</div>
+<div class="border-t border-[#2C2C2C] pt-6 grid grid-cols-3 gap-2 text-center">
+<div>
+<p class="text-caption text-outline mb-1">Started</p>
+<p class="text-label-md text-white">9:30 AM</p>
+</div>
+<div class="border-x border-[#2C2C2C]">
+<p class="text-caption text-outline mb-1">Ended</p>
+<p class="text-label-md text-white">11:16 AM</p>
+</div>
+<div>
+<p class="text-caption text-outline mb-1">Session today</p>
+<p class="text-label-md text-white">#3</p>
+</div>
+</div>
+</div>
+<!-- Daily Goal Progress Card -->
+<div class="bg-[#1E1E1E] border border-[#2C2C2C] rounded-xl overflow-hidden flex">
+<div class="w-1.5 bg-[#2D6BE4]"></div>
+<div class="p-5 flex-1 space-y-3">
+<div class="flex justify-between items-end">
+<span class="text-label-md text-on-surface-variant">Daily goal progress</span>
+<span class="text-white font-semibold">5h 10m / 6h</span>
+</div>
+<div class="h-2 w-full bg-[#2C2C2C] rounded-full overflow-hidden">
+<div class="h-full bg-[#2D6BE4] rounded-full" style="width: 86%"></div>
+</div>
+<p class="text-caption text-[#4A90E2] flex items-center gap-1">
+                86% of daily goal reached 🎯
+            </p>
+</div>
+</div>
+<!-- Subject Breakdown Card -->
+<div class="bg-[#1E1E1E] border border-[#2C2C2C] rounded-xl p-6 space-y-stack-md">
+<h3 class="text-label-md font-bold text-white flex items-center gap-2">
+<span class="material-symbols-outlined text-sm">analytics</span>
+            SUBJECT BREAKDOWN
+        </h3>
+<div class="space-y-4">
+<!-- Mathematics -->
+<div class="space-y-1.5">
+<div class="flex justify-between text-caption">
+<span class="text-white">Mathematics</span>
+<span class="text-outline">72%</span>
+</div>
+<div class="h-[6px] w-full bg-[#2C2C2C] rounded-[4px] overflow-hidden">
+<div class="h-full bg-[#2D6BE4] rounded-[4px]" style="width: 72%"></div>
+</div>
+</div>
+<!-- Physics -->
+<div class="space-y-1.5">
+<div class="flex justify-between text-caption">
+<span class="text-white">Physics</span>
+<span class="text-outline">22%</span>
+</div>
+<div class="h-[6px] w-full bg-[#2C2C2C] rounded-[4px] overflow-hidden">
+<div class="h-full bg-purple-500 rounded-[4px]" style="width: 22%"></div>
+</div>
+</div>
+<!-- Piano Practice -->
+<div class="space-y-1.5">
+<div class="flex justify-between text-caption">
+<span class="text-white">Piano Practice</span>
+<span class="text-outline">12%</span>
+</div>
+<div class="h-[6px] w-full bg-[#2C2C2C] rounded-[4px] overflow-hidden">
+<div class="h-full bg-red-500 rounded-[4px]" style="width: 12%"></div>
+</div>
+</div>
+</div>
+</div>
+<!-- Achievement Banner -->
+<div class="bg-[#1A2744] border border-[#2D6BE4]/30 rounded-xl p-4 flex items-center gap-4 achievement-glow">
+<div class="w-12 h-12 bg-[#2D6BE4]/20 rounded-lg flex items-center justify-center">
+<span class="material-symbols-outlined text-[#2D6BE4] text-3xl" style="font-variation-settings: 'FILL' 1;">trophy</span>
+</div>
+<div>
+<p class="text-caption text-[#4A90E2] font-semibold uppercase tracking-wider">Achievement unlocked!</p>
+<h4 class="text-h3 font-h3 text-white text-lg">10h Club</h4>
+</div>
+</div>
+<!-- Action Buttons -->
+<div class="pt-4 space-y-4 flex flex-col items-center">
+<button class="w-full h-14 bg-[#2D6BE4] text-white font-h3 text-lg rounded-xl flex items-center justify-center glow-blue active:scale-[0.98] transition-transform">
+            Back to Home
+        </button>
+<button class="w-full h-14 border-2 border-[#4A90E2] text-[#4A90E2] font-h3 text-lg rounded-xl flex items-center justify-center active:scale-[0.98] transition-transform">
+            Start Another Session
+        </button>
+<a class="text-caption text-[#9E9E9E] flex items-center gap-1.5 underline underline-offset-4 decoration-[#2C2C2C] hover:text-white transition-colors py-2" href="#">
+<span class="material-symbols-outlined text-[14px] text-[#4A90E2]">share</span>
+            Share your session →
+        </a>
+</div>
+</main>
+<!-- Visual Background Element (Subtle Gradient) -->
+<div class="fixed top-0 left-0 w-full h-full -z-10 pointer-events-none opacity-20">
+<div class="absolute top-0 right-0 w-96 h-96 bg-[#2D6BE4] blur-[120px] rounded-full -translate-y-1/2 translate-x-1/3"></div>
+<div class="absolute bottom-0 left-0 w-64 h-64 bg-[#2D6BE4] blur-[100px] rounded-full translate-y-1/3 -translate-x-1/4"></div>
+</div>
+</body></html>

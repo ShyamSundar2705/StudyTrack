@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Leaderboard - StudyTrack</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                "tertiary-container": "#bd5100",
+                "primary-fixed-dim": "#b1c5ff",
+                "on-tertiary-fixed-variant": "#793100",
+                "primary-container": "#2d6be4",
+                "surface": "#11131a",
+                "on-error": "#690005",
+                "on-background": "#e1e2ec",
+                "surface-container-high": "#282a31",
+                "on-secondary-fixed-variant": "#004883",
+                "on-tertiary-container": "#fff6f3",
+                "tertiary": "#ffb691",
+                "secondary": "#a4c9ff",
+                "surface-container": "#1d1f27",
+                "secondary-fixed": "#d4e3ff",
+                "background": "#11131a",
+                "inverse-primary": "#0156cf",
+                "on-secondary-fixed": "#001c39",
+                "surface-bright": "#373941",
+                "outline-variant": "#424654",
+                "on-secondary-container": "#d0e1ff",
+                "on-primary-container": "#f8f7ff",
+                "outline": "#8d909f",
+                "on-primary": "#002c71",
+                "tertiary-fixed-dim": "#ffb691",
+                "surface-variant": "#32343c",
+                "on-primary-fixed-variant": "#00409f",
+                "inverse-surface": "#e1e2ec",
+                "tertiary-fixed": "#ffdbcb",
+                "surface-container-lowest": "#0c0e15",
+                "on-tertiary": "#552000",
+                "on-surface-variant": "#c3c6d6",
+                "surface-tint": "#b1c5ff",
+                "primary-fixed": "#dae2ff",
+                "inverse-on-surface": "#2e3038",
+                "surface-container-highest": "#32343c",
+                "secondary-fixed-dim": "#a4c9ff",
+                "on-error-container": "#ffdad6",
+                "on-surface": "#e1e2ec",
+                "on-primary-fixed": "#001847",
+                "surface-dim": "#11131a",
+                "primary": "#b1c5ff",
+                "surface-container-low": "#191b23",
+                "error": "#ffb4ab",
+                "on-secondary": "#00315d",
+                "error-container": "#93000a",
+                "secondary-container": "#0164b4",
+                "on-tertiary-fixed": "#341100"
+            },
+            "borderRadius": {
+                "DEFAULT": "0.25rem",
+                "lg": "0.5rem",
+                "xl": "0.75rem",
+                "full": "9999px"
+            },
+            "spacing": {
+                "gutter": "16px",
+                "unit": "8px",
+                "container-padding": "24px",
+                "stack-lg": "32px",
+                "stack-sm": "8px",
+                "stack-md": "16px"
+            },
+            "fontFamily": {
+                "h1": ["Lexend"],
+                "caption": ["Lexend"],
+                "h2": ["Lexend"],
+                "body-md": ["Lexend"],
+                "h3": ["Lexend"],
+                "body-lg": ["Lexend"],
+                "label-md": ["Lexend"]
+            },
+            "fontSize": {
+                "h1": ["40px", {"lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                "caption": ["12px", {"lineHeight": "1.4", "letterSpacing": "0", "fontWeight": "400"}],
+                "h2": ["32px", {"lineHeight": "1.3", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                "body-md": ["16px", {"lineHeight": "1.6", "letterSpacing": "0", "fontWeight": "400"}],
+                "h3": ["24px", {"lineHeight": "1.4", "letterSpacing": "0", "fontWeight": "600"}],
+                "body-lg": ["18px", {"lineHeight": "1.6", "letterSpacing": "0", "fontWeight": "400"}],
+                "label-md": ["14px", {"lineHeight": "1.0", "letterSpacing": "0.02em", "fontWeight": "500"}]
+            }
+          }
+        }
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            display: inline-block;
+            line-height: 1;
+            vertical-align: middle;
+        }
+        body {
+            background-color: #0F0F0F;
+            color: #e1e2ec;
+            -webkit-font-smoothing: antialiased;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+</head>
+<body class="font-body-md overflow-x-hidden pb-32">
+<!-- Top AppBar -->
+<header class="bg-[#0F0F0F] border-b border-[#2C2C2C] flex items-center justify-between px-4 h-16 w-full fixed top-0 z-[60]">
+<div class="flex items-center gap-4">
+<button class="active:opacity-70 transition-opacity text-white">
+<span class="material-symbols-outlined">arrow_back</span>
+</button>
+<h1 class="font-lexend text-white text-xl font-bold">Leaderboard</h1>
+</div>
+<div class="flex items-center gap-4">
+<button class="active:opacity-70 transition-opacity text-white">
+<span class="material-symbols-outlined">share</span>
+</button>
+<button class="active:opacity-70 transition-opacity text-white">
+<span class="material-symbols-outlined">tune</span>
+</button>
+</div>
+</header>
+<main class="mt-20 px-4 space-y-6">
+<!-- Scope Toggle -->
+<div class="bg-[#1E1E1E] p-1 rounded-full flex w-full border border-[#2C2C2C]">
+<button class="flex-1 py-2 px-4 rounded-full font-label-md text-label-md bg-[#2D6BE4] text-white">My Group</button>
+<button class="flex-1 py-2 px-4 rounded-full font-label-md text-label-md text-[#9E9E9E] hover:text-white transition-colors">Category</button>
+<button class="flex-1 py-2 px-4 rounded-full font-label-md text-label-md text-[#9E9E9E] hover:text-white transition-colors">Global</button>
+</div>
+<!-- Period Chips -->
+<div class="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
+<button class="whitespace-nowrap px-4 py-1.5 rounded-lg border border-[#2D6BE4] bg-[#2D6BE4]/10 text-[#2D6BE4] font-label-md text-label-md">Today</button>
+<button class="whitespace-nowrap px-4 py-1.5 rounded-lg border border-[#2C2C2C] text-[#9E9E9E] font-label-md text-label-md active:bg-[#252525]">This Week</button>
+<button class="whitespace-nowrap px-4 py-1.5 rounded-lg border border-[#2C2C2C] text-[#9E9E9E] font-label-md text-label-md active:bg-[#252525]">This Month</button>
+<button class="whitespace-nowrap px-4 py-1.5 rounded-lg border border-[#2C2C2C] text-[#9E9E9E] font-label-md text-label-md active:bg-[#252525]">All Time</button>
+</div>
+<!-- Podium Hero Section -->
+<div class="flex items-end justify-center gap-2 pt-8 pb-4 relative">
+<!-- 2nd Place -->
+<div class="flex flex-col items-center w-24">
+<div class="relative mb-2">
+<div class="w-16 h-16 rounded-full border-2 border-[#C0C0C0] p-0.5">
+<div class="w-full h-full rounded-full overflow-hidden bg-surface-container">
+<img class="w-full h-full object-cover" data-alt="portrait of a young man with short dark hair looking confident in a library setting with soft morning light" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBapMAMEMlLbx0Pd9KE_ScBfwMn7SzbiwNAoDea3WVJsFp0GCdnObfUygQBshAhQuarYsWvWNB9rI5VsxxBDKWZdZOJoseFFuTVppY27RLmF92PZWXiSbWDLQj2XecLW6VNR6M_GR1gldNn8ArpU7vDVdJ75V4oUpwsZ9kPRZO18-PpK53ketGFlw-WHKpCpysCzOYA29ZaGJDwgZ7mOkAGWYdd1o-L_sUCKkZN0iXmqtyP4Nm5CZ-2i3jI9xssdrSVkiG0-R070Dk"/>
+</div>
+</div>
+<div class="absolute -bottom-1 left-1/2 -translate-x-1/2 bg-[#C0C0C0] text-[#0F0F0F] rounded-full w-5 h-5 flex items-center justify-center text-[10px] font-bold">2</div>
+</div>
+<span class="font-label-md text-label-md font-bold text-white">Arjun</span>
+<span class="text-caption font-caption text-[#9E9E9E]">7h 52m</span>
+<div class="mt-2 w-full h-24 bg-gradient-to-t from-[#1E1E1E] to-[#252525] rounded-t-xl border-x border-t border-[#2C2C2C]"></div>
+</div>
+<!-- 1st Place -->
+<div class="flex flex-col items-center w-28 -mt-6 z-10">
+<div class="relative mb-2">
+<span class="material-symbols-outlined text-[#FFD700] absolute -top-8 left-1/2 -translate-x-1/2 text-3xl" style="font-variation-settings: 'FILL' 1;">workspace_premium</span>
+<div class="w-20 h-20 rounded-full border-4 border-[#FFD700] p-1 shadow-[0_0_20px_rgba(255,215,0,0.3)]">
+<div class="w-full h-full rounded-full overflow-hidden bg-surface-container">
+<img class="w-full h-full object-cover" data-alt="close up portrait of a smiling young woman with dark hair under warm professional studio lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCFF6m9ClPwGAobmS2GslX3jxjQnGxVE-G2shHq1TUzCBSj-7ABWdw29d2NpsLtFQ6zQsuLSZ2rEecFqNt-CNLmVZPIAnwlc7C-uT5PEgsxo1cQTGlG8JShOJDsmXzj_cWzNmp3NaF7svdzT-yUFDF8BWyGbZ8asauarg3xXz6VzYIfKPIRodk0gkiiAkDZtuV_hPxO7r6I_Od6IG-BPkOlh6pxEslUVpfDna3_5NSer0S5vK72M8psgMv5ZhMscF8qxDPoHSTLg1w"/>
+</div>
+</div>
+<div class="absolute -bottom-1 left-1/2 -translate-x-1/2 bg-[#FFD700] text-[#0F0F0F] rounded-full w-6 h-6 flex items-center justify-center text-[12px] font-extrabold">1</div>
+</div>
+<span class="font-label-md text-label-md font-extrabold text-white">Meera</span>
+<span class="text-caption font-caption text-[#FFD700] font-bold">9h 14m</span>
+<div class="mt-2 w-full h-36 bg-gradient-to-t from-[#1E1E1E] to-[#2D6BE4]/20 rounded-t-xl border-x border-t border-[#FFD700]/50"></div>
+</div>
+<!-- 3rd Place -->
+<div class="flex flex-col items-center w-24">
+<div class="relative mb-2">
+<div class="w-16 h-16 rounded-full border-2 border-[#CD7F32] p-0.5">
+<div class="w-full h-full rounded-full overflow-hidden bg-surface-container">
+<img class="w-full h-full object-cover" data-alt="portrait of a young south asian woman with glasses in a focused study environment with cool lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDHyxTd1jcUX0Ot7K8q7MxzY-t3_lryvaROrIDPUQeFskCudRLh3AwMSuo37XmRbajt7w1We2mWIxXnvpXLknhoyCgt8rQxkFnIwDJ7K8D_y2q_GuhBCdY34sZQu3pCsBvuA_8Qi5KFL03QKWdOh5uLQv5cEnoD27rs3eLqHCBeRSktjQyjpCmnHM6nQAXPthVjQVsKxRI4eiPLZqjH9ECP4Y6zwTCd_G__-uRZ3OQIfTFkckFKem8-FIc394V8eIvuLXOZPzXIN04"/>
+</div>
+</div>
+<div class="absolute -bottom-1 left-1/2 -translate-x-1/2 bg-[#CD7F32] text-[#0F0F0F] rounded-full w-5 h-5 flex items-center justify-center text-[10px] font-bold">3</div>
+</div>
+<span class="font-label-md text-label-md font-bold text-white">Priya</span>
+<span class="text-caption font-caption text-[#9E9E9E]">6h 30m</span>
+<div class="mt-2 w-full h-20 bg-gradient-to-t from-[#1E1E1E] to-[#252525] rounded-t-xl border-x border-t border-[#2C2C2C]"></div>
+</div>
+</div>
+<!-- Ranked List -->
+<div class="space-y-3">
+<!-- Position 4 -->
+<div class="bg-[#1E1E1E] p-4 rounded-xl border border-[#2C2C2C] flex items-center gap-4">
+<span class="text-label-md font-bold text-[#9E9E9E] w-4">4</span>
+<div class="w-10 h-10 rounded-full overflow-hidden bg-surface-container">
+<img class="w-full h-full object-cover" data-alt="professional headshot of a woman with curly hair" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAQlM7lOBjNVx94e3SiKpkIg2eDjZGZUtEpqSvcS0TgcnMXKF-9XcDPu68NJfBQID4CoDeeJ-wsy9VxOQgRi-m7gy99j8zBGgabTntSiBUS6-pGcQIA6amy6byrURShYTDGmtdJB9wcRyMalvahpUDx4QW64i10mnRGhjuXS98rDxJqHA3Ok3oCR95oT7bkSoVMEAnkHPpGx7RGajdCGmtc8VCELowea7m8D0_SdONxz0pwDZ6mlHMmc3I73L_e3gSquaMLd9emdMQ"/>
+</div>
+<div class="flex-1">
+<p class="font-label-md font-bold text-white">Deepa</p>
+<div class="flex items-center gap-1">
+<span class="material-symbols-outlined text-[#F44336] text-[16px]">arrow_downward</span>
+<span class="text-[10px] text-[#9E9E9E] uppercase">Dropped 1</span>
+</div>
+</div>
+<span class="text-label-md font-bold text-white">6h 12m</span>
+</div>
+<!-- Position 5 (YOU) -->
+<div class="relative p-4 rounded-xl border border-[#2D6BE4] flex items-center gap-4 ring-1 ring-[#2D6BE4]/50 overflow-hidden" style="background: linear-gradient(to right, rgba(26, 39, 68, 0.6) 0%, transparent 100%);">
+<div class="absolute left-0 top-0 bottom-0 w-[4px] bg-[#2D6BE4]"></div>
+<span class="text-label-md font-bold text-[#2D6BE4] w-4 ml-1">5</span>
+<div class="relative">
+<div class="w-10 h-10 rounded-full overflow-hidden border-2 border-[#2D6BE4] p-0.5">
+<div class="w-full h-full rounded-full overflow-hidden bg-surface-container">
+<img class="w-full h-full object-cover" data-alt="self-portrait profile picture of a young professional person" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCPtwcDyUR9SgQC-pQCaDLc9rgFNs4azk8tR14_PKUFDrxvBLfv4XP21ylSCwOfQnjyNipUFFRz4LbjkBdtaOvr347jL03SiS588njnNX1pr9b3ghzliAUS3t9xeKNGgewrt5_I0zJ4CMiOuO8eD1w3t_TmS5ZliSpjwfKOCzQL_jZiToQeV-VDEBQe21ZqvBvyhEqUQkOwujsziRhA02Cjd7csyytSmyqqlskLlZMWuYEyGOkUXH8QaGNoT76htZ6Rf4V9NiUpzZw"/>
+</div>
+</div>
+</div>
+<div class="flex-1">
+<p class="font-label-md font-bold text-white">YOU</p>
+<div class="flex items-center gap-1">
+<span class="material-symbols-outlined text-[#4CAF50] text-[16px]">arrow_upward</span>
+<span class="text-[10px] text-[#4CAF50] font-bold">UP 2 POSITIONS</span>
+</div>
+</div>
+<span class="text-label-md font-bold text-[#2D6BE4]">5h 44m</span>
+</div>
+<!-- Position 6 -->
+<div class="bg-[#1E1E1E] p-4 rounded-xl border border-[#2C2C2C] flex items-center gap-4">
+<span class="text-label-md font-bold text-[#9E9E9E] w-4">6</span>
+<div class="w-10 h-10 rounded-full overflow-hidden bg-surface-container">
+<img class="w-full h-full object-cover" data-alt="portrait of a male student" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCusZxeu90WvxkgYg49UU7-1IqmUU67kPiV8vJv2qg14TdIS8tQhek5ZIH8BTCjonnkMf9TpH2jZYElD8DchVaENQYzHyDmdYQGSC3jkH6JGAcuBbdz_YExyLfchtSWvZCon-tpJcr8rdVVUni-22o06VF-EoKlJ1_cNJXPZnD_WaJ8ShIAkKkbjDTN78uwfNabIJnln1P8o6mSjk_UEQTxJKShK9_XQ1J9bQieaS42XUYcARQVo41Ixj-8ojK6_iVH420zEr7XkSs"/>
+</div>
+<div class="flex-1">
+<p class="font-label-md font-bold text-white">Karan</p>
+<div class="flex items-center gap-1">
+<span class="material-symbols-outlined text-[#9E9E9E] text-[16px]">remove</span>
+<span class="text-[10px] text-[#9E9E9E] uppercase">Stable</span>
+</div>
+</div>
+<span class="text-label-md font-bold text-white">5h 20m</span>
+</div>
+<!-- Position 7 -->
+<div class="bg-[#1E1E1E] p-4 rounded-xl border border-[#2C2C2C] flex items-center gap-4">
+<span class="text-label-md font-bold text-[#9E9E9E] w-4">7</span>
+<div class="w-10 h-10 rounded-full overflow-hidden bg-surface-container">
+<img class="w-full h-full object-cover" data-alt="portrait of a smiling man" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBIjwutC18MW9bxz2wQjb9yJpcEgDRBh_zjA528DwLM6I5c814kOHMAeKkoDY8mz0CBBKryUVS7MtuxA9aohIbNaXP2U0FcI4qHPL6-W7KiOW9GKHcPFiTAk71eTbN-fT9o2YAZgQ7X73lsbdYvf4oSFwSVHDgOhgXrE7NPtc_fnzdGXlrv1x8XjFDAE_L9Sic_nrKzGheDcId1_2TbefE1Ks57BR3_oGxCME30hVBVlExfXMnwpITC89XLz9HLPHcB1m5-FnAC0P4"/>
+</div>
+<div class="flex-1">
+<p class="font-label-md font-bold text-white">Rahul</p>
+<div class="flex items-center gap-1">
+<span class="material-symbols-outlined text-[#F44336] text-[16px]">arrow_downward</span>
+<span class="text-[10px] text-[#9E9E9E] uppercase">Dropped 3</span>
+</div>
+</div>
+<span class="text-label-md font-bold text-white">5h 10m</span>
+</div>
+<!-- Position 8 -->
+<div class="bg-[#1E1E1E] p-4 rounded-xl border border-[#2C2C2C] flex items-center gap-4">
+<span class="text-label-md font-bold text-[#9E9E9E] w-4">8</span>
+<div class="w-10 h-10 rounded-full overflow-hidden bg-surface-container">
+<img class="w-full h-full object-cover" data-alt="portrait of a woman in glasses" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB6tZ5W9GXq4c6LQd6Icj6IJWh-wf5Ihw62XMR6ci3FngQOe7hLplox8FKpGLiQ88IEw-dbPfQsdLmYUjnNJsRZc-CveblTZQsDUs5mDbAvEzCUg22VtNETkW6ceNfpUUcvUKnFy4uEuEpPBpPHfkiZ1423-boR44fd9HtC6HccYc_tj0j3Nfgs8oGk5sA6_GP9gwnWTfzAdqa4SPbVLll31PaKSenNfDkS7he8As67K9lB2PEMbcx0SjOuawsWMwlQDJq4gEgbNyQ"/>
+</div>
+<div class="flex-1">
+<p class="font-label-md font-bold text-white">Nisha</p>
+<div class="flex items-center gap-1">
+<span class="material-symbols-outlined text-[#4CAF50] text-[16px]">arrow_upward</span>
+<span class="text-[10px] text-[#9E9E9E] uppercase">New Rank</span>
+</div>
+</div>
+<span class="text-label-md font-bold text-white">4h 58m</span>
+</div>
+</div>
+<!-- Bottom Stat Strip -->
+<div class="bg-[#1E1E1E] p-5 rounded-2xl border border-[#2C2C2C] space-y-4">
+<div class="flex justify-between items-center">
+<h3 class="text-white font-h3 text-h3 leading-none">Your position</h3>
+<span class="text-[#2D6BE4] text-label-md font-bold">Top 5%</span>
+</div>
+<div class="grid grid-cols-3 gap-2">
+<div class="bg-[#252525] p-3 rounded-xl border border-[#2C2C2C] text-center">
+<p class="text-[#9E9E9E] text-[10px] uppercase tracking-wider mb-1">Group</p>
+<p class="text-white font-bold text-body-lg">#5</p>
+</div>
+<div class="bg-[#252525] p-3 rounded-xl border border-[#2C2C2C] text-center">
+<p class="text-[#9E9E9E] text-[10px] uppercase tracking-wider mb-1">Category</p>
+<p class="text-white font-bold text-body-lg">#312</p>
+</div>
+<div class="bg-[#252525] p-3 rounded-xl border border-[#2C2C2C] text-center">
+<p class="text-[#9E9E9E] text-[10px] uppercase tracking-wider mb-1">Global</p>
+<p class="text-white font-bold text-body-lg">#4,821</p>
+</div>
+</div>
+<div class="space-y-2">
+<div class="flex justify-between text-caption font-caption text-[#9E9E9E]">
+<span>Next Rank: #4</span>
+<span>30m more needed</span>
+</div>
+<div class="w-full h-1.5 bg-[#2C2C2C] rounded-full overflow-hidden">
+<div class="h-full bg-[#2D6BE4] rounded-full w-[75%]"></div>
+</div>
+</div>
+</div>
+<!-- Footer Motivational Banner -->
+<div class="relative overflow-hidden bg-primary-container rounded-2xl p-6 flex items-center justify-between group active:scale-[0.98] transition-transform">
+<div class="relative z-10">
+<div class="flex items-center gap-2 text-white mb-1">
+<span class="material-symbols-outlined fill-1" style="font-variation-settings: 'FILL' 1;">bolt</span>
+<span class="font-lexend font-bold text-lg">Daily Goal: 6h</span>
+</div>
+<p class="text-white/80 text-caption">You're just 16 minutes away from a new streak!</p>
+</div>
+<button class="relative z-10 bg-white w-12 h-12 rounded-full flex items-center justify-center shadow-lg active:scale-90 transition-transform">
+<span class="material-symbols-outlined text-[#2D6BE4] text-3xl fill-1" style="font-variation-settings: 'FILL' 1;">play_arrow</span>
+</button>
+<!-- Decorative background element -->
+<div class="absolute right-[-20px] top-[-20px] w-40 h-40 bg-white/10 rounded-full blur-2xl"></div>
+</div>
+</main>
+<!-- Fixed Bottom Sticky Action (Floating Study Button) -->
+<div class="fixed bottom-6 left-1/2 -translate-x-1/2 z-50">
+<button class="bg-[#2D6BE4] text-white flex items-center gap-2 px-8 py-4 rounded-full font-bold shadow-[0_8px_24px_rgba(45,107,228,0.4)] active:scale-95 transition-transform">
+<span class="material-symbols-outlined">timer</span>
+<span>Study Now</span>
+</button>
+</div>
+</body></html>

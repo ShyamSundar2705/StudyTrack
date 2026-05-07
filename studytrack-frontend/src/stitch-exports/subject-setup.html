@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;600;700&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-container-low": "#261813",
+                        "inverse-surface": "#f7ddd4",
+                        "tertiary-fixed-dim": "#71d2ff",
+                        "on-tertiary": "#003547",
+                        "primary": "#2D6BE4",
+                        "on-tertiary-fixed-variant": "#004d66",
+                        "on-secondary-fixed": "#1b1b1c",
+                        "on-error": "#690005",
+                        "secondary": "#c8c6c5",
+                        "primary-fixed-dim": "#2D6BE4",
+                        "tertiary-container": "#00a5d7",
+                        "on-tertiary-fixed": "#001e2b",
+                        "on-secondary-container": "#b7b5b4",
+                        "surface-container": "#2a1c17",
+                        "on-secondary": "#303030",
+                        "surface-dim": "#1d100c",
+                        "error": "#ffb4ab",
+                        "on-error-container": "#ffdad6",
+                        "on-primary-fixed": "#001a41",
+                        "inverse-primary": "#2D6BE4",
+                        "secondary-fixed-dim": "#c8c6c5",
+                        "inverse-on-surface": "#3c2d27",
+                        "secondary-container": "#474746",
+                        "surface-bright": "#463630",
+                        "surface": "#1d100c",
+                        "tertiary-fixed": "#c0e8ff",
+                        "primary-fixed": "#dce1ff",
+                        "surface-container-lowest": "#170b07",
+                        "surface-container-high": "#352721",
+                        "on-secondary-fixed-variant": "#474746",
+                        "on-tertiary-container": "#003648",
+                        "background": "#0F0F0F",
+                        "tertiary": "#71d2ff",
+                        "secondary-fixed": "#e5e2e1",
+                        "surface-container-highest": "#41312c",
+                        "outline-variant": "#594138",
+                        "on-primary-container": "#001a41",
+                        "error-container": "#93000a",
+                        "outline": "#a98a7f",
+                        "on-primary-fixed-variant": "#004494",
+                        "on-surface-variant": "#e2bfb3",
+                        "surface-variant": "#41312c",
+                        "primary-container": "#2D6BE4",
+                        "on-primary": "#ffffff",
+                        "on-background": "#f7ddd4",
+                        "surface-tint": "#2D6BE4",
+                        "on-surface": "#f7ddd4"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "2xl": "12px",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "sm": "12px",
+                        "xs": "8px",
+                        "md": "16px",
+                        "base": "4px",
+                        "xl": "32px",
+                        "margin-edge": "24px",
+                        "lg": "24px",
+                        "gutter": "16px"
+                    },
+                    "fontFamily": {
+                        "label-sm": ["Lexend"],
+                        "title-md": ["Lexend"],
+                        "headline-lg": ["Lexend"],
+                        "body-md": ["Lexend"],
+                        "display-lg": ["Lexend"]
+                    },
+                    "fontSize": {
+                        "label-sm": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "500"}],
+                        "title-md": ["18px", {"lineHeight": "24px", "letterSpacing": "0.01em", "fontWeight": "500"}],
+                        "headline-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "0", "fontWeight": "600"}],
+                        "body-md": ["16px", {"lineHeight": "24px", "letterSpacing": "0.02em", "fontWeight": "400"}],
+                        "display-lg": ["56px", {"lineHeight": "64px", "letterSpacing": "-0.02em", "fontWeight": "700"}]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .pb-safe { padding-bottom: env(safe-area-inset-bottom); }
+        .tap-highlight-transparent { -webkit-tap-highlight-color: transparent; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+<style>
+        body {
+            min-height: max(884px, 100dvh);
+        }
+    </style>
+</head>
+<body class="bg-[#0F0F0F] text-on-background font-body-md min-h-screen flex flex-col antialiased overflow-x-hidden">
+<!-- Top AppBar -->
+<header class="flex justify-between items-center w-full px-5 h-16 border-b border-[#1E1E1E] bg-[#0F0F0F]">
+<div class="flex items-center gap-3">
+<button class="p-2 text-[#2D6BE4] hover:bg-[#1E1E1E] transition-colors rounded-full active:scale-95 duration-200">
+<span class="material-symbols-outlined">arrow_back</span>
+</button>
+<span class="font-['Lexend'] text-white text-xl font-bold">Study Setup</span>
+</div>
+<button class="p-2 text-[#9E9E9E] hover:bg-[#1E1E1E] transition-colors rounded-full active:scale-95 duration-200">
+<span class="material-symbols-outlined">help</span>
+</button>
+</header>
+<main class="flex-1 px-margin-edge py-xl flex flex-col max-w-lg mx-auto w-full">
+<!-- Progress Indicators -->
+<div class="flex justify-center items-center gap-2 mb-xl">
+<div class="h-1.5 w-1.5 rounded-full bg-[#3A3A3A]"></div>
+<div class="h-1.5 w-6 rounded-full bg-[#2D6BE4]"></div>
+<div class="h-1.5 w-1.5 rounded-full bg-[#3A3A3A]"></div>
+</div>
+<!-- Header -->
+<div class="mb-xl">
+<h1 class="text-[26px] font-bold text-white mb-2 font-['Lexend']">What do you study?</h1>
+<p class="text-[#9E9E9E] text-sm leading-relaxed">Add subjects to track your time. You can always edit these later.</p>
+</div>
+<!-- Add Subject Input Card -->
+<div class="bg-[#1E1E1E] rounded-2xl p-md mb-xl border border-[#2A2A2A]">
+<div class="flex items-center gap-sm mb-md">
+<input class="bg-transparent border-none text-white placeholder-[#9E9E9E] focus:ring-0 flex-1 font-medium" placeholder="e.g. Mathematics" type="text"/>
+<button class="bg-[#2D6BE4] text-white px-5 py-2 rounded-[10px] font-bold text-sm hover:opacity-90 active:scale-95 transition-all">
+                    Add
+                </button>
+</div>
+<div class="flex items-center gap-3 overflow-x-auto no-scrollbar">
+<button class="w-8 h-8 rounded-full bg-[#4A90E2] border-2 border-white flex-shrink-0 ring-2 ring-[#4A90E2] ring-offset-2 ring-offset-[#1E1E1E]"></button>
+<button class="w-8 h-8 rounded-full bg-[#27AE60] flex-shrink-0"></button>
+<button class="w-8 h-8 rounded-full bg-[#8E44AD] flex-shrink-0"></button>
+<button class="w-8 h-8 rounded-full bg-[#E74C3C] flex-shrink-0"></button>
+<button class="w-8 h-8 rounded-full bg-[#F1C40F] flex-shrink-0"></button>
+</div>
+</div>
+<!-- Quick Add Section -->
+<div class="mb-xl">
+<h2 class="text-[#9E9E9E] text-[12px] font-bold tracking-widest mb-md uppercase">Quick Add</h2>
+<div class="flex gap-2 overflow-x-auto no-scrollbar pb-2">
+<button class="flex items-center gap-1.5 bg-[#2A2A2A] text-[#4A90E2] px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap active:scale-95 transition-all border border-[#2D6BE4]">
+<span class="material-symbols-outlined text-[#4A90E2] text-lg">add</span>
+                    History
+                </button>
+<button class="flex items-center gap-1.5 bg-[#2A2A2A] text-[#4A90E2] px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap active:scale-95 transition-all border border-[#2D6BE4]">
+<span class="material-symbols-outlined text-[#4A90E2] text-lg">add</span>
+                    Biology
+                </button>
+<button class="flex items-center gap-1.5 bg-[#2A2A2A] text-[#4A90E2] px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap active:scale-95 transition-all border border-[#2D6BE4]">
+<span class="material-symbols-outlined text-[#4A90E2] text-lg">add</span>
+                    Programming
+                </button>
+<button class="flex items-center gap-1.5 bg-[#2A2A2A] text-[#4A90E2] px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap active:scale-95 transition-all border border-[#2D6BE4]">
+<span class="material-symbols-outlined text-[#4A90E2] text-lg">add</span>
+                    Art
+                </button>
+</div>
+</div>
+<!-- Your Subjects List -->
+<div class="flex-1">
+<h2 class="text-[#9E9E9E] text-[12px] font-bold tracking-widest mb-md uppercase">Your Subjects</h2>
+<div class="space-y-3">
+<!-- Card 1 -->
+<div class="flex items-center bg-[#1E1E1E] h-16 rounded-2xl overflow-hidden border border-[#2A2A2A]" style="background: linear-gradient(90deg, rgba(74, 144, 226, 0.08) 0%, transparent 100%);">
+<div class="w-1.5 h-full bg-[#4A90E2]"></div>
+<div class="flex-1 flex items-center justify-between px-md">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-[#9E9E9E] cursor-grab">drag_indicator</span>
+<div>
+<h3 class="text-white font-semibold">Mathematics</h3>
+<p class="text-[#9E9E9E] text-xs">0h tracked</p>
+</div>
+</div>
+<button class="text-[#E74C3C] p-2 hover:bg-[#2A2A2A] rounded-lg transition-colors">
+<span class="material-symbols-outlined">delete</span>
+</button>
+</div>
+</div>
+<!-- Card 2 -->
+<div class="flex items-center bg-[#1E1E1E] h-16 rounded-2xl overflow-hidden border border-[#2A2A2A]" style="background: linear-gradient(90deg, rgba(142, 68, 173, 0.08) 0%, transparent 100%);">
+<div class="w-1.5 h-full bg-[#8E44AD]"></div>
+<div class="flex-1 flex items-center justify-between px-md">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-[#9E9E9E] cursor-grab">drag_indicator</span>
+<div>
+<h3 class="text-white font-semibold">Physics</h3>
+<p class="text-[#9E9E9E] text-xs">0h tracked</p>
+</div>
+</div>
+<button class="text-[#E74C3C] p-2 hover:bg-[#2A2A2A] rounded-lg transition-colors">
+<span class="material-symbols-outlined">delete</span>
+</button>
+</div>
+</div>
+<!-- Card 3 -->
+<div class="flex items-center bg-[#1E1E1E] h-16 rounded-2xl overflow-hidden border border-[#2A2A2A]" style="background: linear-gradient(90deg, rgba(39, 174, 96, 0.08) 0%, transparent 100%);">
+<div class="w-1.5 h-full bg-[#27AE60]"></div>
+<div class="flex-1 flex items-center justify-between px-md">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-[#9E9E9E] cursor-grab">drag_indicator</span>
+<div>
+<h3 class="text-white font-semibold">English Literature</h3>
+<p class="text-[#9E9E9E] text-xs">0h tracked</p>
+</div>
+</div>
+<button class="text-[#E74C3C] p-2 hover:bg-[#2A2A2A] rounded-lg transition-colors">
+<span class="material-symbols-outlined">delete</span>
+</button>
+</div>
+</div>
+<!-- Card 4 -->
+<div class="flex items-center bg-[#1E1E1E] h-16 rounded-2xl overflow-hidden border border-[#2A2A2A]" style="background: linear-gradient(90deg, rgba(231, 76, 60, 0.08) 0%, transparent 100%);">
+<div class="w-1.5 h-full bg-[#E74C3C]"></div>
+<div class="flex-1 flex items-center justify-between px-md">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-[#9E9E9E] cursor-grab">drag_indicator</span>
+<div>
+<h3 class="text-white font-semibold">Piano Practice</h3>
+<p class="text-[#9E9E9E] text-xs">0h tracked</p>
+</div>
+</div>
+<button class="text-[#E74C3C] p-2 hover:bg-[#2A2A2A] rounded-lg transition-colors">
+<span class="material-symbols-outlined">delete</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- Bottom Action Area -->
+<footer class="mt-auto px-margin-edge pb-safe pt-md bg-[#0F0F0F] border-t border-[#2A2A2A]">
+<div class="max-w-lg mx-auto w-full flex flex-col gap-md py-md">
+<button class="w-full bg-[#2D6BE4] text-white py-4 rounded-[14px] font-bold text-lg flex items-center justify-center gap-2 hover:opacity-90 active:scale-[0.98] transition-all shadow-[0_0_12px_rgba(45,107,228,0.25)]">
+                Let's Start
+                <span class="material-symbols-outlined">arrow_forward</span>
+</button>
+<button class="text-[#4A90E2] text-sm underline hover:text-white transition-colors text-center py-2">
+                Skip for now
+            </button>
+</div>
+</footer>
+</body></html>

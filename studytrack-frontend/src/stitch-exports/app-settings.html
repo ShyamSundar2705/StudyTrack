@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>StudyTrack Settings</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@100..900&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "inverse-primary": "#0156cf",
+                        "tertiary-fixed-dim": "#ffb691",
+                        "secondary-fixed-dim": "#a4c9ff",
+                        "on-error": "#690005",
+                        "primary-fixed-dim": "#b1c5ff",
+                        "on-tertiary-fixed": "#341100",
+                        "on-background": "#e1e2ec",
+                        "surface-bright": "#373941",
+                        "surface-container-highest": "#32343c",
+                        "primary-fixed": "#dae2ff",
+                        "primary": "#b1c5ff",
+                        "primary-container": "#2d6be4",
+                        "on-error-container": "#ffdad6",
+                        "surface-container-high": "#282a31",
+                        "outline-variant": "#424654",
+                        "error-container": "#93000a",
+                        "on-secondary-container": "#d0e1ff",
+                        "error": "#ffb4ab",
+                        "inverse-surface": "#e1e2ec",
+                        "surface-dim": "#11131a",
+                        "on-tertiary-container": "#fff6f3",
+                        "surface-tint": "#b1c5ff",
+                        "outline": "#8d909f",
+                        "on-tertiary-fixed-variant": "#793100",
+                        "surface-container": "#1d1f27",
+                        "surface-variant": "#32343c",
+                        "tertiary-fixed": "#ffdbcb",
+                        "secondary-fixed": "#d4e3ff",
+                        "on-primary-container": "#f8f7ff",
+                        "on-secondary": "#00315d",
+                        "surface-container-lowest": "#0c0e15",
+                        "on-tertiary": "#552000",
+                        "inverse-on-surface": "#2e3038",
+                        "tertiary-container": "#bd5100",
+                        "secondary-container": "#0164b4",
+                        "on-surface": "#e1e2ec",
+                        "on-surface-variant": "#c3c6d6",
+                        "on-primary-fixed-variant": "#00409f",
+                        "tertiary": "#ffb691",
+                        "on-secondary-fixed": "#001c39",
+                        "on-primary-fixed": "#001847",
+                        "on-secondary-fixed-variant": "#004883",
+                        "surface-container-low": "#191b23",
+                        "background": "#11131a",
+                        "on-primary": "#002c71",
+                        "secondary": "#a4c9ff",
+                        "surface": "#11131a"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "stack-lg": "32px",
+                        "gutter": "16px",
+                        "container-padding": "24px",
+                        "stack-sm": "8px",
+                        "unit": "8px",
+                        "stack-md": "16px"
+                    },
+                    "fontFamily": {
+                        "body-md": ["Lexend"],
+                        "h1": ["Lexend"],
+                        "caption": ["Lexend"],
+                        "label-md": ["Lexend"],
+                        "h2": ["Lexend"],
+                        "h3": ["Lexend"],
+                        "body-lg": ["Lexend"]
+                    },
+                    "fontSize": {
+                        "body-md": ["16px", {"lineHeight": "1.6", "letterSpacing": "0", "fontWeight": "400"}],
+                        "h1": ["40px", {"lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                        "caption": ["12px", {"lineHeight": "1.4", "letterSpacing": "0", "fontWeight": "400"}],
+                        "label-md": ["14px", {"lineHeight": "1.0", "letterSpacing": "0.02em", "fontWeight": "500"}],
+                        "h2": ["32px", {"lineHeight": "1.3", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                        "h3": ["24px", {"lineHeight": "1.4", "letterSpacing": "0", "fontWeight": "600"}],
+                        "body-lg": ["18px", {"lineHeight": "1.6", "letterSpacing": "0", "fontWeight": "400"}]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body {
+            background-color: #0F0F0F;
+            color: #e1e2ec;
+        }
+        .settings-card {
+            background-color: #1E1E1E;
+            border: 1px solid #2C2C2C;
+            border-radius: 14px;
+            overflow: hidden;
+        }
+        .row-border {
+            border-bottom: 1px solid #2C2C2C;
+        }
+        .row-border:last-child {
+            border-bottom: none;
+        }
+        /* Custom Toggle Switch */
+        .toggle-checkbox:checked + .toggle-label {
+            background-color: #2D6BE4;
+        }
+        .toggle-checkbox:checked + .toggle-label:after {
+            left: calc(100% - 2px);
+            transform: translateX(-100%);
+        }
+        .toggle-label:after {
+            content: '';
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 18px;
+            height: 18px;
+            background: white;
+            border-radius: 90px;
+            transition: 0.2s;
+        }
+        .section-header {
+            font-size: 15px;
+            font-weight: 700;
+            color: #BBBBBB;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            padding-left: 0.25rem;
+        }
+    </style>
+<style>
+        body {
+            min-height: max(884px, 100dvh);
+        }
+    </style>
+</head>
+<body class="font-body-md antialiased pb-24">
+<!-- Top App Bar -->
+<header class="fixed top-0 left-0 right-0 z-50 bg-neutral-950/80 backdrop-blur-md border-b border-[#2C2C2C] h-16 flex items-center px-4 justify-between">
+<div class="flex items-center gap-4">
+<button class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-neutral-800/50 transition-colors active:scale-95 duration-200">
+<span class="material-symbols-outlined text-blue-600 dark:text-[#2D6BE4]" data-icon="arrow_back">arrow_back</span>
+</button>
+<h1 class="text-lg font-semibold text-neutral-100 font-['Lexend'] tracking-tight">Settings</h1>
+</div>
+</header>
+<main class="mt-20 px-4 max-w-2xl mx-auto space-y-6">
+<!-- User Profile Row -->
+<div class="flex items-center justify-between bg-neutral-800/20 p-4 rounded-xl border border-[#2C2C2C]">
+<div class="flex items-center gap-4">
+<div class="w-14 h-14 bg-primary-container rounded-full flex items-center justify-center text-white font-h3">
+                S
+            </div>
+<div>
+<h2 class="font-h3 text-lg">Shyam</h2>
+<p class="text-neutral-500 text-caption">@shyam_studies</p>
+</div>
+</div>
+<button class="flex items-center gap-1 text-[#2D6BE4] font-label-md hover:opacity-80">
+            Edit profile
+            <span class="material-symbols-outlined text-[18px]" data-icon="arrow_forward">arrow_forward</span>
+</button>
+</div>
+<!-- Notifications Section -->
+<section class="space-y-2">
+<h3 class="section-header">NOTIFICATIONS</h3>
+<div class="settings-card">
+<div class="p-4 flex items-center justify-between row-border">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-[#4A90E2]" data-icon="notifications">notifications</span>
+<span class="font-label-md">Push</span>
+</div>
+<div class="relative inline-block w-11 h-6 transition duration-200 ease-in-out align-middle select-none">
+<input checked="" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer invisible" id="push" name="push" type="checkbox"/>
+<label class="toggle-label block overflow-hidden h-6 rounded-full bg-neutral-700 cursor-pointer relative" for="push"></label>
+</div>
+</div>
+<div class="p-4 flex items-center justify-between row-border">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-[#4A90E2]" data-icon="alarm">alarm</span>
+<span class="font-label-md">Reminders</span>
+</div>
+<div class="flex items-center gap-3">
+<span class="text-caption text-neutral-500">8:00 PM</span>
+<div class="relative inline-block w-11 h-6 transition duration-200 ease-in-out align-middle select-none">
+<input checked="" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer invisible" id="reminders" type="checkbox"/>
+<label class="toggle-label block overflow-hidden h-6 rounded-full bg-neutral-700 cursor-pointer relative" for="reminders"></label>
+</div>
+</div>
+</div>
+<div class="p-4 flex items-center justify-between row-border">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-[#4A90E2]" data-icon="group">group</span>
+<span class="font-label-md">Group Activity</span>
+</div>
+<div class="relative inline-block w-11 h-6 transition duration-200 ease-in-out align-middle select-none">
+<input class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer invisible" id="group" type="checkbox"/>
+<label class="toggle-label block overflow-hidden h-6 rounded-full bg-neutral-700 cursor-pointer relative" for="group"></label>
+</div>
+</div>
+<div class="p-4 flex items-center justify-between row-border">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-[#4A90E2]" data-icon="emoji_events">emoji_events</span>
+<span class="font-label-md">Achievement Alerts</span>
+</div>
+<div class="relative inline-block w-11 h-6 transition duration-200 ease-in-out align-middle select-none">
+<input checked="" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer invisible" id="achieve" type="checkbox"/>
+<label class="toggle-label block overflow-hidden h-6 rounded-full bg-neutral-700 cursor-pointer relative" for="achieve"></label>
+</div>
+</div>
+</div>
+</section>
+<!-- Focus Mode Section -->
+<section class="space-y-2">
+<h3 class="section-header">FOCUS MODE</h3>
+<div class="settings-card">
+<div class="p-4 flex items-center justify-between row-border">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-[#4A90E2]" data-icon="center_focus_strong">center_focus_strong</span>
+<span class="font-label-md">Focus Mode</span>
+</div>
+<div class="relative inline-block w-11 h-6 transition duration-200 ease-in-out align-middle select-none">
+<input checked="" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer invisible" id="focus_on" type="checkbox"/>
+<label class="toggle-label block overflow-hidden h-6 rounded-full bg-neutral-700 cursor-pointer relative" for="focus_on"></label>
+</div>
+</div>
+<div class="p-4 flex items-center justify-between row-border">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-[#4A90E2]" data-icon="wb_sunny">wb_sunny</span>
+<span class="font-label-md">Keep Awake</span>
+</div>
+<div class="relative inline-block w-11 h-6 transition duration-200 ease-in-out align-middle select-none">
+<input checked="" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer invisible" id="keep_awake" type="checkbox"/>
+<label class="toggle-label block overflow-hidden h-6 rounded-full bg-neutral-700 cursor-pointer relative" for="keep_awake"></label>
+</div>
+</div>
+<div class="p-4 flex items-center justify-between row-border">
+<div class="flex flex-col gap-1">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-[#4A90E2]" data-icon="visibility_off">visibility_off</span>
+<span class="font-label-md">Hide Timer Digits</span>
+</div>
+<p class="text-caption text-neutral-500 ml-9 leading-tight">Reduce pressure by hiding numerical countdown</p>
+</div>
+<div class="relative inline-block w-11 h-6 transition duration-200 ease-in-out align-middle select-none">
+<input class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer invisible" id="hide_digits" type="checkbox"/>
+<label class="toggle-label block overflow-hidden h-6 rounded-full bg-neutral-700 cursor-pointer relative" for="hide_digits"></label>
+</div>
+</div>
+<div class="p-4 flex items-center justify-between row-border">
+<div class="flex flex-col gap-1">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-[#4A90E2]" data-icon="format_quote">format_quote</span>
+<span class="font-label-md">Motivational Quotes</span>
+</div>
+<p class="text-caption text-neutral-500 ml-9 leading-tight">Display inspiring messages during sessions</p>
+</div>
+<div class="relative inline-block w-11 h-6 transition duration-200 ease-in-out align-middle select-none">
+<input checked="" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer invisible" id="quotes" type="checkbox"/>
+<label class="toggle-label block overflow-hidden h-6 rounded-full bg-neutral-700 cursor-pointer relative" for="quotes"></label>
+</div>
+</div>
+</div>
+</section>
+<!-- Pomodoro Section -->
+<section class="space-y-2">
+<h3 class="section-header">POMODORO</h3>
+<div class="settings-card">
+<div class="p-4 flex items-center justify-between row-border">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-[#4A90E2]" data-icon="timer">timer</span>
+<span class="font-label-md">Pomodoro Mode</span>
+</div>
+<div class="relative inline-block w-11 h-6 transition duration-200 ease-in-out align-middle select-none">
+<input checked="" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer invisible" id="pomo_mode" type="checkbox"/>
+<label class="toggle-label block overflow-hidden h-6 rounded-full bg-neutral-700 cursor-pointer relative" for="pomo_mode"></label>
+</div>
+</div>
+<div class="p-4 flex items-center justify-between row-border cursor-pointer hover:bg-neutral-800/30">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-[#4A90E2]" data-icon="schedule">schedule</span>
+<span class="font-label-md">Focus Time</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="text-caption" style="color: #4A90E2;">25m</span>
+<span class="material-symbols-outlined text-neutral-500 text-[18px]" data-icon="chevron_right">chevron_right</span>
+</div>
+</div>
+<div class="p-4 flex items-center justify-between row-border cursor-pointer hover:bg-neutral-800/30">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-[#4A90E2]" data-icon="coffee">coffee</span>
+<span class="font-label-md">Break Intervals</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="text-caption" style="color: #4A90E2;">5m / 15m</span>
+<span class="material-symbols-outlined text-neutral-500 text-[18px]" data-icon="chevron_right">chevron_right</span>
+</div>
+</div>
+<div class="p-4 flex items-center justify-between row-border">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-[#4A90E2]" data-icon="rebase_edit">rebase_edit</span>
+<span class="font-label-md">Sound</span>
+</div>
+<span class="text-caption" style="color: #4A90E2;">Soft chime</span>
+</div>
+</div>
+</section>
+<!-- App Blocker Section -->
+<section class="space-y-2">
+<h3 class="section-header">APP BLOCKER</h3>
+<div class="settings-card">
+<div class="p-4 flex items-center justify-between row-border">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-[#4A90E2]" data-icon="block">block</span>
+<span class="font-label-md">Enable Blocker</span>
+</div>
+<div class="relative inline-block w-11 h-6 transition duration-200 ease-in-out align-middle select-none">
+<input checked="" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer invisible" id="block_on" type="checkbox"/>
+<label class="toggle-label block overflow-hidden h-6 rounded-full bg-neutral-700 cursor-pointer relative" for="block_on"></label>
+</div>
+</div>
+<div class="p-4 flex items-center justify-between row-border bg-red-500/5">
+<div class="flex flex-col gap-1">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-red-500" data-icon="lock">lock</span>
+<span class="font-label-md text-red-100">Strict Mode</span>
+</div>
+<p class="text-caption text-neutral-500 ml-9 leading-tight">Prevents disabling focus once started</p>
+</div>
+<div class="relative inline-block w-11 h-6 transition duration-200 ease-in-out align-middle select-none">
+<input class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer invisible" id="strict" type="checkbox"/>
+<label class="toggle-label block overflow-hidden h-6 rounded-full bg-neutral-700 cursor-pointer relative" for="strict"></label>
+</div>
+</div>
+</div>
+</section>
+<!-- Appearance Section -->
+<section class="space-y-2">
+<h3 class="section-header">APPEARANCE</h3>
+<div class="settings-card">
+<div class="p-4 flex items-center justify-between row-border">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-[#4A90E2]" data-icon="dark_mode">dark_mode</span>
+<span class="font-label-md">Theme</span>
+</div>
+<div class="flex bg-neutral-800 p-1 rounded-lg border border-[#2D6BE4]">
+<button class="px-3 py-1 bg-[#1E1E1E] rounded-md text-caption font-bold text-white shadow-sm" style="width: 44px; height: 26px; display: flex; align-items: center; justify-content: center; padding: 0;">Dark</button>
+<button class="px-3 py-1 text-neutral-500 text-caption" style="width: 44px; height: 26px; display: flex; align-items: center; justify-content: center; padding: 0;">Light</button>
+</div>
+</div>
+<div class="p-4 flex items-center justify-between row-border">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-[#4A90E2]" data-icon="palette">palette</span>
+<span class="font-label-md">Accent Color</span>
+</div>
+<div class="w-6 h-6 rounded-full bg-[#2D6BE4] border-2 border-white/20"></div>
+</div>
+</div>
+</section>
+<!-- Section 6: Data & Privacy -->
+<section class="space-y-2">
+<h3 class="section-header">DATA &amp; PRIVACY</h3>
+<div class="settings-card">
+<div class="p-4 flex items-center justify-between row-border">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-[#4A90E2]" data-icon="cloud">cloud</span>
+<span class="font-label-md text-white">Sync Across Devices</span>
+</div>
+<div class="relative inline-block w-11 h-6 transition duration-200 ease-in-out align-middle select-none">
+<input checked="" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer invisible" id="sync_devices" type="checkbox"/>
+<label class="toggle-label block overflow-hidden h-6 rounded-full bg-neutral-700 cursor-pointer relative" for="sync_devices"></label>
+</div>
+</div>
+<div class="p-4 flex items-center justify-between row-border cursor-pointer hover:bg-neutral-800/30">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-[#4A90E2]" data-icon="download">download</span>
+<span class="font-label-md text-white">Backup Study Data</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="text-[12px] text-neutral-500">Last: Today</span>
+<span class="material-symbols-outlined text-neutral-500 text-[18px]" data-icon="chevron_right">chevron_right</span>
+</div>
+</div>
+<div class="p-4 flex items-center justify-between row-border cursor-pointer hover:bg-neutral-800/30">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-[#4A90E2]" data-icon="export_notes">export_notes</span>
+<span class="font-label-md text-white">Export My Data</span>
+</div>
+<span class="material-symbols-outlined text-neutral-500" data-icon="chevron_right">chevron_right</span>
+</div>
+<div class="p-4 h-[64px] flex items-center justify-between row-border">
+<div class="flex flex-col">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-[#4A90E2]" data-icon="bar_chart">bar_chart</span>
+<span class="font-label-md text-white">Share Analytics</span>
+</div>
+<p class="text-[11px] text-neutral-500 ml-9 leading-tight">Help improve StudyTrack anonymously</p>
+</div>
+<div class="relative inline-block w-11 h-6 transition duration-200 ease-in-out align-middle select-none">
+<input checked="" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer invisible" id="share_analytics" type="checkbox"/>
+<label class="toggle-label block overflow-hidden h-6 rounded-full bg-neutral-700 cursor-pointer relative" for="share_analytics"></label>
+</div>
+</div>
+<div class="p-4 flex items-center justify-between row-border cursor-pointer hover:bg-neutral-800/30">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-[#4A90E2]" data-icon="shield">shield</span>
+<span class="font-label-md text-white">Privacy Policy</span>
+</div>
+<span class="material-symbols-outlined text-neutral-500 text-[14px]" data-icon="launch">launch</span>
+</div>
+<div class="p-4 flex items-center justify-between row-border cursor-pointer hover:bg-neutral-800/30">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-[#4A90E2]" data-icon="description">description</span>
+<span class="font-label-md text-white">Terms of Service</span>
+</div>
+<span class="material-symbols-outlined text-neutral-500 text-[14px]" data-icon="launch">launch</span>
+</div>
+</div>
+</section>
+<!-- Account Section -->
+<section class="space-y-2">
+<h3 class="section-header">ACCOUNT</h3>
+<div class="settings-card">
+<div class="p-4 flex items-center justify-between row-border hover:bg-neutral-800/30 cursor-pointer">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-[#4A90E2]" data-icon="mail">mail</span>
+<span class="font-label-md">Change Email</span>
+</div>
+<span class="material-symbols-outlined text-neutral-500" data-icon="chevron_right">chevron_right</span>
+</div>
+<div class="p-4 flex items-center justify-between row-border hover:bg-red-900/20 cursor-pointer transition-colors" style="background-color: rgba(231, 76, 60, 0.08); border-left: 2px solid #E74C3C;">
+<div class="flex flex-col gap-1">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-red-500" data-icon="delete_forever">delete_forever</span>
+<span class="font-label-md text-red-400">Delete Account</span>
+</div>
+<p class="text-caption text-neutral-500 ml-9 leading-tight">This will permanently erase all focus data</p>
+</div>
+</div>
+</div>
+</section>
+<!-- App Info -->
+<div class="pt-4 flex flex-col items-center gap-4">
+<div class="flex flex-col items-center">
+<p class="text-caption text-neutral-500 uppercase tracking-widest font-bold">StudyTrack v2.4.1</p>
+<div class="flex gap-1 mt-2 text-yellow-500">
+<span class="material-symbols-outlined text-[20px]" data-icon="star" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-[20px]" data-icon="star" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-[20px]" data-icon="star" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-[20px]" data-icon="star" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-[20px]" data-icon="star" style="font-variation-settings: 'FILL' 1;">star</span>
+</div>
+<button class="mt-4 text-[#2D6BE4] font-label-md flex items-center gap-1">
+                What's New in this version
+                <span class="material-symbols-outlined text-[18px]" data-icon="launch">launch</span>
+</button>
+</div>
+<button class="w-full bg-neutral-900 border border-neutral-800 py-4 rounded-xl flex items-center justify-center gap-2 text-red-500 font-bold active:scale-95 transition-all">
+<span class="material-symbols-outlined" data-icon="logout">logout</span>
+            Sign Out
+        </button>
+</div>
+</main>
+<!-- Bottom Navigation Bar -->
+<nav class="fixed bottom-0 w-full z-50 bg-neutral-950 dark:bg-[#0F0F0F] border-t border-[#2C2C2C] flex justify-around items-center h-16 pb-safe">
+<button class="flex flex-col items-center justify-center text-neutral-500 hover:text-neutral-300 transition-colors active:opacity-70">
+<span class="material-symbols-outlined" data-icon="timer">timer</span>
+<span class="font-['Lexend'] text-[10px] font-medium">Timer</span>
+</button>
+<button class="flex flex-col items-center justify-center text-neutral-500 hover:text-neutral-300 transition-colors active:opacity-70">
+<span class="material-symbols-outlined" data-icon="bar_chart">bar_chart</span>
+<span class="font-['Lexend'] text-[10px] font-medium">Stats</span>
+</button>
+<button class="flex flex-col items-center justify-center text-neutral-500 hover:text-neutral-300 transition-colors active:opacity-70">
+<span class="material-symbols-outlined" data-icon="center_focus_strong">center_focus_strong</span>
+<span class="font-['Lexend'] text-[10px] font-medium">Focus</span>
+</button>
+<button class="flex flex-col items-center justify-center text-[#2D6BE4] font-bold">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+<span class="font-['Lexend'] text-[10px] font-medium">Settings</span>
+</button>
+</nav>
+</body></html>

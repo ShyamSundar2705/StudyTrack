@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>StudyTrack - Focus Timer</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@100..900&amp;family=JetBrains+Mono:wght@400;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-primary-fixed-variant": "#802a00",
+                        "surface-container-high": "#352721",
+                        "inverse-primary": "#a83900",
+                        "primary-fixed-dim": "#ffb59a",
+                        "on-surface": "#f7ddd4",
+                        "tertiary": "#71d2ff",
+                        "error-container": "#93000a",
+                        "on-surface-variant": "#e2bfb3",
+                        "primary": "#ffb59a",
+                        "secondary-container": "#474746",
+                        "error": "#ffb4ab",
+                        "surface-container": "#2a1c17",
+                        "surface-dim": "#1d100c",
+                        "surface-tint": "#ffb59a",
+                        "inverse-on-surface": "#3c2d27",
+                        "surface-container-low": "#261813",
+                        "on-primary": "#5b1b00",
+                        "primary-fixed": "#ffdbce",
+                        "on-error": "#690005",
+                        "background": "#1d100c",
+                        "on-background": "#f7ddd4",
+                        "surface": "#1d100c",
+                        "tertiary-fixed": "#c0e8ff",
+                        "on-tertiary-fixed": "#001e2b",
+                        "on-tertiary": "#003547",
+                        "tertiary-container": "#00a5d7",
+                        "on-error-container": "#ffdad6",
+                        "secondary": "#c8c6c5",
+                        "secondary-fixed": "#e5e2e1",
+                        "on-secondary-fixed-variant": "#474746",
+                        "tertiary-fixed-dim": "#71d2ff",
+                        "on-tertiary-fixed-variant": "#004d66",
+                        "on-secondary": "#303030",
+                        "surface-container-highest": "#41312c",
+                        "outline": "#a98a7f",
+                        "primary-container": "#2D6BE4",
+                        "outline-variant": "#594138",
+                        "on-primary-fixed": "#380d00",
+                        "on-primary-container": "#5c1c00",
+                        "secondary-fixed-dim": "#c8c6c5",
+                        "surface-container-lowest": "#170b07",
+                        "on-tertiary-container": "#003648",
+                        "on-secondary-container": "#b7b5b4",
+                        "inverse-surface": "#f7ddd4",
+                        "surface-bright": "#463630",
+                        "on-secondary-fixed": "#1b1b1c",
+                        "surface-variant": "#41312c",
+                        "study-blue": "#4A90E2",
+                        "accent-blue": "#2D6BE4"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "gutter": "16px",
+                        "base": "4px",
+                        "sm": "12px",
+                        "md": "16px",
+                        "lg": "24px",
+                        "margin-edge": "20px",
+                        "xs": "8px",
+                        "xl": "32px"
+                    },
+                    "fontFamily": {
+                        "headline-lg": ["Lexend"],
+                        "title-md": ["Lexend"],
+                        "label-sm": ["Lexend"],
+                        "body-md": ["Lexend"],
+                        "display-lg": ["Lexend"],
+                        "mono": ["JetBrains Mono"]
+                    },
+                    "fontSize": {
+                        "headline-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "0", "fontWeight": "600"}],
+                        "title-md": ["18px", {"lineHeight": "24px", "letterSpacing": "0.01em", "fontWeight": "500"}],
+                        "label-sm": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "500"}],
+                        "body-md": ["16px", {"lineHeight": "24px", "letterSpacing": "0.02em", "fontWeight": "400"}],
+                        "display-lg": ["56px", {"lineHeight": "64px", "letterSpacing": "-0.02em", "fontWeight": "700"}]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        .timer-ring { transform: rotate(-90deg); }
+        body { min-height: max(884px, 100dvh); }
+    </style>
+</head>
+<body class="bg-[#0F0F0F] text-on-surface font-body-md min-h-screen pb-32">
+<!-- Top App Bar -->
+<header class="fixed top-0 w-full z-50 bg-[#0F0F0F] border-b border-neutral-800 flex justify-between items-center px-5 h-16">
+<h1 class="font-headline-lg text-title-md text-white">StudyTrack</h1>
+<div class="flex items-center gap-4">
+<button class="text-neutral-500 hover:bg-neutral-800 transition-colors p-2 rounded-full active:scale-95 duration-150">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</button>
+<div class="h-8 w-8 rounded-full bg-neutral-700 flex items-center justify-center overflow-hidden">
+<span class="material-symbols-outlined text-neutral-400" data-icon="person">person</span>
+</div>
+</div>
+</header>
+<main class="pt-20 px-margin-edge">
+<!-- Subject Selector -->
+<section class="mt-4 mb-8 -mx-margin-edge">
+<div class="flex overflow-x-auto no-scrollbar gap-3 px-margin-edge">
+<button class="flex-shrink-0 px-5 py-2 rounded-full bg-study-blue text-white font-title-md text-sm">
+                Mathematics
+            </button>
+<button class="flex-shrink-0 px-5 py-2 rounded-full bg-[#1E1E1E] text-neutral-400 font-title-md text-sm border border-transparent">
+                Physics
+            </button>
+<button class="flex-shrink-0 px-5 py-2 rounded-full bg-[#1E1E1E] text-neutral-400 font-title-md text-sm border border-transparent">
+                English Lit
+            </button>
+<button class="flex-shrink-0 px-5 py-2 rounded-full bg-[#1E1E1E] text-neutral-400 font-title-md text-sm border border-transparent">
+                Piano
+            </button>
+<button class="flex-shrink-0 px-4 py-2 rounded-full bg-transparent border border-neutral-700 text-accent-blue flex items-center gap-1 font-title-md text-sm">
+<span class="material-symbols-outlined text-[18px]" data-icon="add">add</span>
+                Add
+            </button>
+</div>
+</section>
+<!-- Timer Section -->
+<section class="flex flex-col items-center justify-center py-8 relative">
+<div class="absolute text-study-blue font-bold tracking-widest text-[12px] top-0">
+            MATHEMATICS
+        </div>
+<div class="relative w-[280px] h-[280px] flex items-center justify-center mt-6">
+<!-- Circular Ring -->
+<svg class="absolute w-full h-full timer-ring">
+<circle cx="140" cy="140" fill="transparent" r="130" stroke="#2A2A2A" stroke-width="4"></circle>
+<circle cx="140" cy="140" fill="transparent" r="130" stroke="#4A90E2" stroke-dasharray="816" stroke-dashoffset="816" stroke-linecap="round" stroke-width="6"></circle>
+</svg>
+<div class="text-center z-10">
+<div class="font-mono text-[56px] font-bold text-white tracking-tighter">00:00:00</div>
+<div class="text-neutral-500 font-label-sm mt-1">Today 3h 24m</div>
+</div>
+</div>
+</section>
+<!-- Timer Controls -->
+<section class="flex items-center justify-center gap-10 mt-8 mb-12">
+<div class="flex flex-col items-center gap-2">
+<button class="w-[52px] h-[52px] rounded-full bg-[#1E1E1E] flex items-center justify-center text-white active:scale-90 transition-transform">
+<span class="material-symbols-outlined" data-icon="edit">edit</span>
+</button>
+<span class="text-[10px] text-neutral-500 uppercase tracking-widest font-bold">Manual</span>
+</div>
+<button class="w-[72px] h-[72px] rounded-full bg-accent-blue flex items-center justify-center text-white shadow-[0_0_30px_rgba(45,107,228,0.4)] active:scale-95 transition-transform">
+<span class="material-symbols-outlined text-[40px] leading-none ml-1" data-icon="play_arrow" data-weight="fill" style="font-variation-settings: 'FILL' 1;">play_arrow</span>
+</button>
+<div class="flex flex-col items-center gap-2">
+<button class="w-[52px] h-[52px] rounded-full bg-[#1E1E1E] flex items-center justify-center text-white active:scale-90 transition-transform">
+<span class="material-symbols-outlined" data-icon="timer">timer</span>
+</button>
+<span class="text-[10px] text-neutral-500 uppercase tracking-widest font-bold">Pomo</span>
+</div>
+</section>
+<!-- Sessions List -->
+<section class="pb-8">
+<div class="flex justify-between items-center mb-5">
+<h2 class="text-white font-headline-lg text-title-md">Today's Sessions</h2>
+<button class="text-study-blue font-title-md text-sm flex items-center gap-1">
+                See all
+                <span class="material-symbols-outlined text-sm" data-icon="arrow_forward">arrow_forward</span>
+</button>
+</div>
+<div class="space-y-4">
+<!-- Card 1 -->
+<div class="bg-[#1E1E1E] p-md rounded-xl flex items-center justify-between border-l-4 border-study-blue">
+<div class="flex items-center gap-4">
+<div class="w-2 h-2 rounded-full bg-study-blue"></div>
+<div>
+<div class="text-white font-title-md">Mathematics</div>
+<div class="text-neutral-500 text-sm">9:30 AM - 11:15 AM</div>
+</div>
+</div>
+<div class="text-white font-title-md">1h 45m</div>
+</div>
+<!-- Card 2 -->
+<div class="bg-[#1E1E1E] p-md rounded-xl flex items-center justify-between border-l-4 border-purple-500">
+<div class="flex items-center gap-4">
+<div class="w-2 h-2 rounded-full bg-purple-500"></div>
+<div>
+<div class="text-white font-title-md">Physics</div>
+<div class="text-neutral-500 text-sm">2:00 PM</div>
+</div>
+</div>
+<div class="text-white font-title-md">58m</div>
+</div>
+<!-- Dash Card -->
+<button class="w-full border-2 border-dashed border-neutral-800 p-md rounded-xl flex items-center justify-center gap-2 text-neutral-500 active:bg-neutral-800 transition-colors">
+<span class="material-symbols-outlined text-sm text-study-blue" data-icon="history">history</span>
+<span class="font-title-md text-sm">Log a past session</span>
+</button>
+</div>
+</section>
+</main>
+<!-- Bottom Nav Bar -->
+<nav class="fixed bottom-0 left-0 w-full bg-[#1E1E1E] flex justify-around items-center h-20 pb-safe px-2 rounded-t-lg z-50 shadow-2xl border-t border-neutral-800">
+<!-- Home (Active) -->
+<a class="flex flex-col items-center justify-center text-accent-blue gap-1 relative" href="#">
+<div class="absolute -top-[2px] w-8 h-[2px] bg-accent-blue rounded-full"></div>
+<span class="material-symbols-outlined" data-icon="timer" data-weight="fill" style="font-variation-settings: 'FILL' 1;">timer</span>
+<span class="font-['Lexend'] text-[10px] font-medium tracking-tight">Focus</span>
+</a>
+<!-- Stats -->
+<a class="flex flex-col items-center justify-center text-neutral-500 gap-1 hover:text-accent-blue transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="bar_chart">bar_chart</span>
+<span class="font-['Lexend'] text-[10px] font-medium tracking-tight">Stats</span>
+</a>
+<!-- Library -->
+<a class="flex flex-col items-center justify-center text-neutral-500 gap-1 hover:text-accent-blue transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="book_4">book_4</span>
+<span class="font-['Lexend'] text-[10px] font-medium tracking-tight">Library</span>
+</a>
+<!-- Goals -->
+<a class="flex flex-col items-center justify-center text-neutral-500 gap-1 hover:text-accent-blue transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="emoji_events">emoji_events</span>
+<span class="font-['Lexend'] text-[10px] font-medium tracking-tight">Goals</span>
+</a>
+<!-- Profile -->
+<a class="flex flex-col items-center justify-center text-neutral-500 gap-1 hover:text-accent-blue transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="person">person</span>
+<span class="font-['Lexend'] text-[10px] font-medium tracking-tight">Profile</span>
+</a>
+</nav>
+</body></html>

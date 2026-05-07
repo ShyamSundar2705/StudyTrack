@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>StudyTrack Planner</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-tint": "#b1c5ff",
+                        "surface-container-highest": "#32343c",
+                        "surface-container": "#1d1f27",
+                        "on-secondary-fixed-variant": "#004883",
+                        "tertiary-fixed-dim": "#ffb691",
+                        "outline": "#8d909f",
+                        "on-tertiary": "#552000",
+                        "on-surface": "#e1e2ec",
+                        "error": "#ffb4ab",
+                        "on-tertiary-container": "#fff6f3",
+                        "on-primary-fixed": "#001847",
+                        "secondary": "#a4c9ff",
+                        "secondary-container": "#0164b4",
+                        "inverse-surface": "#e1e2ec",
+                        "surface-bright": "#373941",
+                        "outline-variant": "#424654",
+                        "on-tertiary-fixed-variant": "#793100",
+                        "inverse-on-surface": "#2e3038",
+                        "surface-container-lowest": "#0c0e15",
+                        "on-primary-container": "#f8f7ff",
+                        "on-secondary-container": "#d0e1ff",
+                        "tertiary-container": "#bd5100",
+                        "primary-fixed": "#dae2ff",
+                        "primary-container": "#2d6be4",
+                        "tertiary-fixed": "#ffdbcb",
+                        "primary": "#b1c5ff",
+                        "on-background": "#e1e2ec",
+                        "surface": "#11131a",
+                        "on-error-container": "#ffdad6",
+                        "surface-variant": "#32343c",
+                        "on-tertiary-fixed": "#341100",
+                        "on-surface-variant": "#c3c6d6",
+                        "inverse-primary": "#0156cf",
+                        "on-primary-fixed-variant": "#00409f",
+                        "tertiary": "#ffb691",
+                        "error-container": "#93000a",
+                        "on-error": "#690005",
+                        "on-secondary-fixed": "#001c39",
+                        "secondary-fixed-dim": "#a4c9ff",
+                        "on-primary": "#002c71",
+                        "background": "#11131a",
+                        "surface-container-low": "#191b23",
+                        "secondary-fixed": "#d4e3ff",
+                        "primary-fixed-dim": "#b1c5ff",
+                        "surface-dim": "#11131a",
+                        "surface-container-high": "#282a31",
+                        "on-secondary": "#00315d"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "2xl": "14px",
+                        "full": "9999px"
+                    },
+                    "fontFamily": {
+                        "body-md": ["Lexend"],
+                        "caption": ["Lexend"],
+                        "h3": ["Lexend"],
+                        "body-lg": ["Lexend"],
+                        "h2": ["Lexend"],
+                        "label-md": ["Lexend"],
+                        "h1": ["Lexend"],
+                        "mono": ["JetBrains Mono"]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body { background-color: #0F0F0F; color: #e1e2ec; }
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+        .date-active-glow { box-shadow: 0 0 15px rgba(45, 107, 228, 0.4); }
+        .pulse-ring { animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: .5; transform: scale(1.1); } }
+        ::-webkit-scrollbar { display: none; }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+</head>
+<body class="font-body-md selection:bg-primary-container selection:text-white">
+<!-- Top Bar Component -->
+<header class="bg-neutral-950 border-b border-neutral-800 flex items-center justify-between px-6 h-16 w-full fixed top-0 z-50">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-blue-600 dark:text-blue-500" data-icon="calendar_add_on">calendar_add_on</span>
+<h1 class="font-['Lexend'] text-xl font-bold text-white">Planner</h1>
+</div>
+<button class="hover:bg-neutral-900 transition-colors p-2 rounded-full active:scale-95 transition-transform">
+<span class="material-symbols-outlined text-neutral-400" data-icon="more_vert">more_vert</span>
+</button>
+</header>
+<main class="pt-20 pb-28 px-4 max-w-md mx-auto space-y-6">
+<!-- Date Strip -->
+<section class="flex overflow-x-auto gap-3 py-2 scroll-smooth">
+<div class="flex flex-col items-center gap-2 min-w-[56px]">
+<div class="w-14 h-20 flex flex-col items-center justify-center rounded-2xl bg-[#1E1E1E] border border-neutral-800">
+<span class="text-caption text-neutral-500">Mon</span>
+<span class="text-h3 font-mono">22</span>
+</div>
+<div class="w-1.5 h-1.5 rounded-full bg-blue-500 opacity-40"></div>
+</div>
+<div class="flex flex-col items-center gap-2 min-w-[56px]">
+<div class="w-14 h-20 flex flex-col items-center justify-center rounded-2xl bg-[#1E1E1E] border border-neutral-800">
+<span class="text-caption text-neutral-500">Tue</span>
+<span class="text-h3 font-mono">23</span>
+</div>
+<div class="w-1.5 h-1.5 rounded-full bg-blue-500"></div>
+</div>
+<div class="flex flex-col items-center gap-2 min-w-[56px]">
+<div class="w-14 h-20 flex flex-col items-center justify-center rounded-2xl bg-[#1E1E1E] border border-neutral-800">
+<span class="text-caption text-neutral-500">Wed</span>
+<span class="text-h3 font-mono">24</span>
+</div>
+<div class="w-1.5 h-1.5 rounded-full bg-blue-500"></div>
+</div>
+<!-- Active Today -->
+<div class="flex flex-col items-center gap-2 min-w-[52px]">
+<div class="w-[52px] h-20 flex flex-col items-center justify-center rounded-2xl bg-[#2D6BE4] border border-blue-400/30 date-active-glow">
+<span class="text-caption text-blue-100 font-bold">Thu</span>
+<span class="text-h3 font-mono text-white">25</span>
+</div>
+<div class="w-1.5 h-1.5 rounded-full bg-blue-400"></div>
+</div>
+<div class="flex flex-col items-center gap-2 min-w-[56px]">
+<div class="w-14 h-20 flex flex-col items-center justify-center rounded-2xl bg-[#1E1E1E] border border-neutral-800">
+<span class="text-caption text-neutral-500">Fri</span>
+<span class="text-h3 font-mono">26</span>
+</div>
+</div>
+<div class="flex flex-col items-center gap-2 min-w-[56px]">
+<div class="w-14 h-20 flex flex-col items-center justify-center rounded-2xl bg-[#1E1E1E] border border-neutral-800">
+<span class="text-caption text-neutral-500">Sat</span>
+<span class="text-h3 font-mono">27</span>
+</div>
+</div>
+<div class="flex flex-col items-center gap-2 min-w-[56px]">
+<div class="w-14 h-20 flex flex-col items-center justify-center rounded-2xl bg-[#1E1E1E] border border-neutral-800">
+<span class="text-caption text-neutral-500">Sun</span>
+<span class="text-h3 font-mono">28</span>
+</div>
+</div>
+</section>
+<!-- Yesterday Recap Card -->
+<section class="bg-[#1E1E1E] rounded-2xl border border-[#2C2C2C] border-l-[3px] border-l-[#2D6BE4] p-5 shadow-sm"><div class="flex justify-between items-start mb-4">
+<h3 class="text-label-md font-bold text-neutral-400 uppercase tracking-wider">Yesterday Recap</h3>
+</div>
+<div class="flex items-center justify-between">
+<div class="flex-1 text-center">
+<p class="text-h3 font-mono text-white">14</p>
+<p class="text-[10px] text-neutral-500 uppercase tracking-tighter">Day Streak</p>
+</div>
+<div class="h-8 w-[0.5px] bg-[#2A2A2A]"></div>
+<div class="flex-1 text-center">
+<p class="text-h3 font-mono text-white">4.5h</p>
+<p class="text-[10px] text-neutral-500 uppercase tracking-tighter">Studied</p>
+</div>
+<div class="h-8 w-[0.5px] bg-[#2A2A2A]"></div>
+<div class="flex-1 text-center">
+<p class="text-h3 font-mono text-white">3/4</p>
+<p class="text-[10px] text-neutral-500 uppercase tracking-tighter">Tasks</p>
+</div>
+</div>
+<div class="mt-4 pt-4 border-t border-neutral-800 flex items-center gap-2">
+<div class="w-2 h-2 rounded-full bg-orange-500"></div>
+<p class="text-caption text-neutral-300">Incomplete: <span class="text-white font-medium">Physics revision</span></p>
+</div></section>
+<!-- Today's Tasks -->
+<section class="space-y-4">
+<div class="flex justify-between items-center px-1">
+<h2 class="text-h3 text-white">Today's Tasks</h2>
+<span class="text-caption text-neutral-500">4 total</span>
+</div>
+<div class="space-y-3">
+<!-- Task 1: Completed -->
+<div class="bg-[#1E1E1E] border border-[#2C2C2C] p-4 rounded-2xl flex items-center gap-4">
+<div class="w-6 h-6 rounded-md bg-[#2D6BE4] flex items-center justify-center">
+<span class="material-symbols-outlined text-white text-[18px]" style="font-variation-settings: 'FILL' 1;">check</span>
+</div>
+<div class="flex-1">
+<p class="text-body-md text-neutral-500 line-through">Read Chapter 5 — Mechanics</p>
+<div class="flex gap-2 mt-1">
+<span class="inline-flex items-center px-2 py-0.5 rounded bg-purple-900/30 text-[10px] text-purple-400 border border-purple-800/50">Physics</span>
+</div>
+</div>
+</div>
+<!-- Task 2: In Progress -->
+<div class="bg-[#1E1E1E] border border-blue-600/30 p-4 rounded-2xl flex items-center gap-4 relative overflow-hidden">
+<div class="absolute top-0 left-0 w-1 h-full bg-blue-500"></div>
+<div class="w-6 h-6 rounded-md border-2 border-[#2D6BE4] flex items-center justify-center">
+<div class="w-2 h-2 bg-blue-500 rounded-full pulse-ring"></div>
+</div>
+<div class="flex-1">
+<p class="text-body-md text-white font-medium">Mathematics problem sets</p>
+<div class="flex gap-2 mt-1">
+<span class="inline-flex items-center px-2 py-0.5 rounded bg-blue-900/30 text-[10px] text-blue-400 border border-blue-800/50">Maths</span>
+</div>
+</div>
+</div>
+<!-- Task 3: Pending with red accent -->
+<div class="bg-[#1E1E1E] border border-[#2C2C2C] p-4 rounded-2xl flex items-center gap-4 relative overflow-hidden">
+<div class="absolute top-0 left-0 w-1 h-full bg-red-500"></div>
+<div class="w-6 h-6 rounded-md border-2 border-neutral-700"></div>
+<div class="flex-1">
+<p class="text-body-md text-white font-medium">Physics revision</p>
+<div class="flex gap-2 mt-1">
+<span class="inline-flex items-center px-2 py-0.5 rounded bg-purple-900/30 text-[10px] text-purple-400 border border-purple-800/50">Physics</span>
+<span class="text-[10px] text-red-400 font-bold uppercase tracking-tight">Overdue</span>
+</div>
+</div>
+</div>
+<!-- Task 4: Pending -->
+<div class="bg-[#1E1E1E] border border-[#2C2C2C] p-4 rounded-2xl flex items-center gap-4">
+<div class="w-6 h-6 rounded-md border-2 border-neutral-700"></div>
+<div class="flex-1">
+<p class="text-body-md text-white font-medium">Piano scales practice</p>
+<div class="flex gap-2 mt-1">
+<span class="inline-flex items-center px-2 py-0.5 rounded bg-red-900/30 text-[10px] text-red-400 border border-red-800/50">Piano</span>
+</div>
+</div>
+</div>
+<!-- Empty State / Add Task -->
+<button class="w-full border-2 border-dashed border-neutral-800 p-4 rounded-2xl flex items-center justify-center gap-2 hover:bg-neutral-900/50 transition-colors">
+<span class="material-symbols-outlined text-neutral-500" data-icon="add_circle">add_circle</span>
+<span class="text-body-md text-neutral-500">Add another task</span>
+</button>
+</div>
+</section>
+<!-- Schedule Section -->
+<section class="space-y-4">
+<h2 class="text-h3 text-white px-1">Schedule</h2>
+<div class="space-y-4 relative ml-3">
+<!-- Vertical Line -->
+<div class="absolute left-0 top-2 bottom-2 w-px bg-neutral-800"></div>
+<!-- Event 1 -->
+<div class="relative pl-8">
+<div class="absolute left-[-4.5px] top-2 w-2.5 h-2.5 rounded-full bg-blue-500 ring-4 ring-[#0F0F0F]"></div>
+<div class="flex flex-col gap-1">
+<span class="text-caption font-mono text-blue-400 font-bold uppercase">3:00 PM</span>
+<div class="bg-[#1E1E1E] p-4 rounded-xl border border-neutral-800 border-l-4 border-l-blue-500">
+<p class="text-body-md text-white font-bold">Study group session</p>
+<p class="text-caption text-neutral-400 mt-1">Mathematics — with 3 friends</p>
+</div>
+</div>
+</div>
+<!-- Event 2 -->
+<div class="relative pl-8">
+<div class="absolute left-[-4.5px] top-2 w-2.5 h-2.5 rounded-full bg-emerald-500 ring-4 ring-[#0F0F0F]"></div>
+<div class="flex flex-col gap-1">
+<span class="text-caption font-mono text-emerald-400 font-bold uppercase">6:30 PM</span>
+<div class="bg-[#1E1E1E] p-4 rounded-xl border border-neutral-800 border-l-4 border-l-emerald-500">
+<p class="text-body-md text-white font-bold">Piano lesson</p>
+<p class="text-caption text-neutral-400 mt-1">45 min — recurring</p>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Focus Banner -->
+<section class="bg-[#0D1526] border border-[#2D6BE4]/30 rounded-2xl p-6 flex items-center justify-between">
+<div class="flex items-center gap-4">
+<div class="relative w-12 h-12 rounded-full bg-[#2D6BE4] flex items-center justify-center z-10">
+<div class="absolute inset-0 rounded-full bg-[#2D6BE4] opacity-[0.08] scale-[1.6] blur-xl -z-10"></div>
+<span class="material-symbols-outlined text-white" style="font-variation-settings: 'FILL' 1;">bolt</span>
+</div>
+<div>
+<h4 class="text-body-lg font-bold text-white">Ready to focus?</h4>
+<p class="text-caption text-blue-300">Start your deep study timer now</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-blue-400" data-icon="chevron_right">chevron_right</span>
+</section>
+</main>
+<!-- Bottom Navigation Component -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 py-3 bg-neutral-950 border-t border-neutral-800">
+<!-- Home -->
+<div class="flex flex-col items-center justify-center text-neutral-500 hover:text-neutral-200 transition-colors active:scale-90 transition-transform duration-200">
+<span class="material-symbols-outlined" data-icon="home">home</span>
+<span class="font-['Lexend'] text-[10px] font-medium tracking-tight">Home</span>
+</div>
+<!-- Planner (Active) -->
+<div class="flex flex-col items-center justify-center text-blue-500 font-bold relative active:scale-90 transition-transform duration-200">
+<span class="material-symbols-outlined" data-icon="calendar_today" style="font-variation-settings: 'FILL' 1;">calendar_today</span>
+<span class="font-['Lexend'] text-[10px] font-medium tracking-tight">Planner</span>
+<div class="absolute -bottom-3 w-8 h-1 bg-blue-500 rounded-full"></div>
+</div>
+<!-- Insights -->
+<div class="flex flex-col items-center justify-center text-neutral-500 hover:text-neutral-200 transition-colors active:scale-90 transition-transform duration-200">
+<span class="material-symbols-outlined" data-icon="analytics">analytics</span>
+<span class="font-['Lexend'] text-[10px] font-medium tracking-tight">Insights</span>
+</div>
+<!-- Groups -->
+<div class="flex flex-col items-center justify-center text-neutral-500 hover:text-neutral-200 transition-colors active:scale-90 transition-transform duration-200">
+<span class="material-symbols-outlined" data-icon="groups">groups</span>
+<span class="font-['Lexend'] text-[10px] font-medium tracking-tight">Groups</span>
+</div>
+<!-- Profile -->
+<div class="flex flex-col items-center justify-center text-neutral-500 hover:text-neutral-200 transition-colors active:scale-90 transition-transform duration-200">
+<span class="material-symbols-outlined" data-icon="person">person</span>
+<span class="font-['Lexend'] text-[10px] font-medium tracking-tight">Profile</span>
+</div>
+</nav>
+</body></html>

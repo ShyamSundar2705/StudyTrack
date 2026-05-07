@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0, viewport-fit=cover" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@100..900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "background": "#0F0F0F",
+                    "primary-fixed-dim": "#a7c8ff",
+                    "primary-fixed": "#d6e3ff",
+                    "tertiary-fixed-dim": "#71d2ff",
+                    "on-secondary-fixed-variant": "#474746",
+                    "on-tertiary-container": "#003648",
+                    "surface-dim": "#10131d",
+                    "on-secondary-container": "#b7b5b4",
+                    "inverse-primary": "#2d6be4",
+                    "error": "#ffb4ab",
+                    "surface-variant": "#2c3141",
+                    "on-tertiary-fixed-variant": "#004d66",
+                    "tertiary-fixed": "#c0e8ff",
+                    "on-primary-fixed": "#001a41",
+                    "on-surface-variant": "#b3c5e2",
+                    "inverse-on-surface": "#272d3c",
+                    "on-primary": "#002d6e",
+                    "surface-container-low": "#131826",
+                    "on-tertiary-fixed": "#001e2b",
+                    "surface-container-highest": "#2c3141",
+                    "on-error": "#690005",
+                    "primary-container": "#2D6BE4",
+                    "secondary-container": "#474746",
+                    "outline-variant": "#384159",
+                    "on-tertiary": "#003547",
+                    "primary": "#4A90E2",
+                    "surface-container-lowest": "#070b17",
+                    "surface-tint": "#4A90E2",
+                    "secondary-fixed-dim": "#c8c6c5",
+                    "secondary-fixed": "#e5e2e1",
+                    "on-primary-container": "#d6e3ff",
+                    "on-error-container": "#ffdad6",
+                    "surface-container-high": "#212735",
+                    "outline": "#7f8aa9",
+                    "inverse-surface": "#d4deef",
+                    "surface": "#10131d",
+                    "surface-bright": "#303646",
+                    "surface-container": "#171c2a",
+                    "on-primary-fixed-variant": "#004494",
+                    "tertiary": "#71d2ff",
+                    "on-surface": "#d4deef",
+                    "error-container": "#93000a",
+                    "on-secondary": "#303030",
+                    "on-background": "#d4deef",
+                    "secondary": "#c8c6c5",
+                    "tertiary-container": "#00a5d7",
+                    "on-secondary-fixed": "#1b1b1c"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "sm": "12px",
+                    "xl": "32px",
+                    "xs": "8px",
+                    "md": "16px",
+                    "margin-edge": "20px",
+                    "gutter": "16px",
+                    "lg": "24px",
+                    "base": "4px"
+            },
+            "fontFamily": {
+                    "title-md": ["Lexend"],
+                    "label-sm": ["Lexend"],
+                    "headline-lg": ["Lexend"],
+                    "body-md": ["Lexend"],
+                    "display-lg": ["Lexend"]
+            },
+            "fontSize": {
+                    "title-md": ["18px", {"lineHeight": "24px", "letterSpacing": "0.01em", "fontWeight": "500"}],
+                    "label-sm": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "500"}],
+                    "headline-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "0", "fontWeight": "600"}],
+                    "body-md": ["16px", {"lineHeight": "24px", "letterSpacing": "0.02em", "fontWeight": "400"}],
+                    "display-lg": ["56px", {"lineHeight": "64px", "letterSpacing": "-0.02em", "fontWeight": "700"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body {
+            background-color: #0F0F0F;
+            color: #FFFFFF;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+</head>
+<body class="antialiased flex flex-col min-h-screen">
+<!-- Status Bar Simulation -->
+<div class="w-full px-6 py-3 flex justify-between items-center bg-transparent z-10">
+<span class="text-white font-title-md text-[14px]">9:41</span>
+<div class="flex gap-1.5 items-center">
+<span class="material-symbols-outlined text-[18px]">signal_cellular_4_bar</span>
+<span class="material-symbols-outlined text-[18px]">wifi</span>
+<span class="material-symbols-outlined text-[18px]">battery_full</span>
+</div>
+</div>
+<main class="flex-grow flex flex-col px-6">
+<!-- Top Section (45% Intent) -->
+<section class="flex-[45] flex flex-col items-center justify-center pt-8">
+<div class="w-20 h-20 bg-[#1E1E1E] rounded-full flex items-center justify-center mb-6 shadow-xl relative">
+<div class="absolute inset-0 bg-[#2D6BE4] opacity-15 blur-2xl rounded-full -z-10"></div>
+<span class="material-symbols-outlined text-[#4A90E2] text-[40px]" data-icon="timer" style="font-variation-settings: 'FILL' 1;">timer</span>
+</div>
+<h1 class="font-headline-lg text-[28px] text-white tracking-tight mb-2">StudyTrack</h1>
+<p class="font-body-md text-[#BBBBBB] text-[16px]">Study smarter. Together.</p>
+</section>
+<!-- Middle Section (25% Intent) - Floating Bento Style Cards -->
+<section class="flex-[25] relative flex items-center justify-center py-10 overflow-visible">
+<!-- Card 1: Streak -->
+<div class="absolute transform -rotate-6 -translate-x-12 -translate-y-4 bg-[#1E1E1E] border-l-[3px] border-[#2D6BE4] rounded-xl px-4 py-3 shadow-[0_10px_20px_rgba(0,0,0,0.4)] flex items-center gap-3">
+<span class="text-lg">🔥</span>
+<span class="font-title-md text-[14px] text-white">14 Day Streak</span>
+</div>
+<!-- Card 2: Time -->
+<div class="absolute transform rotate-3 translate-x-10 translate-y-2 bg-[#1E1E1E] border-l-[3px] border-[#2D6BE4] rounded-xl px-5 py-4 shadow-[0_12px_24px_rgba(0,0,0,0.5)] z-20 flex items-center gap-3">
+<span class="text-lg">⏱</span>
+<span class="font-title-md text-[16px] text-white">4h 32m Today</span>
+</div>
+<!-- Card 3: Group -->
+<div class="absolute transform -rotate-2 -translate-x-4 translate-y-12 bg-[#1E1E1E] border-l-[3px] border-[#2D6BE4] rounded-xl px-4 py-3 shadow-[0_8px_16px_rgba(0,0,0,0.3)] flex items-center gap-3">
+<span class="text-lg">👥</span>
+<span class="font-title-md text-[14px] text-white">Group #1</span>
+</div>
+</section>
+<!-- Bottom Section (30% Intent) -->
+<section class="flex-[30] flex flex-col justify-end pb-xl">
+<!-- Primary Action -->
+<button class="w-full h-[52px] bg-white rounded-[14px] flex items-center justify-center gap-3 active:scale-95 transition-transform mb-sm shadow-sm border border-gray-200">
+<svg fill="none" height="18" viewbox="0 0 24 24" width="18" xmlns="http://www.w3.org/2000/svg">
+<path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"></path>
+<path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"></path>
+<path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"></path>
+<path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 12-4.53z" fill="#EA4335"></path>
+</svg>
+<span class="font-title-md text-[#333333] text-[16px]">Continue with Google</span>
+</button>
+<!-- Secondary Action -->
+<button class="w-full h-[52px] border-[0.5px] border-white/50 rounded-[14px] flex items-center justify-center active:bg-white/10 transition-colors mb-lg">
+<span class="font-title-md text-white text-[16px]">Sign in with Email</span>
+</button>
+<!-- Footer Meta -->
+<footer class="text-center px-4">
+<p class="font-label-sm text-[#9E9E9E] text-[11px] leading-relaxed">
+                    By continuing you agree to our <span class="text-white underline underline-offset-2">Terms</span> &amp; <span class="text-white underline underline-offset-2">Privacy Policy</span>
+</p>
+</footer>
+</section>
+</main>
+<!-- Visual Polish: Top Background Glow -->
+<div class="fixed top-[-100px] left-1/2 -translate-x-1/2 w-[300px] h-[300px] bg-[#2D6BE4] opacity-5 blur-[120px] pointer-events-none"></div>
+</body></html>

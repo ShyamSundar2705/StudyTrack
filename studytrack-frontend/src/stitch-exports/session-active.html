@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@100..900&amp;family=JetBrains+Mono:wght@400;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "inverse-primary": "#0156cf",
+                        "surface-bright": "#373941",
+                        "secondary-fixed": "#d4e3ff",
+                        "on-tertiary-fixed-variant": "#793100",
+                        "on-surface": "#e1e2ec",
+                        "on-primary": "#002c71",
+                        "surface-tint": "#b1c5ff",
+                        "primary": "#b1c5ff",
+                        "secondary-container": "#0164b4",
+                        "on-primary-fixed-variant": "#00409f",
+                        "surface-container-high": "#282a31",
+                        "primary-container": "#2d6be4",
+                        "surface-container-highest": "#32343c",
+                        "surface-variant": "#32343c",
+                        "on-tertiary": "#552000",
+                        "on-secondary-fixed-variant": "#004883",
+                        "surface-container-lowest": "#0c0e15",
+                        "surface-container-low": "#191b23",
+                        "on-surface-variant": "#c3c6d6",
+                        "primary-fixed": "#dae2ff",
+                        "on-secondary-container": "#d0e1ff",
+                        "on-tertiary-fixed": "#341100",
+                        "surface-dim": "#11131a",
+                        "secondary": "#a4c9ff",
+                        "on-tertiary-container": "#fff6f3",
+                        "outline-variant": "#424654",
+                        "on-secondary": "#00315d",
+                        "error-container": "#93000a",
+                        "primary-fixed-dim": "#b1c5ff",
+                        "tertiary": "#ffb691",
+                        "background": "#0F0F0F",
+                        "error": "#ffb4ab",
+                        "tertiary-container": "#bd5100",
+                        "secondary-fixed-dim": "#a4c9ff",
+                        "outline": "#2C2C2C",
+                        "inverse-surface": "#e1e2ec",
+                        "tertiary-fixed": "#ffdbcb",
+                        "on-background": "#e1e2ec",
+                        "on-secondary-fixed": "#001c39",
+                        "surface-container": "#1E1E1E",
+                        "on-primary-container": "#f8f7ff",
+                        "on-error-container": "#ffdad6",
+                        "tertiary-fixed-dim": "#ffb691",
+                        "on-error": "#690005",
+                        "inverse-on-surface": "#2e3038",
+                        "on-primary-fixed": "#001847",
+                        "surface": "#11131a"
+                    },
+                    fontFamily: {
+                        "h1": ["Lexend"],
+                        "h3": ["Lexend"],
+                        "h2": ["Lexend"],
+                        "label-md": ["Lexend"],
+                        "caption": ["Lexend"],
+                        "body-lg": ["Lexend"],
+                        "body-md": ["Lexend"],
+                        "mono": ["JetBrains Mono"]
+                    },
+                    fontSize: {
+                        "h1": ["40px", {"lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                        "h3": ["24px", {"lineHeight": "1.4", "letterSpacing": "0", "fontWeight": "600"}],
+                        "h2": ["32px", {"lineHeight": "1.3", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                        "label-md": ["14px", {"lineHeight": "1.0", "letterSpacing": "0.02em", "fontWeight": "500"}],
+                        "caption": ["12px", {"lineHeight": "1.4", "letterSpacing": "0", "fontWeight": "400"}],
+                        "body-lg": ["18px", {"lineHeight": "1.6", "letterSpacing": "0", "fontWeight": "400"}],
+                        "body-md": ["16px", {"lineHeight": "1.6", "letterSpacing": "0", "fontWeight": "400"}]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .timer-glow {
+            filter: drop-shadow(0 0 8px rgba(45, 107, 228, 0.4));
+        }
+        /* Refinement 1: Reduced blue radial glow */
+        .bg-aura {
+            background: radial-gradient(circle, rgba(45, 107, 228, 0.04) 0%, rgba(15, 15, 15, 0) 70%);
+            width: 280px; /* 140px radius */
+            height: 280px;
+        }
+        body {
+            min-height: max(884px, 100dvh);
+        }
+    </style>
+</head>
+<body class="bg-background text-on-surface font-body-md selection:bg-primary-container selection:text-white min-h-screen flex flex-col items-center overflow-hidden">
+<!-- 1. Status Bar Mock (Mobile Context) -->
+<div class="w-full h-8 px-6 flex justify-between items-center text-on-surface-variant opacity-80 z-50">
+<span class="text-xs font-bold font-h3">9:41</span>
+<div class="flex gap-1.5 items-center">
+<span class="material-symbols-outlined text-[14px]">signal_cellular_alt</span>
+<span class="material-symbols-outlined text-[14px]">wifi</span>
+<span class="material-symbols-outlined text-[14px]">battery_full</span>
+</div>
+</div>
+<!-- 2. Top Bar -->
+<header class="w-full h-[52px] px-4 flex justify-between items-center z-50">
+<button class="w-10 h-10 flex items-center justify-start text-[#9E9E9E] active:scale-90 transition-transform">
+<span class="material-symbols-outlined">close</span>
+</button>
+<h1 class="font-h3 text-[15px] font-bold text-white tracking-wide">Mathematics</h1>
+<button class="w-10 h-10 flex items-center justify-end text-[#9E9E9E] active:scale-90 transition-transform">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</header>
+<main class="flex-1 w-full max-w-md flex flex-col items-center pt-4 relative">
+<!-- Background Aura (Refinement 1) -->
+<div class="absolute top-[230px] left-1/2 -translate-x-1/2 -translate-y-1/2 bg-aura pointer-events-none"></div>
+<!-- 3. Session Context Pill -->
+<div class="bg-[#1E1E1E] px-4 py-2 rounded-full border-l-2 border-[#2D6BE4] shadow-[0_0_15px_rgba(45,107,228,0.1)] flex items-center gap-2 mb-12">
+<div class="w-2 h-2 rounded-full bg-[#2D6BE4] animate-pulse"></div>
+<span class="font-caption text-[#9E9E9E] text-[12px]">Focus Session • Started 2:14 PM</span>
+</div>
+<!-- 4. Main Circular Timer -->
+<div class="relative flex items-center justify-center w-[300px] h-[300px] mb-8">
+<!-- Outer Static Ring -->
+<div class="absolute w-[280px] h-[280px] rounded-full border border-[#1E1E1E]"></div>
+<!-- SVG Progress Ring (Refinement 2: Gradient Arc) -->
+<svg class="w-[260px] h-[260px] -rotate-90 timer-glow">
+<defs>
+<lineargradient id="arcGradient" x1="1" x2="0" y1="0" y2="0">
+<stop offset="0%" stop-color="#4A90E2"></stop>
+<stop offset="100%" stop-color="#2D6BE4"></stop>
+</lineargradient>
+</defs>
+<!-- Track -->
+<circle cx="130" cy="130" fill="transparent" r="125" stroke="#1A1A2E" stroke-width="5"></circle>
+<!-- Progress Arc (Refinement 2) -->
+<circle cx="130" cy="130" fill="transparent" r="125" stroke="url(#arcGradient)" stroke-dasharray="785" stroke-dashoffset="510" stroke-linecap="round" stroke-width="5"></circle>
+</svg>
+<!-- Inner Text Content -->
+<div class="absolute flex flex-col items-center">
+<span class="font-label-md text-[#4A90E2] tracking-[0.2em] text-[11px] font-bold uppercase mb-1">Focusing</span>
+<span class="font-mono text-white text-[58px] font-bold leading-none tabular-nums">01:24:38</span>
+<span class="font-caption text-[#9E9E9E] text-[12px] mt-2">elapsed</span>
+</div>
+</div>
+<!-- 5. Quote Area (Refinement 5) -->
+<div class="flex items-center gap-4 mb-12">
+<span class="material-symbols-outlined text-[#9E9E9E] text-[18px]">chevron_left</span>
+<p class="font-caption text-[#B0B0B0] text-[13px] tracking-wide">You're in the zone. Keep going.</p>
+<span class="material-symbols-outlined text-[#9E9E9E] text-[18px]">chevron_right</span>
+</div>
+<!-- 6. Unified Stats (Restructured) -->
+<div class="px-5 w-full mb-16 flex flex-row gap-[14px] justify-center">
+<!-- Today Card -->
+<div class="flex-1 bg-[#1E1E1E] rounded-[14px] p-4 shadow-[0_4px_12px_rgba(0,0,0,0.3)] border-l-[3px] border-[#2D6BE4] flex flex-col items-start min-w-0">
+<span class="text-[11px] uppercase tracking-wider text-[#9E9E9E] font-bold">Today</span>
+<span class="text-white font-semibold text-[18px] truncate">3h 24m</span>
+</div>
+<!-- Sessions Card -->
+<div class="flex-1 bg-[#1E1E1E] rounded-[14px] p-4 shadow-[0_4px_12px_rgba(0,0,0,0.3)] border-l-[3px] border-[#2D6BE4] flex flex-col items-start min-w-0">
+<span class="text-[11px] uppercase tracking-wider text-[#9E9E9E] font-bold">Sessions</span>
+<span class="text-white font-semibold text-[18px] truncate">2nd</span>
+</div>
+<!-- Streak Card -->
+<div class="flex-1 bg-[#1E1E1E] rounded-[14px] p-4 shadow-[0_4px_12px_rgba(0,0,0,0.3)] border-l-[3px] border-[#2D6BE4] flex flex-col items-start min-w-0">
+<span class="text-[11px] uppercase tracking-wider text-[#9E9E9E] font-bold">Streak</span>
+<span class="text-white font-semibold text-[18px] truncate">🔥 14</span>
+</div>
+</div>
+<!-- 7. Control Buttons (Refinement 4: Stop Button) -->
+<div class="flex items-center gap-8 mb-8">
+<!-- Note Button -->
+<div class="flex flex-col items-center gap-2">
+<button class="w-[56px] h-[56px] rounded-full bg-[#1E1E1E] text-white flex items-center justify-center active:scale-95 transition-all hover:bg-[#2C2C2C] border border-white/5">
+<span class="material-symbols-outlined text-[24px]">edit</span>
+</button>
+<span class="text-[11px] text-[#9E9E9E] font-label-md">Note</span>
+</div>
+<!-- Stop Button (Refinement 4) -->
+<div class="relative flex items-center justify-center">
+<div class="absolute w-[96px] h-[96px] rounded-full border-2 border-[#2D6BE4] opacity-20 pointer-events-none"></div>
+<button class="w-[80px] h-[80px] rounded-full bg-[#2D6BE4] text-white flex items-center justify-center shadow-[0_0_20px_rgba(45,107,228,0.5)] active:scale-90 transition-all z-10">
+<span class="material-symbols-outlined text-[28px]" style="font-variation-settings: 'FILL' 1;">stop</span>
+</button>
+</div>
+<!-- Pause Button -->
+<div class="flex flex-col items-center gap-2">
+<button class="w-[56px] h-[56px] rounded-full bg-[#1E1E1E] text-white flex items-center justify-center active:scale-95 transition-all hover:bg-[#2C2C2C] border border-white/5">
+<span class="material-symbols-outlined text-[24px]">pause</span>
+</button>
+<span class="text-[11px] text-[#9E9E9E] font-label-md">Pause</span>
+</div>
+</div>
+</main>
+<!-- Bottom Aesthetic Bar (iPhone Indicator) -->
+<div class="w-full h-12 flex justify-center items-end pb-2 opacity-50">
+<div class="w-32 h-1 bg-[#2C2C2C] rounded-full"></div>
+</div>
+</body></html>
