@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react'
 import {
   Modal, View, Text, TextInput, TouchableOpacity,
   ScrollView, Animated, Keyboard, KeyboardAvoidingView,
-  Platform, StyleSheet
+  Platform, StyleSheet, Switch
 } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
 import { colors, spacing, radius } from '../constraints/theme'
@@ -17,6 +17,9 @@ export default function TaskFormSheet({ visible, task, defaultDate, onSave, onCl
   const [estimatedMinutes, setEstimatedMinutes] = useState(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState(null)
+  const [isRecurring, setIsRecurring] = useState(task?.isRecurring ?? false)
+  const [recurringDays, setRecurringDays] = useState(task?.recurringDays ?? [])
+  const dayPillAnim = useRef(new Animated.Value(0)).current
 
   const slideAnim = useRef(new Animated.Value(400)).current
 
@@ -26,6 +29,8 @@ export default function TaskFormSheet({ visible, task, defaultDate, onSave, onCl
       setTitle(task?.title ?? '')
       setSubjectId(task?.subjectId ?? null)
       setEstimatedMinutes(task?.estimatedMinutes ?? null)
+      setIsRecurring(task?.isRecurring ?? false)
+      setRecurringDays(task?.recurringDays ?? [])
       setError(null)
       setIsSubmitting(false)
       Animated.spring(slideAnim, {
@@ -37,6 +42,14 @@ export default function TaskFormSheet({ visible, task, defaultDate, onSave, onCl
       slideAnim.setValue(400)
     }
   }, [visible])
+
+  useEffect(() => {
+    Animated.timing(dayPillAnim, {
+      toValue: isRecurring ? 1 : 0,
+      duration: 200,
+      useNativeDriver: false,
+    }).start()
+  }, [isRecurring])
 
   const handleClose = () => {
     Keyboard.dismiss()
@@ -58,6 +71,8 @@ export default function TaskFormSheet({ visible, task, defaultDate, onSave, onCl
           title: title.trim(),
           subjectId: subjectId || null,
           estimatedMinutes: estimatedMinutes || null,
+          isRecurring,
+          recurringDays,
         })
         savedTask = res.data.data.task
       } else {
@@ -66,6 +81,8 @@ export default function TaskFormSheet({ visible, task, defaultDate, onSave, onCl
           subjectId: subjectId || null,
           estimatedMinutes: estimatedMinutes || null,
           dueDate: `${defaultDate.getFullYear()}-${String(defaultDate.getMonth() + 1).padStart(2, '0')}-${String(defaultDate.getDate()).padStart(2, '0')}`,
+          isRecurring,
+          recurringDays,
         })
         savedTask = res.data.data.task
       }
@@ -89,7 +106,7 @@ export default function TaskFormSheet({ visible, task, defaultDate, onSave, onCl
     { label: 'No estimate', value: null },
   ]
 
-  const canSave = title.trim().length > 0 && !isSubmitting
+  const canSave = title.trim().length > 0 && !isSubmitting && !(isRecurring && recurringDays.length === 0)
 
   return (
     <Modal visible={visible} transparent animationType="none" onRequestClose={handleClose}>
@@ -185,6 +202,51 @@ export default function TaskFormSheet({ visible, task, defaultDate, onSave, onCl
               )
             })}
           </ScrollView>
+
+          {/* Repeat toggle row */}
+          <View style={styles.repeatRow}>
+            <View style={styles.repeatLeft}>
+              <Ionicons name="repeat-outline" size={18} color={colors.accentLight} style={{ marginRight: spacing.sm }} />
+              <Text style={styles.repeatLabel}>Repeat</Text>
+            </View>
+            <Switch
+              value={isRecurring}
+              onValueChange={setIsRecurring}
+              trackColor={{ false: colors.border, true: colors.accentPrimary }}
+              thumbColor={colors.textPrimary}
+            />
+          </View>
+
+          {/* Day-pill selector (animated) */}
+          <Animated.View style={[styles.dayPillContainer, {
+            maxHeight: dayPillAnim.interpolate({ inputRange: [0, 1], outputRange: [0, 80] }),
+            opacity: dayPillAnim,
+            overflow: 'hidden',
+          }]}>
+            <View style={styles.dayPillRow}>
+              {['S','M','T','W','T','F','S'].map((label, index) => {
+                const selected = recurringDays.includes(index)
+                return (
+                  <TouchableOpacity
+                    key={index}
+                    style={[styles.dayPill, selected && styles.dayPillSelected]}
+                    onPress={() => {
+                      setRecurringDays(prev =>
+                        prev.includes(index) ? prev.filter(d => d !== index) : [...prev, index]
+                      )
+                    }}
+                  >
+                    <Text style={[styles.dayPillText, selected && styles.dayPillTextSelected]}>
+                      {label}
+                    </Text>
+                  </TouchableOpacity>
+                )
+              })}
+            </View>
+            {isRecurring && recurringDays.length === 0 && (
+              <Text style={styles.dayPillError}>Select at least one day</Text>
+            )}
+          </Animated.View>
 
           {/* Error banner */}
           {error ? (
@@ -313,6 +375,60 @@ const styles = StyleSheet.create({
   chipActiveText: {
     color: colors.textPrimary,
     fontWeight: 'bold',
+  },
+  repeatRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: colors.surface,
+    borderRadius: radius.md,
+    marginHorizontal: spacing.xxl,
+    marginTop: spacing.lg,
+    height: 52,
+    paddingHorizontal: spacing.lg,
+  },
+  repeatLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  repeatLabel: {
+    color: colors.textPrimary,
+    fontSize: 15,
+  },
+  dayPillContainer: {
+    marginHorizontal: spacing.xxl,
+    marginTop: spacing.sm,
+  },
+  dayPillRow: {
+    flexDirection: 'row',
+    gap: 8,
+    justifyContent: 'center',
+    paddingVertical: spacing.sm,
+  },
+  dayPill: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: colors.surface,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  dayPillSelected: {
+    backgroundColor: colors.accentPrimary,
+  },
+  dayPillText: {
+    color: colors.textSecondary,
+    fontSize: 13,
+  },
+  dayPillTextSelected: {
+    color: colors.textPrimary,
+    fontWeight: 'bold',
+  },
+  dayPillError: {
+    color: colors.danger,
+    fontSize: 12,
+    textAlign: 'center',
+    marginTop: 2,
   },
   errorBanner: {
     marginHorizontal: spacing.xxl,
