@@ -90,7 +90,7 @@ export default function ScheduleEventFormSheet({ visible, event, defaultDate, on
       } else {
         const res = await api.post('/schedule-events', {
           title: title.trim(),
-          date: defaultDate.toISOString().split('T')[0],
+          date: `${defaultDate.getFullYear()}-${String(defaultDate.getMonth() + 1).padStart(2, '0')}-${String(defaultDate.getDate()).padStart(2, '0')}`,
           startTime: startTimeStr,
           durationMinutes,
           subjectId: subjectId || null,

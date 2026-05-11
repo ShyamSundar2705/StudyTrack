@@ -152,7 +152,15 @@ export default function HomeTimerScreen({ navigation }) {
           return;
         }
         if (sessionsData?.length) setTodaySessions(sessionsData);
-      } catch (_) {}
+      } catch (err) {
+        if (!cancelled) {
+          Alert.alert(
+            'Could not load subjects',
+            'Make sure the backend is running and your phone is on the same WiFi as your computer.',
+            [{ text: 'OK' }]
+          );
+        }
+      }
     })();
     return () => { cancelled = true; };
   }, []);
