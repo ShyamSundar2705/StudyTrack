@@ -36,7 +36,6 @@ export async function listTasks(request: FastifyRequest, reply: FastifyReply) {
       where: {
         userId,
         isRecurring: true,
-        recurringDays: { has: dayOfWeek },
       },
       include: {
         completions: { where: { date, userId } },
@@ -45,7 +44,8 @@ export async function listTasks(request: FastifyRequest, reply: FastifyReply) {
     }),
   ])
 
-  const recurringWithCompletion = recurringTasks.map((task) => {
+  // Filter recurring tasks by day-of-week in JS — avoids @prisma/adapter-pg parameter mismatch with Int[] has filter
+  const recurringWithCompletion = recurringTasks.filter(t => t.recurringDays.includes(dayOfWeek)).map((task) => {
     const completion = task.completions[0] ?? null
     const { completions, ...rest } = task
     return {
