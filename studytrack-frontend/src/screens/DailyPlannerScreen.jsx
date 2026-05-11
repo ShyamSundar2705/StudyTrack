@@ -225,7 +225,7 @@ export default function DailyPlannerScreen({ navigation }) {
     });
   }, [tasks, taskSort]);
 
-  const completedCount = tasks.filter(t => t.isRecurring ? t.completedOnDate : t.completed).length;
+  const completedCount = tasks.filter(t => !t.isRecurring && t.completed).length;
 
   const dates = buildWeekDates(selectedDate);
 
