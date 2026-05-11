@@ -1,9 +1,10 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity, StyleSheet, Platform, ActivityIndicator,
   Alert, PanResponder, Animated,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useFocusEffect } from '@react-navigation/native';
 import { colors, radius, spacing } from '../constraints/theme';
 import useSubjectStore from '../store/useSubjectStore';
 import useUserStore from '../store/useUserStore';
@@ -12,6 +13,7 @@ import TaskFormSheet from '../components/TaskFormSheet';
 import ScheduleEventFormSheet from '../components/ScheduleEventFormSheet';
 import api from '../api/client';
 import { getTasks } from '../api/tasks';
+import { formatRecurringLabel } from '../utils/dateTime';
 
 const DAY_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
@@ -44,16 +46,39 @@ function transformTask(task, subjects) {
   const now = new Date();
   let status = 'pending';
   let overdue = false;
-  if (task.completed) {
-    status = 'done';
-  } else if (task.dueDate && new Date(task.dueDate) < now) {
-    status = 'overdue';
-    overdue = true;
+
+  if (task.isRecurring) {
+    // Recurring: completion is per-day
+    if (task.completedOnDate) status = 'done';
+  } else {
+    if (task.completed) {
+      status = 'done';
+    } else if (task.dueDate && new Date(task.dueDate) < now) {
+      status = 'overdue';
+      overdue = true;
+    }
   }
+
   const subject = subjects.find((s) => s.id === task.subjectId);
-  const tags = subject ? [{ label: subject.name, color: subject.color }] : [];
+  const tags = subject ? [{ label: subject.name, color: subject.color ?? subject.colorHex }] : [];
   const accentColor = status === 'overdue' ? colors.danger : null;
-  return { id: task.id, title: task.title, status, tags, accentColor, overdue, completed: task.completed, subjectId: task.subjectId };
+  const subjectName = subject?.name ?? null;
+
+  return {
+    id: task.id,
+    title: task.title,
+    status,
+    tags,
+    accentColor,
+    overdue,
+    completed: task.completed,
+    completedOnDate: task.completedOnDate ?? false,
+    subjectId: task.subjectId,
+    isRecurring: task.isRecurring ?? false,
+    recurringDays: task.recurringDays ?? [],
+    subjectName,
+    createdAt: task.createdAt ?? null,
+  };
 }
 
 // ── SwipeableTaskRow ────────────────────────────────────────────────────────
@@ -127,9 +152,17 @@ function SwipeableTaskRow({ task, onToggle, onEdit, onDelete }) {
             )}
           </TouchableOpacity>
           <View style={styles.taskBody}>
-            <Text style={[styles.taskTitle, task.status === 'done' && styles.taskTitleDone]}>
-              {task.title}
-            </Text>
+            <View style={styles.taskTitleRow}>
+              <Text style={[styles.taskTitle, task.status === 'done' && styles.taskTitleDone]}>
+                {task.title}
+              </Text>
+              {task.isRecurring && (
+                <Ionicons name="repeat-outline" size={12} color={colors.accentLight} style={{ marginLeft: 4, marginTop: 2 }} />
+              )}
+            </View>
+            {task.isRecurring && (
+              <Text style={styles.recurringLabel}>{formatRecurringLabel(task.recurringDays)}</Text>
+            )}
             <View style={styles.taskTags}>
               {task.tags.map((tag) => (
                 <View key={tag.label} style={[styles.tag, { borderColor: tag.color }]}>
@@ -165,10 +198,12 @@ export default function DailyPlannerScreen({ navigation }) {
 
   const dates = buildWeekDates(selectedDate);
 
-  // ── Fetch tasks + events whenever the selected date changes ────────────────
-  useEffect(() => {
-    fetchForDate(selectedDate);
-  }, [selectedDate]);
+  // ── Fetch tasks + events when date changes or screen gains focus ────────────
+  useFocusEffect(
+    useCallback(() => {
+      fetchForDate(selectedDate);
+    }, [selectedDate])
+  );
 
 
   const fetchForDate = async (isoDate) => {
@@ -208,18 +243,37 @@ export default function DailyPlannerScreen({ navigation }) {
   // ── Task handlers ─────────────────────────────────────────────────────────
   const handleToggleComplete = async (task) => {
     const newCompleted = task.status !== 'done';
-    setTasks((prev) => prev.map((t) =>
-      t.id === task.id
-        ? { ...t, status: newCompleted ? 'done' : 'pending', completed: newCompleted, accentColor: newCompleted ? null : t.accentColor, overdue: newCompleted ? false : t.overdue }
-        : t
-    ));
-    try {
-      await api.patch(`/tasks/${task.id}`, {
-        completed: newCompleted,
-        completedAt: newCompleted ? new Date().toISOString() : null,
-      });
-    } catch {
-      fetchForDate(selectedDate);
+
+    if (task.isRecurring) {
+      // Optimistic update using completedOnDate
+      setTasks((prev) => prev.map((t) =>
+        t.id === task.id
+          ? { ...t, status: newCompleted ? 'done' : 'pending', completedOnDate: newCompleted }
+          : t
+      ));
+      try {
+        await api.patch(`/tasks/${task.id}`, {
+          completed: newCompleted,
+          date: selectedDate,
+        });
+      } catch {
+        fetchForDate(selectedDate);
+      }
+    } else {
+      // Non-recurring: existing behaviour
+      setTasks((prev) => prev.map((t) =>
+        t.id === task.id
+          ? { ...t, status: newCompleted ? 'done' : 'pending', completed: newCompleted, accentColor: newCompleted ? null : t.accentColor, overdue: newCompleted ? false : t.overdue }
+          : t
+      ));
+      try {
+        await api.patch(`/tasks/${task.id}`, {
+          completed: newCompleted,
+          completedAt: newCompleted ? new Date().toISOString() : null,
+        });
+      } catch {
+        fetchForDate(selectedDate);
+      }
     }
   };
 
@@ -603,6 +657,8 @@ const styles = StyleSheet.create({
   },
 
   taskBody: { flex: 1, gap: 4 },
+  taskTitleRow: { flexDirection: 'row', alignItems: 'center' },
+  recurringLabel: { fontSize: 11, color: colors.textSecondary, marginBottom: 2 },
   taskTitle: { fontSize: 16, color: colors.textPrimary, fontWeight: '500' },
   taskTitleDone: { color: colors.textSecondary },
   taskTags: { flexDirection: 'row', gap: spacing.xs, alignItems: 'center' },
