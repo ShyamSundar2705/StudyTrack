@@ -38,3 +38,15 @@ export function getDefaultEndTime() {
   const d = new Date();
   return { hours: d.getHours(), minutes: d.getMinutes() };
 }
+
+const DAY_ABBR = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+
+export function formatRecurringLabel(days) {
+  if (!days || days.length === 0) return ''
+  const sorted = [...days].sort((a, b) => a - b)
+  if (sorted.length === 7) return 'Every day'
+  if (sorted.length === 5 && sorted.join(',') === '1,2,3,4,5') return 'Weekdays'
+  if (sorted.length === 2 && sorted.join(',') === '0,6') return 'Weekends'
+  if (sorted.length === 1) return `Every ${DAY_ABBR[sorted[0]]}`
+  return sorted.map(d => DAY_ABBR[d]).join(', ')
+}
