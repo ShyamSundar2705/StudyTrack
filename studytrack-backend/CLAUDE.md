@@ -39,7 +39,8 @@ src/
 | `UserPreferences` | `id`, `userId` (unique), full prefs fields | 1:1 with `User`; created lazily on first `GET` or `PATCH /users/me/preferences`; `onDelete: Cascade`; fields cover Pomodoro config, daily goal, notifications, appearance, privacy, analytics |
 | `Subject` | `id`, `userId`, `name`, `colorHex` | Belongs to one user; has many sessions and tasks |
 | `Session` | `id`, `userId`, `subjectId`, `startedAt`, `endedAt?`, `durationSeconds?`, `pomodoroRound?`, `type` (FOCUS \| POMODORO), `note?` | `endedAt`/`durationSeconds` are null until `completeSession` is called; `pomodoroRound` is set only on POMODORO sessions; `note` is set only on manual sessions |
-| `Task` | `id`, `userId`, `title`, `subjectId?`, `dueDate?`, `estimatedMinutes?`, `completed`, `completedAt?`, `carriedOver` | `carriedOver` flags tasks rolled from a previous day |
+| `Task` | `id`, `userId`, `title`, `subjectId?`, `dueDate?`, `estimatedMinutes?`, `completed`, `completedAt?`, `carriedOver`, `isRecurring` (default false), `recurringDays Int[]`, `createdAt` | `carriedOver` flags tasks rolled from a previous day; `isRecurring` + `recurringDays` define weekly repeat schedule |
+| `RecurringTaskCompletion` | `id`, `taskId`, `userId`, `date` (YYYY-MM-DD), `completedAt` | Per-day completion record for recurring tasks; `@@unique([taskId, date])` |
 | `Achievement` | `id`, `userId`, `type` (enum), `unlockedAt` | Achievement types: FIRST_SESSION, STREAK_3/7, TOTAL_1H/10H/100H, EARLY_BIRD, NIGHT_OWL |
 | `Group` | `id`, `name`, `createdAt` | Full CRUD via `/api/groups` routes |
 | `GroupMember` | `id`, `groupId`, `userId`, `joinedAt` | Junction table — no unique constraint on (groupId, userId); join endpoint guards against duplicates in application code |
@@ -101,9 +102,9 @@ All routes are under `/api`. Auth routes have no authentication; all others requ
 
 | Method | Path | Description |
 |---|---|---|
-| `GET` | `/api/tasks?date=` | List caller's tasks; userId from JWT; optional `date` (YYYY-MM-DD) filters by dueDate |
-| `POST` | `/api/tasks` | Create a task (`title`, optional `subjectId`, `dueDate`); userId from JWT |
-| `PATCH` | `/api/tasks/:id` | Update `title`, `completed` (also sets `completedAt`), `carriedOver`, `dueDate`, `subjectId`, `estimatedMinutes` |
+| `GET` | `/api/tasks?date=` | List caller's tasks; optional `date` returns non-recurring tasks due that day + recurring tasks matching day-of-week; recurring tasks include `completedOnDate` and `completedAtOnDate` |
+| `POST` | `/api/tasks` | Create a task (`title`, optional `subjectId`, `dueDate`, `isRecurring`, `recurringDays`); userId from JWT |
+| `PATCH` | `/api/tasks/:id` | Update task fields; for recurring tasks + `completed` present: upserts/deletes `RecurringTaskCompletion` for `date` instead of flipping `task.completed` |
 | `DELETE` | `/api/tasks/:id` | Delete task (ownership check) |
 
 ### Schedule Events — auth required

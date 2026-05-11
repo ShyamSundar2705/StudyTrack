@@ -12,14 +12,15 @@ index.js       — entry point (import './polyfills' is line 1)
 src/
   api/         — client.js, supabase.js, socket.js, users.js, subjects.js, sessions.js, tasks.js, leaderboard.js
   components/  — AuthModal, BottomSheetPicker, ManualLogModal, DatePickerModal, TimePickerModal,
-                 NoteBottomSheet, SessionActionSheet, SubjectSwitchSheet, TaskFormSheet, ScheduleEventFormSheet
+                 NoteBottomSheet, SessionActionSheet, SubjectSwitchSheet, TaskFormSheet, ScheduleEventFormSheet,
+                 PlannerActionSheet
   constraints/ — theme.js (colors, spacing, radius — folder is "constraints" not "constants")
   navigation/  — AppNavigator.jsx, navigationRef.js
   screens/     — SplashScreen, SubjectSetupScreen, HomeTimerScreen, SessionActiveScreen,
                  SessionCompleteScreen, DailyPlannerScreen, InsightsScreen, SubjectDetailsScreen,
                  StudyGroupsScreen, LeaderboardScreen, ProfileScreen, AppSettingsScreen
   store/       — useUserStore, useSubjectStore, useSessionStore, useTimerStore, usePomodoroStore
-  utils/       — notifications.js, dateTime.js, shareSession.js
+  utils/       — notifications.js, dateTime.js (includes formatRecurringLabel for recurring day labels), shareSession.js
 ```
 
 ## Design System
