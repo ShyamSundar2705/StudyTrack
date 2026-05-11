@@ -14,7 +14,10 @@ export default async function taskRoutes(fastify: FastifyInstance) {
         properties: {
           title: { type: 'string', minLength: 1 },
           subjectId: { type: 'string' },
-          dueDate: { type: 'string' }
+          dueDate: { type: 'string' },
+          estimatedMinutes: { type: 'integer' },
+          isRecurring: { type: 'boolean' },
+          recurringDays: { type: 'array', items: { type: 'integer', minimum: 0, maximum: 6 } }
         }
       }
     }
@@ -32,7 +35,10 @@ export default async function taskRoutes(fastify: FastifyInstance) {
           completed: { type: 'boolean' },
           completedAt: { type: ['string', 'null'], pattern: '^\\d{4}-\\d{2}-\\d{2}' },
           carriedOver: { type: 'boolean' },
-          dueDate: { type: 'string', pattern: '^\\d{4}-\\d{2}-\\d{2}' }
+          dueDate: { type: 'string', pattern: '^\\d{4}-\\d{2}-\\d{2}' },
+          date: { type: 'string', pattern: '^\\d{4}-\\d{2}-\\d{2}' },
+          isRecurring: { type: 'boolean' },
+          recurringDays: { type: 'array', items: { type: 'integer', minimum: 0, maximum: 6 } }
         }
       }
     }
