@@ -5,17 +5,53 @@ export async function listTasks(request: FastifyRequest, reply: FastifyReply) {
   const { date } = request.query as { date?: string }
   const prisma = request.server.prisma
 
-  const where: any = { userId }
-  if (date) {
-    where.dueDate = {
-      gte: new Date(`${date}T00:00:00.000Z`),
-      lte: new Date(`${date}T23:59:59.999Z`)
-    }
+  if (!date) {
+    const tasks = await prisma.task.findMany({
+      where: { userId },
+      orderBy: { createdAt: 'asc' },
+    })
+    return reply.send({ data: { tasks } })
   }
 
-  const tasks = await prisma.task.findMany({ where, orderBy: { dueDate: 'asc' } })
+  // Day of week: use noon UTC to avoid DST edge cases (0=Sun…6=Sat)
+  const dayOfWeek = new Date(`${date}T12:00:00.000Z`).getDay()
 
-  return reply.send({ data: { tasks } })
+  const [dateTasks, recurringTasks] = await Promise.all([
+    prisma.task.findMany({
+      where: {
+        userId,
+        isRecurring: false,
+        dueDate: {
+          gte: new Date(`${date}T00:00:00.000Z`),
+          lte: new Date(`${date}T23:59:59.999Z`),
+        },
+      },
+      orderBy: { createdAt: 'asc' },
+    }),
+    prisma.task.findMany({
+      where: {
+        userId,
+        isRecurring: true,
+        recurringDays: { has: dayOfWeek },
+      },
+      include: {
+        completions: { where: { date } },
+      },
+      orderBy: { createdAt: 'asc' },
+    }),
+  ])
+
+  const recurringWithCompletion = recurringTasks.map((task) => {
+    const completion = task.completions[0] ?? null
+    const { completions, ...rest } = task
+    return {
+      ...rest,
+      completedOnDate: completion !== null,
+      completedAtOnDate: completion?.completedAt?.toISOString() ?? null,
+    }
+  })
+
+  return reply.send({ data: { tasks: [...dateTasks, ...recurringWithCompletion] } })
 }
 
 export async function createTask(request: FastifyRequest, reply: FastifyReply) {
