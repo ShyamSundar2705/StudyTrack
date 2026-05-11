@@ -60,10 +60,13 @@ export async function listTasks(request: FastifyRequest, reply: FastifyReply) {
 
 export async function createTask(request: FastifyRequest, reply: FastifyReply) {
   const userId = request.user.id
-  const { title, subjectId, dueDate } = request.body as {
+  const { title, subjectId, dueDate, estimatedMinutes, isRecurring, recurringDays } = request.body as {
     title: string
     subjectId?: string
     dueDate?: string
+    estimatedMinutes?: number
+    isRecurring?: boolean
+    recurringDays?: number[]
   }
 
   const prisma = request.server.prisma
@@ -72,7 +75,10 @@ export async function createTask(request: FastifyRequest, reply: FastifyReply) {
       userId,
       title,
       subjectId,
-      ...(dueDate ? { dueDate: new Date(dueDate) } : {})
+      ...(dueDate ? { dueDate: new Date(dueDate) } : {}),
+      ...(estimatedMinutes !== undefined && { estimatedMinutes }),
+      isRecurring: isRecurring ?? false,
+      recurringDays: recurringDays ?? [],
     }
   })
 
@@ -89,15 +95,51 @@ export async function updateTask(request: FastifyRequest, reply: FastifyReply) {
     completedAt?: string | null
     carriedOver?: boolean
     dueDate?: string
+    date?: string
+    isRecurring?: boolean
+    recurringDays?: number[]
   }
 
+  const userId = request.user.id
   const prisma = request.server.prisma
 
   const existing = await prisma.task.findUnique({ where: { id: params.id } })
   if (!existing) return reply.status(404).send({ error: 'Task not found' })
-  if (existing.userId !== request.user.id) return reply.status(403).send({ error: 'Forbidden' })
+  if (existing.userId !== userId) return reply.status(403).send({ error: 'Forbidden' })
 
-  // Build date mutations
+  // Handle recurring completion toggle separately
+  if (body.completed !== undefined && existing.isRecurring) {
+    const date = body.date as string
+    if (body.completed) {
+      await prisma.recurringTaskCompletion.upsert({
+        where: { taskId_date: { taskId: existing.id, date } },
+        create: { taskId: existing.id, userId, date },
+        update: {},
+      })
+    } else {
+      await prisma.recurringTaskCompletion.deleteMany({
+        where: { taskId: existing.id, date, userId },
+      })
+    }
+
+    // Update any non-completion fields that were also sent
+    const task = await prisma.task.update({
+      where: { id: params.id },
+      data: {
+        ...(body.title !== undefined && { title: body.title }),
+        ...(body.subjectId !== undefined && { subjectId: body.subjectId }),
+        ...(body.estimatedMinutes !== undefined && { estimatedMinutes: body.estimatedMinutes }),
+        ...(body.carriedOver !== undefined && { carriedOver: body.carriedOver }),
+        ...(body.dueDate !== undefined && { dueDate: new Date(body.dueDate) }),
+        ...(body.isRecurring !== undefined && { isRecurring: body.isRecurring }),
+        ...(body.recurringDays !== undefined && { recurringDays: body.recurringDays }),
+      }
+    })
+
+    return reply.send({ data: { task } })
+  }
+
+  // Non-recurring task — keep existing logic
   const dateUpdates: Record<string, Date | null> = {}
   if (body.completed !== undefined) {
     if (body.completed) {
@@ -119,6 +161,8 @@ export async function updateTask(request: FastifyRequest, reply: FastifyReply) {
       ...('completedAt' in dateUpdates && { completedAt: dateUpdates.completedAt }),
       ...(body.carriedOver !== undefined && { carriedOver: body.carriedOver }),
       ...(body.dueDate !== undefined && { dueDate: new Date(body.dueDate) }),
+      ...(body.isRecurring !== undefined && { isRecurring: body.isRecurring }),
+      ...(body.recurringDays !== undefined && { recurringDays: body.recurringDays }),
     }
   })
 
