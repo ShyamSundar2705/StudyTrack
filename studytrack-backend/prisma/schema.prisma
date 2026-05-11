@@ -41,6 +41,7 @@ model User {
   groupMembers     GroupMember[]
   preferences      UserPreferences?
   scheduleEvents   ScheduleEvent[]
+  recurringCompletions RecurringTaskCompletion[]
 }
 
 model UserPreferences {
@@ -122,8 +123,24 @@ model Task {
   completedAt      DateTime?
   carriedOver      Boolean   @default(false)
   estimatedMinutes Int?
+  isRecurring      Boolean   @default(false)
+  recurringDays    Int[]
+  createdAt        DateTime  @default(now())
   user             User      @relation(fields: [userId], references: [id])
   subject          Subject?  @relation(fields: [subjectId], references: [id])
+  completions      RecurringTaskCompletion[]
+}
+
+model RecurringTaskCompletion {
+  id          String   @id @default(cuid())
+  taskId      String
+  task        Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  date        String
+  completedAt DateTime @default(now())
+
+  @@unique([taskId, date])
 }
 
 model Achievement {
