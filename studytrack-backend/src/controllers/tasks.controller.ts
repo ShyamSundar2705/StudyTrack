@@ -109,34 +109,42 @@ export async function updateTask(request: FastifyRequest, reply: FastifyReply) {
 
   // Handle recurring completion toggle separately
   if (body.completed !== undefined && existing.isRecurring) {
-    const date = body.date as string
-    if (body.completed) {
-      await prisma.recurringTaskCompletion.upsert({
-        where: { taskId_date: { taskId: existing.id, date } },
-        create: { taskId: existing.id, userId, date },
-        update: {},
-      })
-    } else {
-      await prisma.recurringTaskCompletion.deleteMany({
-        where: { taskId: existing.id, date, userId },
-      })
+    const date = body.date
+    if (!date) {
+      return reply.status(400).send({ error: 'date is required for recurring task completion' })
     }
 
-    // Update any non-completion fields that were also sent
-    const task = await prisma.task.update({
-      where: { id: params.id },
-      data: {
-        ...(body.title !== undefined && { title: body.title }),
-        ...(body.subjectId !== undefined && { subjectId: body.subjectId }),
-        ...(body.estimatedMinutes !== undefined && { estimatedMinutes: body.estimatedMinutes }),
-        ...(body.carriedOver !== undefined && { carriedOver: body.carriedOver }),
-        ...(body.dueDate !== undefined && { dueDate: new Date(body.dueDate) }),
-        ...(body.isRecurring !== undefined && { isRecurring: body.isRecurring }),
-        ...(body.recurringDays !== undefined && { recurringDays: body.recurringDays }),
+    const [updatedTask] = await prisma.$transaction(async (tx) => {
+      if (body.completed === true) {
+        await tx.recurringTaskCompletion.upsert({
+          where: { taskId_date: { taskId: existing.id, date } },
+          create: { taskId: existing.id, userId, date },
+          update: {},
+        })
+      } else {
+        await tx.recurringTaskCompletion.deleteMany({
+          where: { taskId: existing.id, date, userId },
+        })
       }
+
+      // Update any non-completion fields that were also sent
+      const task = await tx.task.update({
+        where: { id: params.id },
+        data: {
+          ...(body.title !== undefined && { title: body.title }),
+          ...(body.subjectId !== undefined && { subjectId: body.subjectId }),
+          ...(body.estimatedMinutes !== undefined && { estimatedMinutes: body.estimatedMinutes }),
+          ...(body.carriedOver !== undefined && { carriedOver: body.carriedOver }),
+          ...(body.dueDate !== undefined && { dueDate: new Date(body.dueDate) }),
+          ...(body.isRecurring !== undefined && { isRecurring: body.isRecurring }),
+          ...(body.recurringDays !== undefined && { recurringDays: body.recurringDays }),
+        }
+      })
+
+      return [task]
     })
 
-    return reply.send({ data: { task } })
+    return reply.send({ data: { task: updatedTask } })
   }
 
   // Non-recurring task — keep existing logic
