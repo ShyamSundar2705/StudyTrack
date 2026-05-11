@@ -14,7 +14,11 @@ export async function listTasks(request: FastifyRequest, reply: FastifyReply) {
   }
 
   // Day of week: use noon UTC to avoid DST edge cases (0=Sun…6=Sat)
-  const dayOfWeek = new Date(`${date}T12:00:00.000Z`).getDay()
+  const dayOfWeek = new Date(`${date}T12:00:00.000Z`).getUTCDay()
+
+  // Compute half-open date range [date, next day)
+  const nextDate = new Date(`${date}T00:00:00.000Z`)
+  nextDate.setUTCDate(nextDate.getUTCDate() + 1)
 
   const [dateTasks, recurringTasks] = await Promise.all([
     prisma.task.findMany({
@@ -23,7 +27,7 @@ export async function listTasks(request: FastifyRequest, reply: FastifyReply) {
         isRecurring: false,
         dueDate: {
           gte: new Date(`${date}T00:00:00.000Z`),
-          lte: new Date(`${date}T23:59:59.999Z`),
+          lt: nextDate,
         },
       },
       orderBy: { createdAt: 'asc' },
@@ -35,7 +39,7 @@ export async function listTasks(request: FastifyRequest, reply: FastifyReply) {
         recurringDays: { has: dayOfWeek },
       },
       include: {
-        completions: { where: { date } },
+        completions: { where: { date, userId } },
       },
       orderBy: { createdAt: 'asc' },
     }),
