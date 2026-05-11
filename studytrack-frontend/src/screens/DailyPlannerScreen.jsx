@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef, useCallback } from 'react';
+import React, { useEffect, useState, useRef, useCallback, useMemo } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity, StyleSheet, Platform, ActivityIndicator,
   Alert, PanResponder, Animated,
@@ -11,6 +11,7 @@ import useUserStore from '../store/useUserStore';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import TaskFormSheet from '../components/TaskFormSheet';
 import ScheduleEventFormSheet from '../components/ScheduleEventFormSheet';
+import PlannerActionSheet from '../components/PlannerActionSheet';
 import api from '../api/client';
 import { getTasks } from '../api/tasks';
 import { formatRecurringLabel } from '../utils/dateTime';
@@ -195,6 +196,36 @@ export default function DailyPlannerScreen({ navigation }) {
   const [editingTask,    setEditingTask]    = useState(null);
   const [showEventForm,  setShowEventForm]  = useState(false);
   const [editingEvent,   setEditingEvent]   = useState(null);
+  const [showPlannerSheet, setShowPlannerSheet] = useState(false);
+  const [taskSort, setTaskSort] = useState('default');
+
+  const sortedTasks = useMemo(() => {
+    if (taskSort === 'subject') {
+      return [...tasks].sort((a, b) => {
+        if (!a.subjectName && !b.subjectName) return 0;
+        if (!a.subjectName) return 1;
+        if (!b.subjectName) return -1;
+        return a.subjectName.localeCompare(b.subjectName);
+      });
+    }
+    if (taskSort === 'time') {
+      return [...tasks].sort((a, b) => {
+        if (!a.createdAt && !b.createdAt) return 0;
+        if (!a.createdAt) return 1;
+        if (!b.createdAt) return -1;
+        return new Date(a.createdAt) - new Date(b.createdAt);
+      });
+    }
+    // default: incomplete first, completed last
+    return [...tasks].sort((a, b) => {
+      const aDone = a.isRecurring ? a.completedOnDate : a.completed;
+      const bDone = b.isRecurring ? b.completedOnDate : b.completed;
+      if (aDone === bDone) return 0;
+      return aDone ? 1 : -1;
+    });
+  }, [tasks, taskSort]);
+
+  const completedCount = tasks.filter(t => t.isRecurring ? t.completedOnDate : t.completed).length;
 
   const dates = buildWeekDates(selectedDate);
 
@@ -286,6 +317,12 @@ export default function DailyPlannerScreen({ navigation }) {
     }
   };
 
+  const handleClearCompleted = async () => {
+    const toDelete = tasks.filter(t => !t.isRecurring && t.completed);
+    setTasks(prev => prev.filter(t => t.isRecurring || !t.completed));
+    await Promise.allSettled(toDelete.map(t => api.delete(`/tasks/${t.id}`)));
+  };
+
   const handleTaskSaved = (savedTask) => {
     if (editingTask) {
       setTasks((prev) => prev.map((t) => t.id === savedTask.id ? transformTask(savedTask, subjects) : t));
@@ -316,12 +353,9 @@ export default function DailyPlannerScreen({ navigation }) {
         </View>
         <TouchableOpacity
           style={styles.headerBtn}
-          onPress={() => {
-            setEditingEvent(null);
-            setShowEventForm(true);
-          }}
+          onPress={() => setShowPlannerSheet(true)}
         >
-          <Ionicons name="calendar-plus-outline" size={22} color={colors.textSecondary} />
+          <Ionicons name="ellipsis-vertical" size={22} color={colors.textSecondary} />
         </TouchableOpacity>
       </View>
 
@@ -389,13 +423,13 @@ export default function DailyPlannerScreen({ navigation }) {
             <Text style={styles.sectionTitle}>Today's Tasks</Text>
             {isLoadingTasks
               ? <ActivityIndicator color={colors.accentPrimary} size="small" />
-              : <Text style={styles.sectionCount}>{tasks.length} total</Text>
+              : <Text style={styles.sectionCount}>{sortedTasks.length} total</Text>
             }
           </View>
 
           {isLoadingTasks ? (
             <ActivityIndicator color={colors.accentPrimary} style={{ marginVertical: spacing.xl }} />
-          ) : tasks.length === 0 ? (
+          ) : sortedTasks.length === 0 ? (
             <View style={styles.emptyState}>
               <Text style={styles.emptyStateText}>No tasks for this day</Text>
               <TouchableOpacity onPress={() => { setEditingTask(null); setShowTaskForm(true); }}>
@@ -403,7 +437,7 @@ export default function DailyPlannerScreen({ navigation }) {
               </TouchableOpacity>
             </View>
           ) : (
-            tasks.map((task) => (
+            sortedTasks.map((task) => (
               <SwipeableTaskRow
                 key={task.id}
                 task={task}
@@ -505,6 +539,18 @@ export default function DailyPlannerScreen({ navigation }) {
         defaultDate={selectedDateObj}
         onSave={handleEventSaved}
         onClose={() => { setShowEventForm(false); setEditingEvent(null); }}
+      />
+
+      <PlannerActionSheet
+        visible={showPlannerSheet}
+        onClose={() => setShowPlannerSheet(false)}
+        onAddTask={() => { setEditingTask(null); setShowTaskForm(true); }}
+        onAddEvent={() => { setEditingEvent(null); setShowEventForm(true); }}
+        onSortBySubject={() => setTaskSort(prev => prev === 'subject' ? 'default' : 'subject')}
+        onSortByTime={() => setTaskSort(prev => prev === 'time' ? 'default' : 'time')}
+        onClearCompleted={handleClearCompleted}
+        completedCount={completedCount}
+        currentSort={taskSort}
       />
 
     </View>
