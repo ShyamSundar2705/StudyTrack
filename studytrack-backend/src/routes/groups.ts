@@ -4,6 +4,8 @@ import {
   createGroup,
   getGroup,
   joinGroup,
+  joinByCode,
+  searchGroups,
   leaveGroup,
   getGroupActivity,
   getGroupLeaderboard
@@ -24,6 +26,19 @@ export default async function groupRoutes(fastify: FastifyInstance) {
       }
     }
   }, createGroup)
+
+  fastify.post('/groups/join-by-code', {
+    preHandler: authenticate,
+    schema: {
+      body: {
+        type: 'object',
+        required: ['inviteCode'],
+        properties: {
+          inviteCode: { type: 'string', minLength: 1, maxLength: 10 }
+        }
+      }
+    }
+  }, joinByCode)
 
   fastify.get('/groups/:id', { preHandler: authenticate }, getGroup)
 

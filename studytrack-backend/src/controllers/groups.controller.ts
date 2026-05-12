@@ -91,6 +91,30 @@ export async function joinGroup(request: FastifyRequest, reply: FastifyReply) {
   return reply.status(201).send({ data: { member } })
 }
 
+export async function joinByCode(request: FastifyRequest, reply: FastifyReply) {
+  const userId = request.user.id
+  const { inviteCode } = request.body as { inviteCode: string }
+  const prisma = request.server.prisma
+
+  const group = await prisma.group.findUnique({ where: { inviteCode: inviteCode.toUpperCase() } })
+  if (!group) return reply.status(404).send({ error: 'Group not found' })
+
+  const existing = await prisma.groupMember.findFirst({ where: { groupId: group.id, userId } })
+  if (existing) return reply.status(409).send({ error: 'You are already a member of this group' })
+
+  const memberCount = await prisma.groupMember.count({ where: { groupId: group.id } })
+  if (memberCount >= group.maxMembers) return reply.status(400).send({ error: 'Group is full' })
+
+  const member = await prisma.groupMember.create({ data: { groupId: group.id, userId } })
+
+  const io = request.server.io
+  if (io) {
+    io.to(`group_${group.id}`).emit('member_joined', { userId, groupId: group.id })
+  }
+
+  return reply.status(201).send({ data: { group, member } })
+}
+
 export async function leaveGroup(request: FastifyRequest, reply: FastifyReply) {
   const { id: groupId } = request.params as { id: string }
   const userId = request.user.id
