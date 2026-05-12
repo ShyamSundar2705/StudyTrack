@@ -14,7 +14,13 @@ import ScheduleEventFormSheet from '../components/ScheduleEventFormSheet';
 import PlannerActionSheet from '../components/PlannerActionSheet';
 import api from '../api/client';
 import { getTasks } from '../api/tasks';
-import { formatRecurringLabel } from '../utils/dateTime';
+import { formatRecurringLabel } from '../utils/dateTime'
+import {
+  requestCalendarPermission,
+  isCalendarSyncEnabled,
+  setCalendarSyncEnabled,
+  getDeviceCalendarEvents,
+} from '../utils/calendarSync';
 
 const DAY_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
@@ -198,6 +204,8 @@ export default function DailyPlannerScreen({ navigation }) {
   const [editingEvent,   setEditingEvent]   = useState(null);
   const [showPlannerSheet, setShowPlannerSheet] = useState(false);
   const [taskSort, setTaskSort] = useState('default');
+  const [calendarEnabled, setCalendarEnabled] = useState(false)
+  const [deviceEvents,    setDeviceEvents]    = useState([])
 
   const sortedTasks = useMemo(() => {
     if (taskSort === 'subject') {
@@ -227,6 +235,11 @@ export default function DailyPlannerScreen({ navigation }) {
 
   const completedCount = tasks.filter(t => !t.isRecurring && t.completed).length;
 
+  const allEvents = useMemo(() =>
+    [...events, ...deviceEvents].sort((a, b) => a.startTime.localeCompare(b.startTime)),
+    [events, deviceEvents]
+  )
+
   const dates = buildWeekDates(selectedDate);
 
   // ── Fetch tasks + events when date changes or screen gains focus ────────────
@@ -255,6 +268,11 @@ export default function DailyPlannerScreen({ navigation }) {
     }
   };
 
+  const loadDeviceEvents = useCallback(async (isoDate) => {
+    const evts = await getDeviceCalendarEvents(isoDate)
+    setDeviceEvents(evts)
+  }, [])
+
   // ── Load yesterday's recap once on mount ─────────────────────────────────
   useEffect(() => {
     const d = new Date();
@@ -270,6 +288,17 @@ export default function DailyPlannerScreen({ navigation }) {
       });
     }).catch(() => {});
   }, []);
+
+  useEffect(() => {
+    isCalendarSyncEnabled().then(enabled => {
+      setCalendarEnabled(enabled)
+      if (enabled) loadDeviceEvents(selectedDate)
+    })
+  }, [])
+
+  useEffect(() => {
+    if (calendarEnabled) loadDeviceEvents(selectedDate)
+  }, [selectedDate, calendarEnabled])
 
   // ── Task handlers ─────────────────────────────────────────────────────────
   const handleToggleComplete = async (task) => {
@@ -338,6 +367,27 @@ export default function DailyPlannerScreen({ navigation }) {
       setEvents((prev) => [...prev, savedEvent].sort((a, b) => a.startTime.localeCompare(b.startTime)));
     }
   };
+
+  const handleCalendarSyncToggle = async () => {
+    if (calendarEnabled) {
+      setCalendarEnabled(false)
+      setDeviceEvents([])
+      await setCalendarSyncEnabled(false)
+      return
+    }
+    const granted = await requestCalendarPermission()
+    if (!granted) {
+      Alert.alert(
+        'Calendar Access Required',
+        'Please allow calendar access in your device settings to sync events.',
+        [{ text: 'OK' }]
+      )
+      return
+    }
+    setCalendarEnabled(true)
+    await setCalendarSyncEnabled(true)
+    await loadDeviceEvents(selectedDate)
+  }
 
   // selectedDate is an ISO string; form sheets need a Date object
   const selectedDateObj = isoToDate(selectedDate);
@@ -464,19 +514,34 @@ export default function DailyPlannerScreen({ navigation }) {
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Schedule</Text>
+            <TouchableOpacity onPress={handleCalendarSyncToggle}>
+              <Text style={[styles.syncBtn, calendarEnabled && styles.syncBtnActive]}>
+                {calendarEnabled ? 'Synced ✓' : 'Sync calendar'}
+              </Text>
+            </TouchableOpacity>
           </View>
 
-          {isLoadingTasks ? null : events.length === 0 ? (
+          {isLoadingTasks ? null : allEvents.length === 0 ? (
             <Text style={styles.emptyEventsText}>No events scheduled</Text>
           ) : (
             <View style={styles.timeline}>
               <View style={styles.timelineLine} />
-              {events.map((event) => (
+              {allEvents.map((event) => (
                 <TouchableOpacity
                   key={event.id}
                   style={styles.timelineEvent}
                   activeOpacity={0.8}
-                  onPress={() => { setEditingEvent(event); setShowEventForm(true); }}
+                  onPress={() => {
+                    if (event.isDeviceEvent) {
+                      Alert.alert(
+                        'Device Calendar Event',
+                        'This event is from your device calendar and cannot be edited here.'
+                      )
+                      return
+                    }
+                    setEditingEvent(event)
+                    setShowEventForm(true)
+                  }}
                 >
                   <View
                     style={[
@@ -491,9 +556,23 @@ export default function DailyPlannerScreen({ navigation }) {
                   </View>
                   <View style={styles.timelineContent}>
                     <Text style={[styles.eventTime, { color: event.color ?? colors.accentLight }]}>
-                      {event.startTime}
+                      {event.isDeviceEvent ? `${event.startTime} – ${event.endTime}` : event.startTime}
                     </Text>
-                    <View style={[styles.eventCard, { borderLeftColor: event.color ?? colors.accentPrimary }]}>
+                    <View
+                      style={[
+                        styles.eventCard,
+                        { borderLeftColor: event.color ?? colors.accentPrimary },
+                        event.isDeviceEvent && styles.deviceEventCard,
+                      ]}
+                    >
+                      {event.isDeviceEvent && (
+                        <Ionicons
+                          name="calendar-outline"
+                          size={12}
+                          color={colors.accentLight}
+                          style={styles.deviceEventIcon}
+                        />
+                      )}
                       <Text style={styles.eventTitle}>{event.title}</Text>
                       {event.durationMinutes ? (
                         <Text style={styles.eventSubtitle}>{event.durationMinutes} min</Text>
@@ -844,4 +923,13 @@ const styles = StyleSheet.create({
   },
   focusTitle: { fontSize: 18, fontWeight: '700', color: colors.textPrimary },
   focusSub: { fontSize: 12, color: colors.accentLight, marginTop: 2 },
+  syncBtn: { fontSize: 13, color: colors.accentLight },
+  syncBtnActive: { color: colors.success },
+  deviceEventCard: {
+    backgroundColor: colors.surfaceBlue,
+    borderWidth: 0.5,
+    borderColor: colors.accentPrimary,
+    borderLeftWidth: 4,
+  },
+  deviceEventIcon: { position: 'absolute', top: spacing.sm, right: spacing.sm },
 });
