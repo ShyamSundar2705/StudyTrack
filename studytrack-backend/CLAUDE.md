@@ -228,6 +228,7 @@ POST and PATCH routes must define `schema.body` in route options (Fastify valida
 - **Streak computed on every login:** The streak calculation in `supabaseLogin` runs a full session query on every OAuth login. This is acceptable at current scale but should be moved to a scheduled job or cached field before high-traffic launch.
 - **`GroupMember` has no unique DB constraint on (groupId, userId):** The join endpoint guards against duplicates in application code (findFirst + 409), but there is no database-level constraint. If concurrent join requests race, duplicates could be inserted. Add `@@unique([groupId, userId])` to the schema before production.
 - **Prisma dev must be running before the backend:** `npx prisma dev` starts the local Postgres proxy on port 51214. Without it, every route returns 500.
+- **Streak in `GET /users/me/insights` is period-limited:** The streak is computed from `dayMap`, which is scoped to the period's `startDate`. For `period=week` the streak caps at 7, for `period=month` at 30. Only `period=allTime` returns the true streak. The frontend "Current Streak" card should ideally always pass `allTime`, or streak should be computed independently of the period filter.
 
 ## Next Steps
 
