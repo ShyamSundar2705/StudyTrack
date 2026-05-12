@@ -1,11 +1,31 @@
 import { FastifyRequest, FastifyReply } from 'fastify'
 
+const generateInviteCode = () => {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
+  return Array.from({ length: 6 }, () =>
+    chars[Math.floor(Math.random() * chars.length)]
+  ).join('')
+}
+
 export async function createGroup(request: FastifyRequest, reply: FastifyReply) {
   const userId = request.user.id
-  const { name } = request.body as { name: string }
+  const { name, isPublic = false, maxMembers = 20 } = request.body as {
+    name: string
+    isPublic?: boolean
+    maxMembers?: number
+  }
   const prisma = request.server.prisma
 
-  const group = await prisma.group.create({ data: { name } })
+  let code = generateInviteCode()
+  let existing = await prisma.group.findUnique({ where: { inviteCode: code } })
+  while (existing) {
+    code = generateInviteCode()
+    existing = await prisma.group.findUnique({ where: { inviteCode: code } })
+  }
+
+  const group = await prisma.group.create({
+    data: { name, inviteCode: code, isPublic, maxMembers }
+  })
   const member = await prisma.groupMember.create({ data: { groupId: group.id, userId } })
 
   return reply.status(201).send({ data: { group, member } })
@@ -52,7 +72,7 @@ export async function getGroup(request: FastifyRequest, reply: FastifyReply) {
     todaySeconds: todayMap[m.userId] || 0
   }))
 
-  return reply.send({ data: { group: { id: group.id, name: group.name, createdAt: group.createdAt }, members } })
+  return reply.send({ data: { group: { id: group.id, name: group.name, inviteCode: group.inviteCode, isPublic: group.isPublic, maxMembers: group.maxMembers, createdAt: group.createdAt }, members } })
 }
 
 export async function joinGroup(request: FastifyRequest, reply: FastifyReply) {
