@@ -1,18 +1,17 @@
 import { create } from 'zustand';
 
 const useUserStore = create((set) => ({
-  // State — matches ProfileScreen placeholder data
   id: 'user_001',
   name: 'Shyam',
   handle: '@shyam_studies',
-  avatar: 'S',          // initial used in avatar circle
-  streak: 14,           // "14 Day Streak"
-  totalHours: 1248,     // lifetime stat shown on ProfileScreen
-  dailyGoalSeconds: 21600, // 6 hours — "4h 12m / 6h" on ProfileScreen
+  avatar: 'S',
+  streak: 14,
+  totalHours: 1248,
+  dailyGoalSeconds: 21600,
 
-  preferences: null,    // full UserPreferences object from backend
+  preferences: null,
+  group: null,
 
-  // Actions
   setUser: (userData) => set(userData),
 
   updateStreak: (streak) => set({ streak }),
@@ -21,6 +20,8 @@ const useUserStore = create((set) => ({
     set((state) => ({
       preferences: state.preferences ? { ...state.preferences, ...partial } : partial,
     })),
+
+  setGroup: (group) => set({ group }),
 
   reset: () =>
     set({
@@ -32,6 +33,7 @@ const useUserStore = create((set) => ({
       totalHours: 0,
       dailyGoalSeconds: 21600,
       preferences: null,
+      group: null,
     }),
 }));
 
