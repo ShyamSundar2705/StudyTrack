@@ -152,10 +152,13 @@ model Achievement {
 }
 
 model Group {
-  id        String        @id @default(cuid())
-  name      String
-  createdAt DateTime      @default(now())
-  members   GroupMember[]
+  id         String        @id @default(cuid())
+  name       String
+  inviteCode String        @unique
+  isPublic   Boolean       @default(false)
+  maxMembers Int           @default(20)
+  createdAt  DateTime      @default(now())
+  members    GroupMember[]
 }
 
 model GroupMember {
@@ -165,6 +168,8 @@ model GroupMember {
   joinedAt DateTime @default(now())
   group    Group    @relation(fields: [groupId], references: [id])
   user     User     @relation(fields: [userId], references: [id])
+
+  @@unique([groupId, userId])
 }
 
 model ScheduleEvent {
