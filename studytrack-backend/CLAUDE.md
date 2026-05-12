@@ -73,7 +73,7 @@ All routes are under `/api`. Auth routes have no authentication; all others requ
 | `PATCH` | `/api/users/me` | Update caller's name, handle, avatar, or dailyGoalSeconds |
 | `GET` | `/api/users/me/stats` | Lifetime stats: totalHours, totalSessions, totalSubjects, daysActive |
 | `GET` | `/api/users/me/group` | Caller's current group + members with todaySeconds; 404 if not in any group |
-| `GET` | `/api/users/me/insights?period=week\|month\|all` | Insights: totalTime, dailyAvg, bestDay, heatmap, barData (last 7 days), subjectDistribution, streak, totalSessions |
+| `GET` | `/api/users/me/insights?period=week\|month\|allTime` | Insights: totalSeconds, dailyAverageSeconds, bestDaySeconds, heatmap [{date,seconds}], bySubject (sorted desc with %), dailyBreakdown (7/30/12 entries), streak, totalSessions; period accepts `week`, `month`, `allTime` (aliases: `all` → `allTime`) |
 | `GET` | `/api/users/me/preferences` | Fetch caller's full preferences; upserts with all defaults on first call |
 | `PATCH` | `/api/users/me/preferences` | Update any subset of preference fields; body key `longBreakAfter` maps to `longBreakAfterRounds` in DB; returns full updated preferences |
 | `GET` | `/api/users/:id/profile` | Fetch user profile by ID (legacy) |
