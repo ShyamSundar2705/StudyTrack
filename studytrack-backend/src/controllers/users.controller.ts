@@ -170,7 +170,7 @@ export async function getMyGroup(request: FastifyRequest, reply: FastifyReply) {
     todaySeconds: todayMap[m.userId] || 0
   }))
 
-  return reply.send({ data: { group: { id: group.id, name: group.name, createdAt: group.createdAt, members } } })
+  return reply.send({ data: { group: { id: group.id, name: group.name, inviteCode: group.inviteCode, isPublic: group.isPublic, maxMembers: group.maxMembers, createdAt: group.createdAt, members } } })
 }
 
 // GET /users/me/insights?period=week|month|allTime&subjectId=  (also accepts 'all' for allTime)
