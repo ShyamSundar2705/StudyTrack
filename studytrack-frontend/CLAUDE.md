@@ -67,6 +67,8 @@ sm: 8  |  md: 12  |  lg: 14  |  xl: 16  |  xxl: 20
 
 Components added in batch 4: `SubjectFilterSheet` — modal bottom sheet for filtering insights by subject; props: `visible`, `selectedSubjectId`, `onSelect`, `onClose`, `subjectHours`.
 
+Components added in batch 5: `NoGroupView` — empty-state view rendered inside StudyGroupsScreen when user has no group; props: `onCreateGroup`, `onJoinGroup`. `CreateGroupSheet` — modal sheet to create a group with name, privacy toggle, max members; props: `visible`, `onClose`, `onCreated(group)`. `JoinGroupSheet` — modal sheet with two tabs (Invite Code, Search); props: `visible`, `onClose`, `onJoined(group)`; search tab uses 400ms debounce via setTimeout/clearTimeout.
+
 | Screen file | Route name | Location | Description |
 |---|---|---|---|
 | `SplashScreen.jsx` | `Splash` | Auth stack | Google OAuth + email/password login via `AuthModal`, session restore on launch, backend pre-flight health check |
@@ -119,8 +121,8 @@ All stores are Zustand vanilla stores (no persist middleware).
 **Rule: never fetch data inside a component. Use store actions or `useEffect` hooks.**
 
 ### `useUserStore`
-Fields: `id`, `name`, `handle`, `avatar`, `streak`, `totalHours`, `dailyGoalSeconds`, `preferences` (full UserPreferences object, populated after auth)
-Actions: `setUser(userData)`, `updateStreak(n)`, `setPreferences(partial)`, `reset()`
+Fields: `id`, `name`, `handle`, `avatar`, `streak`, `totalHours`, `dailyGoalSeconds`, `preferences` (full UserPreferences object, populated after auth), `group` (full group object after create/join, null otherwise)
+Actions: `setUser(userData)`, `updateStreak(n)`, `setPreferences(partial)`, `setGroup(group)`, `reset()`
 
 ### `useSubjectStore`
 Fields: `subjects` — `[{ id, name, color, totalSeconds }]`

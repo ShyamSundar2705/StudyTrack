@@ -42,8 +42,8 @@ src/
 | `Task` | `id`, `userId`, `title`, `subjectId?`, `dueDate?`, `estimatedMinutes?`, `completed`, `completedAt?`, `carriedOver`, `isRecurring` (default false), `recurringDays Int[]`, `createdAt` | `carriedOver` flags tasks rolled from a previous day; `isRecurring` + `recurringDays` define weekly repeat schedule |
 | `RecurringTaskCompletion` | `id`, `taskId`, `userId`, `date` (YYYY-MM-DD), `completedAt` | Per-day completion record for recurring tasks; `@@unique([taskId, date])` |
 | `Achievement` | `id`, `userId`, `type` (enum), `unlockedAt` | Achievement types: FIRST_SESSION, STREAK_3/7, TOTAL_1H/10H/100H, EARLY_BIRD, NIGHT_OWL |
-| `Group` | `id`, `name`, `createdAt` | Full CRUD via `/api/groups` routes |
-| `GroupMember` | `id`, `groupId`, `userId`, `joinedAt` | Junction table — no unique constraint on (groupId, userId); join endpoint guards against duplicates in application code |
+| `Group` | `id`, `name`, `inviteCode` (unique), `isPublic` (default false), `maxMembers` (default 20), `createdAt` | Full CRUD via `/api/groups` routes; invite code auto-generated on create |
+| `GroupMember` | `id`, `groupId`, `userId`, `joinedAt`; `@@unique([groupId, userId])` | Junction table — DB-level uniqueness enforced |
 | `ScheduleEvent` | `id`, `userId`, `title`, `date` (YYYY-MM-DD), `startTime` (HH:MM), `durationMinutes` (default 60), `subjectId?`, `isRecurring`, `recurringDays (Int[])`, `color?` | One-off or recurring events in the daily planner |
 
 ### Schema operations
@@ -120,7 +120,9 @@ All routes are under `/api`. Auth routes have no authentication; all others requ
 
 | Method | Path | Description |
 |---|---|---|
-| `POST` | `/api/groups` | Create a group (`name`); creator is automatically added as first member |
+| `POST` | `/api/groups` | Create a group (`name`, optional `isPublic`, `maxMembers`); auto-generates unique 6-char `inviteCode`; creator added as first member |
+| `POST` | `/api/groups/join-by-code` | Join group by invite code (`inviteCode`); 404 if not found, 409 if already member, 400 if full |
+| `GET` | `/api/groups/search?q=name` | Search public groups by name (case-insensitive, min 2 chars); excludes groups user is already in; returns `memberCount` |
 | `GET` | `/api/groups/:id` | Group details + all members with `todaySeconds` (today's study time) |
 | `POST` | `/api/groups/:id/join` | Add caller to group; 409 if already a member |
 | `DELETE` | `/api/groups/:id/leave` | Remove caller from group; 404 if not a member |
@@ -226,13 +228,11 @@ POST and PATCH routes must define `schema.body` in route options (Fastify valida
 
 - **Leaderboard scope is group-only:** `GET /api/leaderboard` (legacy) only supports `scope=group`. The `category` and `global` scope values shown in the frontend `LeaderboardScreen` will return a 400 error. These are UI placeholder values — use `GET /api/groups/:id/leaderboard` for group leaderboards going forward.
 - **Streak computed on every login:** The streak calculation in `supabaseLogin` runs a full session query on every OAuth login. This is acceptable at current scale but should be moved to a scheduled job or cached field before high-traffic launch.
-- **`GroupMember` has no unique DB constraint on (groupId, userId):** The join endpoint guards against duplicates in application code (findFirst + 409), but there is no database-level constraint. If concurrent join requests race, duplicates could be inserted. Add `@@unique([groupId, userId])` to the schema before production.
 - **Prisma dev must be running before the backend:** `npx prisma dev` starts the local Postgres proxy on port 51214. Without it, every route returns 500.
 - **Streak in `GET /users/me/insights` is period-limited:** The streak is computed from `dayMap`, which is scoped to the period's `startDate`. For `period=week` the streak caps at 7, for `period=month` at 30. Only `period=allTime` returns the true streak. The frontend "Current Streak" card should ideally always pass `allTime`, or streak should be computed independently of the period filter.
 
 ## Next Steps
 
-- Add `@@unique([groupId, userId])` to `GroupMember` schema before production (see Known Issues)
 - Deploy to Railway or Fly.io; switch `DATABASE_URL` to production Prisma Postgres URL; set all env vars in platform secret manager
 
 ---
