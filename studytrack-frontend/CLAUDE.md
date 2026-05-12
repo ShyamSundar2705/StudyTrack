@@ -65,6 +65,8 @@ sm: 8  |  md: 12  |  lg: 14  |  xl: 16  |  xxl: 20
 
 ## Screen Inventory
 
+Components added in batch 4: `SubjectFilterSheet` — modal bottom sheet for filtering insights by subject; props: `visible`, `selectedSubjectId`, `onSelect`, `onClose`, `subjectHours`.
+
 | Screen file | Route name | Location | Description |
 |---|---|---|---|
 | `SplashScreen.jsx` | `Splash` | Auth stack | Google OAuth + email/password login via `AuthModal`, session restore on launch, backend pre-flight health check |
@@ -151,7 +153,8 @@ Actions: `setConfig`, `enablePomoMode`, `disablePomoMode`, `advancePhase`, `getC
 
 | File | Functions |
 |---|---|
-| `src/api/users.js` | `getMe`, `updateMe`, `getStats`, `getInsights`, `getMyGroup`, `getPreferences`, `updatePreferences`, `signInWithGoogle`, `signInWithEmail`, `signOut` |
+| `src/api/users.js` | `getMe`, `updateMe`, `getStats`, `getInsights(period, subjectId?)`, `getMyGroup`, `getPreferences`, `updatePreferences`, `signInWithGoogle`, `signInWithEmail`, `signOut` |
+| `src/utils/shareStats.js` | `shareInsightsStats({ period, totalSeconds, dailyAverageSeconds, bestDaySeconds, bySubject, streak, userName })` — builds formatted text and opens native share sheet |
 | `src/api/subjects.js` | `getSubjects`, `getSubjectDetails`, `createSubject` |
 | `src/api/sessions.js` | `getTodaySessions`, `startSession`, `completeSession`, `manualSession`, `getSessionsBySubject` |
 | `src/api/tasks.js` | `getTasks`, `createTask`, `updateTask`, `deleteTask` |

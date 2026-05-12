@@ -12,10 +12,10 @@ export const getMe = () =>
 export const updateMe = (data) =>
   client.put('/users/me', data).then((r) => r.data);
 
-// GET /users/me/insights?period=week|month|allTime
+// GET /users/me/insights?period=week|month|allTime&subjectId= (subjectId optional)
 // Returns: { totalSeconds, dailyAverageSeconds, bestDaySeconds, heatmap, bySubject, dailyBreakdown, streak, totalSessions }
-export const getInsights = (period) =>
-  client.get('/users/me/insights', { params: { period } }).then((r) => r.data.data ?? null);
+export const getInsights = (period, subjectId) =>
+  client.get('/users/me/insights', { params: { period, ...(subjectId && { subjectId }) } }).then((r) => r.data.data ?? null);
 
 // GET /users/me/stats
 // Returns: lifetime stats: { totalHours, totalSessions, totalSubjects, daysActive }

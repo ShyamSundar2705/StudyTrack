@@ -173,10 +173,10 @@ export async function getMyGroup(request: FastifyRequest, reply: FastifyReply) {
   return reply.send({ data: { group: { id: group.id, name: group.name, createdAt: group.createdAt, members } } })
 }
 
-// GET /users/me/insights?period=week|month|allTime   (also accepts 'all' for allTime)
+// GET /users/me/insights?period=week|month|allTime&subjectId=  (also accepts 'all' for allTime)
 export async function getInsights(request: FastifyRequest, reply: FastifyReply) {
   const userId = request.user.id
-  const { period = 'week' } = request.query as { period?: string }
+  const { period = 'week', subjectId } = request.query as { period?: string; subjectId?: string }
   const prisma = request.server.prisma
 
   const now = new Date()
@@ -198,24 +198,43 @@ export async function getInsights(request: FastifyRequest, reply: FastifyReply) 
   }
 
   const sessions = await prisma.session.findMany({
-    where: { userId, startedAt: { gte: startDate }, durationSeconds: { not: null } },
-    include: { subject: { select: { name: true, colorHex: true } } },
+    where: {
+      userId,
+      startedAt: { gte: startDate },
+      durationSeconds: { not: null },
+      ...(subjectId ? { subjectId } : {}),
+    },
+    select: { id: true, subjectId: true, startedAt: true, durationSeconds: true },
     orderBy: { startedAt: 'asc' },
   })
+
+  // Fetch subject metadata in a separate query to avoid @prisma/adapter-pg
+  // unnamed prepared-statement caching bug with `include` sub-queries.
+  const uniqueSubjectIds = [...new Set(sessions.map((s: any) => s.subjectId))]
+  const subjectsData = uniqueSubjectIds.length > 0
+    ? await prisma.subject.findMany({
+        where: { id: { in: uniqueSubjectIds } },
+        select: { id: true, name: true, colorHex: true },
+      })
+    : []
+  const subjectLookup: Record<string, { name: string; colorHex: string }> =
+    Object.fromEntries(subjectsData.map((s: any) => [s.id, { name: s.name, colorHex: s.colorHex }]))
 
   const totalSeconds = sessions.reduce((sum: number, s: any) => sum + (s.durationSeconds || 0), 0)
   const totalSessions = sessions.length
 
   const dayMap: Record<string, number> = {}
-  const subjectMap: Record<string, { name: string; colorHex: string; seconds: number }> = {}
+  const subjectMap: Record<string, { name: string; colorHex: string; seconds: number; sessions: number }> = {}
 
   for (const s of sessions) {
     const date = s.startedAt.toISOString().split('T')[0]
     dayMap[date] = (dayMap[date] || 0) + (s.durationSeconds || 0)
     if (!subjectMap[s.subjectId]) {
-      subjectMap[s.subjectId] = { name: s.subject.name, colorHex: s.subject.colorHex, seconds: 0 }
+      const sub = subjectLookup[s.subjectId] ?? { name: 'Unknown', colorHex: '#9E9E9E' }
+      subjectMap[s.subjectId] = { name: sub.name, colorHex: sub.colorHex, seconds: 0, sessions: 0 }
     }
     subjectMap[s.subjectId].seconds += s.durationSeconds || 0
+    subjectMap[s.subjectId].sessions += 1
   }
 
   const daysWithSessions = Object.keys(dayMap).length
@@ -254,6 +273,7 @@ export async function getInsights(request: FastifyRequest, reply: FastifyReply) 
       name: data.name,
       colorHex: data.colorHex,
       seconds: data.seconds,
+      sessions: data.sessions,
       percentage: totalSeconds > 0 ? Math.round((data.seconds / totalSeconds) * 100) : 0,
     }))
     .sort((a, b) => b.seconds - a.seconds)

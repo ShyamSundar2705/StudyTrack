@@ -1,13 +1,17 @@
 import React, { useRef, useCallback, useMemo, useEffect, useState } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity, StyleSheet, Animated,
+  Alert, Modal,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import { colors, radius, spacing } from '../constraints/theme';
 import { getInsights } from '../api/users';
 import useUserStore from '../store/useUserStore';
+import useSubjectStore from '../store/useSubjectStore';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { shareInsightsStats } from '../utils/shareStats';
+import SubjectFilterSheet from '../components/SubjectFilterSheet';
 
 const BAR_HEIGHT = 160;
 const PERIODS = ['Week', 'Month', 'All Time'];
@@ -38,9 +42,10 @@ function utcTodayStr() {
 }
 
 function padAllTimeHeatmap(entries) {
-  if (entries.length === 0) return Array(371).fill({ date: '', seconds: 0 });
+  if (entries.length === 0) return [];
   const firstDate = new Date(entries[0].date + 'T00:00:00Z');
-  const pads = Array(firstDate.getUTCDay()).fill({ date: '', seconds: 0 });
+  const dayOfWeek = firstDate.getUTCDay();
+  const pads = Array(isNaN(dayOfWeek) ? 0 : dayOfWeek).fill({ date: '', seconds: 0 });
   const padded = [...pads, ...entries];
   while (padded.length % 7 !== 0) padded.push({ date: '', seconds: 0 });
   return padded;
@@ -60,12 +65,18 @@ export default function InsightsScreen({ navigation }) {
   const storeStreak = useUserStore((s) => s.streak);
   const insets = useSafeAreaInsets();
   const todayStr = useMemo(utcTodayStr, []);
+  const subjects = useSubjectStore((s) => s.subjects);
 
   const [period, setPeriod] = useState('week');
   const [insightsData, setInsightsData] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
 
+  const [showShareSheet, setShowShareSheet] = useState(false);
+  const [selectedSubjectId, setSelectedSubjectId] = useState(null);
+  const [showFilterSheet, setShowFilterSheet] = useState(false);
+
+  const shareSheetY = useRef(new Animated.Value(800)).current;
   const pulseAnim = useRef(new Animated.Value(0.3)).current;
 
   useEffect(() => {
@@ -79,11 +90,23 @@ export default function InsightsScreen({ navigation }) {
     return () => loop.stop();
   }, []);
 
-  const fetchInsights = useCallback(async (p) => {
+  useEffect(() => {
+    if (showShareSheet) {
+      Animated.spring(shareSheetY, {
+        toValue: 0, useNativeDriver: true, tension: 65, friction: 11,
+      }).start();
+    } else {
+      Animated.timing(shareSheetY, {
+        toValue: 800, duration: 220, useNativeDriver: true,
+      }).start();
+    }
+  }, [showShareSheet]);
+
+  const fetchInsights = useCallback(async (p, subjectId) => {
     setIsLoading(true);
     setError(null);
     try {
-      const res = await getInsights(p);
+      const res = await getInsights(p, subjectId);
       setInsightsData(res);
     } catch {
       setError(true);
@@ -93,21 +116,82 @@ export default function InsightsScreen({ navigation }) {
   }, []);
 
   useFocusEffect(
-    useCallback(() => { fetchInsights(period); }, [period, fetchInsights])
+    useCallback(() => { fetchInsights(period, selectedSubjectId); }, [period, selectedSubjectId, fetchInsights])
   );
+
+  const handleExportCSV = async () => {
+    if (!insightsData?.bySubject?.length) {
+      Alert.alert('No data to export', 'Study some sessions first!');
+      return;
+    }
+
+    const headers = 'Subject,Total Hours,Sessions,Percentage\n';
+    const rows = (insightsData.bySubject ?? [])
+      .map(s => [
+        s.name,
+        (s.seconds / 3600).toFixed(2),
+        s.sessions ?? 0,
+        s.percentage.toFixed(1) + '%',
+      ].join(','))
+      .join('\n');
+    const csvContent = headers + rows;
+
+    try {
+      const FileSystem = require('expo-file-system/legacy');
+      const fileUri = FileSystem.cacheDirectory + `studytrack_stats_${period}.csv`;
+      await FileSystem.writeAsStringAsync(fileUri, csvContent, {
+        encoding: 'utf8',
+      });
+      const Sharing = require('expo-sharing').default ?? require('expo-sharing');
+      const isAvailable = await Sharing.isAvailableAsync();
+      if (isAvailable) {
+        await Sharing.shareAsync(fileUri, {
+          mimeType: 'text/csv',
+          dialogTitle: 'Export Study Stats',
+          UTI: 'public.comma-separated-values-text',
+        });
+      } else {
+        Alert.alert('Sharing not available', 'Cannot share files on this device.');
+      }
+    } catch (err) {
+      console.error('CSV export failed:', err);
+      Alert.alert('Export failed', err.message);
+    }
+  };
+
+  const activeSubject = selectedSubjectId
+    ? subjects.find(s => s.id === selectedSubjectId)
+    : null;
+
+  const subjectHours = useMemo(() => {
+    if (!insightsData?.bySubject) return {};
+    return Object.fromEntries(
+      insightsData.bySubject.map(s => [s.subjectId, formatDuration(s.seconds)])
+    );
+  }, [insightsData]);
 
   const isEmpty = insightsData && insightsData.totalSeconds === 0;
   const hasData = insightsData && !isEmpty;
 
   const heatmapTitle = useMemo(() => {
-    if (period === 'week') return 'This Week';
-    if (period === 'allTime') return 'All Time';
-    return new Date().toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
-  }, [period]);
+    const base = period === 'week'
+      ? 'This Week'
+      : period === 'allTime'
+        ? 'All Time'
+        : new Date().toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+    if (activeSubject) return `${activeSubject.name} heatmap`;
+    return base;
+  }, [period, activeSubject]);
+
+  const metricSublabel = useMemo(() => {
+    const base = PERIOD_SUBLABEL[period];
+    if (activeSubject) return `${activeSubject.name} — ${base.toLowerCase()}`;
+    return base;
+  }, [period, activeSubject]);
 
   function renderHeatmap() {
     if (!hasData) return null;
-    const entries = insightsData.heatmap;
+    const entries = insightsData.heatmap ?? [];
 
     if (period === 'week') {
       return (
@@ -157,9 +241,12 @@ export default function InsightsScreen({ navigation }) {
       );
     }
 
-    // allTime: 7 rows × numCols columns in a horizontal scroll
+    // allTime
+    if (!entries.length) return null;
     const padded = padAllTimeHeatmap(entries);
-    const numCols = Math.ceil(padded.length / 7);
+    const totalCells = padded.length;
+    if (totalCells <= 0) return null;
+    const numCols = Math.ceil(totalCells / 7);
     return (
       <ScrollView horizontal showsHorizontalScrollIndicator={false}>
         <View style={{ flexDirection: 'row', gap: 4 }}>
@@ -193,8 +280,10 @@ export default function InsightsScreen({ navigation }) {
 
   function renderBarChart() {
     if (!hasData) return null;
-    const entries = insightsData.dailyBreakdown;
-    const maxSeconds = Math.max(...entries.map(e => e.seconds), 1);
+    const entries = insightsData.dailyBreakdown ?? [];
+    const maxSeconds = entries.length
+      ? Math.max(...entries.map(e => e.seconds ?? 0), 1)
+      : 1;
 
     return (
       <View style={styles.barChart}>
@@ -246,8 +335,14 @@ export default function InsightsScreen({ navigation }) {
           <Text style={styles.headerTitle}>Insights</Text>
         </View>
         <View style={styles.headerRight}>
-          <TouchableOpacity style={styles.headerBtn}>
+          {/* Share icon */}
+          <TouchableOpacity style={styles.headerBtn} onPress={() => setShowShareSheet(true)}>
             <Ionicons name="share-outline" size={22} color={colors.textSecondary} />
+          </TouchableOpacity>
+          {/* Filter icon with active dot */}
+          <TouchableOpacity style={styles.headerBtn} onPress={() => setShowFilterSheet(true)}>
+            <Ionicons name="filter-outline" size={22} color={selectedSubjectId ? colors.accentPrimary : colors.textSecondary} />
+            {selectedSubjectId != null && <View style={styles.filterDot} />}
           </TouchableOpacity>
           <View style={styles.avatar}>
             <Ionicons name="person-outline" size={18} color={colors.textSecondary} />
@@ -276,6 +371,17 @@ export default function InsightsScreen({ navigation }) {
           ))}
         </View>
 
+        {/* ── Active filter banner ── */}
+        {activeSubject && (
+          <View style={styles.filterBanner}>
+            <View style={[styles.filterBannerDot, { backgroundColor: activeSubject.color }]} />
+            <Text style={styles.filterBannerText}>{activeSubject.name}</Text>
+            <TouchableOpacity onPress={() => setSelectedSubjectId(null)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+              <Text style={styles.filterBannerClose}>✕</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
         {/* ── Loading skeleton ── */}
         {isLoading && (
           <Animated.View style={[styles.skeletonContainer, { opacity: pulseAnim }]}>
@@ -293,7 +399,7 @@ export default function InsightsScreen({ navigation }) {
           <View style={styles.centeredState}>
             <Ionicons name="alert-circle-outline" size={32} color={colors.danger} />
             <Text style={styles.stateTitle}>Failed to load insights</Text>
-            <TouchableOpacity onPress={() => fetchInsights(period)}>
+            <TouchableOpacity onPress={() => fetchInsights(period, selectedSubjectId)}>
               <Text style={styles.stateAction}>Try again</Text>
             </TouchableOpacity>
           </View>
@@ -304,7 +410,11 @@ export default function InsightsScreen({ navigation }) {
           <View style={styles.centeredState}>
             <Ionicons name="book-open" size={40} color={colors.border} />
             <Text style={styles.stateTitle}>No study data yet</Text>
-            <Text style={styles.stateSubtitle}>Start a session to see your insights</Text>
+            <Text style={styles.stateSubtitle}>
+              {activeSubject
+                ? `No sessions for ${activeSubject.name} in this period`
+                : 'Start a session to see your insights'}
+            </Text>
           </View>
         )}
 
@@ -321,7 +431,7 @@ export default function InsightsScreen({ navigation }) {
                 <View key={m.label} style={styles.metricCard}>
                   <Text style={styles.metricLabel}>{m.label}</Text>
                   <Text style={styles.metricValue}>{m.value}</Text>
-                  <Text style={styles.metricSublabel}>{PERIOD_SUBLABEL[period]}</Text>
+                  <Text style={styles.metricSublabel}>{metricSublabel}</Text>
                   <View style={styles.metricBar} />
                 </View>
               ))}
@@ -352,7 +462,7 @@ export default function InsightsScreen({ navigation }) {
             <View style={styles.card}>
               <Text style={styles.cardTitle}>Subject distribution</Text>
               <View style={styles.subjectList}>
-                {insightsData.bySubject.slice(0, 5).map((s) => (
+                {(insightsData.bySubject ?? []).slice(0, 5).map((s) => (
                   <TouchableOpacity
                     key={s.subjectId}
                     style={styles.subjectRow}
@@ -372,7 +482,7 @@ export default function InsightsScreen({ navigation }) {
                     </View>
                   </TouchableOpacity>
                 ))}
-                {insightsData.bySubject.length > 5 && (
+                {(insightsData.bySubject ?? []).length > 5 && (
                   <TouchableOpacity onPress={() => {}}>
                     <Text style={styles.seeAll}>See all subjects →</Text>
                   </TouchableOpacity>
@@ -397,6 +507,74 @@ export default function InsightsScreen({ navigation }) {
         )}
 
       </ScrollView>
+
+      {/* ── Share Action Sheet ── */}
+      <Modal visible={showShareSheet} transparent animationType="none" onRequestClose={() => setShowShareSheet(false)}>
+        <TouchableOpacity style={styles.overlay} activeOpacity={1} onPress={() => setShowShareSheet(false)} />
+        <Animated.View
+          style={[styles.shareSheet, { transform: [{ translateY: shareSheetY }], paddingBottom: insets.bottom + 32 }]}
+        >
+          <View style={styles.handle} />
+          <Text style={styles.shareHeader}>Share Stats</Text>
+
+          {/* Share as Text */}
+          <TouchableOpacity
+            style={styles.shareRow}
+            activeOpacity={0.7}
+            onPress={async () => {
+              setShowShareSheet(false);
+              await shareInsightsStats({
+                period,
+                totalSeconds: insightsData?.totalSeconds,
+                dailyAverageSeconds: insightsData?.dailyAverageSeconds,
+                bestDaySeconds: insightsData?.bestDaySeconds,
+                bySubject: insightsData?.bySubject,
+                streak: useUserStore.getState().streak,
+                userName: useUserStore.getState().name,
+                subjectName: activeSubject?.name,
+              });
+            }}
+          >
+            <Ionicons name="share-outline" size={20} color={colors.accentLight} />
+            <View style={styles.shareRowText}>
+              <Text style={styles.shareRowLabel}>Share as Text</Text>
+              <Text style={styles.shareRowSub}>Send to any app</Text>
+            </View>
+          </TouchableOpacity>
+
+          <View style={styles.shareDivider} />
+
+          {/* Export as CSV */}
+          <TouchableOpacity
+            style={styles.shareRow}
+            activeOpacity={0.7}
+            onPress={() => {
+              setShowShareSheet(false);
+              handleExportCSV();
+            }}
+          >
+            <Ionicons name="document-text-outline" size={20} color={colors.accentLight} />
+            <View style={styles.shareRowText}>
+              <Text style={styles.shareRowLabel}>Export as CSV</Text>
+              <Text style={styles.shareRowSub}>Download session data</Text>
+            </View>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.cancelBtn} onPress={() => setShowShareSheet(false)} activeOpacity={0.8}>
+            <Text style={styles.cancelText}>Cancel</Text>
+          </TouchableOpacity>
+        </Animated.View>
+      </Modal>
+
+      {/* ── Subject Filter Sheet ── */}
+      <SubjectFilterSheet
+        visible={showFilterSheet}
+        selectedSubjectId={selectedSubjectId}
+        onSelect={(id) => setSelectedSubjectId(id)}
+        onClose={() => setShowFilterSheet(false)}
+        subjectHours={subjectHours}
+      />
+
     </View>
   );
 }
@@ -417,6 +595,10 @@ const styles = StyleSheet.create({
     width: 32, height: 32, borderRadius: 16, backgroundColor: colors.surface,
     borderWidth: 1, borderColor: colors.border, alignItems: 'center', justifyContent: 'center',
   },
+  filterDot: {
+    position: 'absolute', top: 0, right: 0,
+    width: 6, height: 6, borderRadius: 3, backgroundColor: colors.accentPrimary,
+  },
 
   scroll: { flex: 1 },
   scrollContent: { padding: spacing.xxl, gap: spacing.xl, paddingBottom: spacing.xl },
@@ -428,6 +610,17 @@ const styles = StyleSheet.create({
   periodBtnActive:   { backgroundColor: colors.accentPrimary },
   periodBtnText:     { fontSize: 14, fontWeight: '500', color: colors.textSecondary },
   periodBtnTextActive: { color: colors.textPrimary },
+
+  filterBanner: {
+    flexDirection: 'row', alignItems: 'center',
+    backgroundColor: colors.surfaceBlue,
+    borderWidth: 0.5, borderColor: colors.accentPrimary,
+    borderRadius: 10, paddingVertical: spacing.sm, paddingHorizontal: spacing.lg,
+    gap: spacing.sm,
+  },
+  filterBannerDot:   { width: 8, height: 8, borderRadius: 4 },
+  filterBannerText:  { flex: 1, fontSize: 13, color: colors.accentLight },
+  filterBannerClose: { fontSize: 16, color: colors.textSecondary },
 
   skeletonContainer: { gap: spacing.xl },
   skeletonBlock: { backgroundColor: colors.surface, borderRadius: radius.xl },
@@ -487,4 +680,34 @@ const styles = StyleSheet.create({
   },
   statsValue: { fontSize: 24, fontWeight: '600', color: colors.textPrimary },
   statsLabel: { fontSize: 12, color: colors.textSecondary },
+
+  // Share sheet
+  overlay: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0,0,0,0.6)' },
+  shareSheet: {
+    position: 'absolute', bottom: 0, left: 0, right: 0,
+    backgroundColor: colors.surface,
+    borderTopLeftRadius: radius.xxl, borderTopRightRadius: radius.xxl,
+  },
+  handle: {
+    width: 40, height: 4, backgroundColor: colors.borderLight, borderRadius: 2,
+    alignSelf: 'center', marginTop: spacing.md,
+  },
+  shareHeader: {
+    fontSize: 16, fontWeight: '700', color: colors.textPrimary,
+    paddingHorizontal: spacing.xxl, paddingTop: spacing.lg, paddingBottom: spacing.sm,
+  },
+  shareRow: {
+    height: 64, flexDirection: 'row', alignItems: 'center',
+    paddingHorizontal: spacing.xxl, gap: spacing.md,
+  },
+  shareRowText: { flex: 1, gap: 3 },
+  shareRowLabel: { fontSize: 15, color: colors.textPrimary },
+  shareRowSub:   { fontSize: 12, color: colors.textSecondary },
+  shareDivider:  { height: 0.5, backgroundColor: colors.border, marginHorizontal: spacing.xxl },
+  cancelBtn: {
+    marginHorizontal: spacing.xxl, marginTop: spacing.md, height: 52,
+    backgroundColor: colors.surfaceDeep, borderRadius: radius.md,
+    alignItems: 'center', justifyContent: 'center',
+  },
+  cancelText: { fontSize: 15, color: colors.textPrimary },
 });
