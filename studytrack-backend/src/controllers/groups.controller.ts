@@ -115,6 +115,40 @@ export async function joinByCode(request: FastifyRequest, reply: FastifyReply) {
   return reply.status(201).send({ data: { group, member } })
 }
 
+export async function searchGroups(request: FastifyRequest, reply: FastifyReply) {
+  const userId = request.user.id
+  const { q } = request.query as { q?: string }
+  const prisma = request.server.prisma
+
+  if (!q || q.length < 2) {
+    return reply.status(400).send({ error: 'Search query must be at least 2 characters' })
+  }
+
+  const groups = await prisma.group.findMany({
+    where: {
+      isPublic: true,
+      name: { contains: q, mode: 'insensitive' },
+      members: { none: { userId } }
+    },
+    include: { _count: { select: { members: true } } },
+    take: 10
+  })
+
+  return reply.send({
+    data: {
+      groups: groups.map(g => ({
+        id: g.id,
+        name: g.name,
+        inviteCode: g.inviteCode,
+        memberCount: g._count.members,
+        maxMembers: g.maxMembers,
+        isPublic: g.isPublic,
+        createdAt: g.createdAt,
+      }))
+    }
+  })
+}
+
 export async function leaveGroup(request: FastifyRequest, reply: FastifyReply) {
   const { id: groupId } = request.params as { id: string }
   const userId = request.user.id

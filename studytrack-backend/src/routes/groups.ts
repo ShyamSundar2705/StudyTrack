@@ -40,6 +40,8 @@ export default async function groupRoutes(fastify: FastifyInstance) {
     }
   }, joinByCode)
 
+  fastify.get('/groups/search', { preHandler: authenticate }, searchGroups)
+
   fastify.get('/groups/:id', { preHandler: authenticate }, getGroup)
 
   fastify.post('/groups/:id/join', { preHandler: authenticate }, joinGroup)
