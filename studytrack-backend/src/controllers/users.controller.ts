@@ -173,63 +173,37 @@ export async function getMyGroup(request: FastifyRequest, reply: FastifyReply) {
   return reply.send({ data: { group: { id: group.id, name: group.name, createdAt: group.createdAt, members } } })
 }
 
-function fmtSeconds(s: number): string {
-  const h = Math.floor(s / 3600)
-  const m = Math.floor((s % 3600) / 60)
-  return h > 0 ? `${h}h ${m}m` : `${m}m`
-}
-
-// Build a 5×7 heatmap grid of intensity strings matching the frontend INT keys
-function buildHeatmapGrid(dayMap: Record<string, number>, anchorDate: Date): string[][] {
-  const maxSeconds = Math.max(...Object.values(dayMap), 1)
-  // 35 days ending on anchorDate (today), arranged newest at bottom-right
-  const days: string[] = []
-  for (let i = 34; i >= 0; i--) {
-    const d = new Date(Date.UTC(anchorDate.getUTCFullYear(), anchorDate.getUTCMonth(), anchorDate.getUTCDate() - i))
-    days.push(d.toISOString().split('T')[0])
-  }
-  const grid: string[][] = []
-  for (let row = 0; row < 5; row++) {
-    const rowData: string[] = []
-    for (let col = 0; col < 7; col++) {
-      const seconds = dayMap[days[row * 7 + col]] || 0
-      if (seconds === 0) { rowData.push('empty'); continue }
-      const r = seconds / maxSeconds
-      if (r < 0.2) rowData.push('l1')
-      else if (r < 0.4) rowData.push('l2')
-      else if (r < 0.6) rowData.push('l3')
-      else if (r < 0.8) rowData.push('l4')
-      else rowData.push('l5')
-    }
-    grid.push(rowData)
-  }
-  return grid
-}
-
-// GET /users/me/insights?period=week|month|all
+// GET /users/me/insights?period=week|month|allTime   (also accepts 'all' for allTime)
 export async function getInsights(request: FastifyRequest, reply: FastifyReply) {
   const userId = request.user.id
-  const { period = 'month' } = request.query as { period?: string }
+  const { period = 'week' } = request.query as { period?: string }
   const prisma = request.server.prisma
 
   const now = new Date()
-  let startDate: Date
+  const todayStr = now.toISOString().split('T')[0]
+  const normalized = period === 'all' ? 'allTime' : period
 
-  if (period === 'week') {
-    startDate = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() - 7))
-  } else if (period === 'all') {
-    startDate = new Date(0)
+  let startDate: Date
+  let heatmapDays: number
+
+  if (normalized === 'week') {
+    heatmapDays = 7
+    startDate = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() - 6))
+  } else if (normalized === 'month') {
+    heatmapDays = 30
+    startDate = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() - 29))
   } else {
-    startDate = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1))
+    heatmapDays = 365
+    startDate = new Date(0)
   }
 
   const sessions = await prisma.session.findMany({
     where: { userId, startedAt: { gte: startDate }, durationSeconds: { not: null } },
     include: { subject: { select: { name: true, colorHex: true } } },
-    orderBy: { startedAt: 'asc' }
+    orderBy: { startedAt: 'asc' },
   })
 
-  const totalSeconds = sessions.reduce((sum, s) => sum + (s.durationSeconds || 0), 0)
+  const totalSeconds = sessions.reduce((sum: number, s: any) => sum + (s.durationSeconds || 0), 0)
   const totalSessions = sessions.length
 
   const dayMap: Record<string, number> = {}
@@ -244,36 +218,47 @@ export async function getInsights(request: FastifyRequest, reply: FastifyReply) 
     subjectMap[s.subjectId].seconds += s.durationSeconds || 0
   }
 
-  const daysActive = Object.keys(dayMap).length
-  const dailyAvgSeconds = daysActive > 0 ? Math.round(totalSeconds / daysActive) : 0
-  const bestDaySeconds = Object.values(dayMap).sort((a, b) => b - a)[0] ?? 0
-  const todayStr = now.toISOString().split('T')[0]
+  const daysWithSessions = Object.keys(dayMap).length
+  const dailyAverageSeconds = daysWithSessions > 0 ? Math.round(totalSeconds / daysWithSessions) : 0
+  const bestDaySeconds = Object.values(dayMap).length > 0 ? Math.max(...Object.values(dayMap)) : 0
 
-  // 7-day bar chart — pct relative to the busiest day in the window
-  const rawBars: { day: string; date: string; seconds: number }[] = []
-  for (let i = 6; i >= 0; i--) {
+  // Flat heatmap array: heatmapDays entries, oldest first
+  const heatmap: { date: string; seconds: number }[] = []
+  for (let i = heatmapDays - 1; i >= 0; i--) {
     const d = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() - i))
     const dateStr = d.toISOString().split('T')[0]
-    rawBars.push({ day: d.toLocaleDateString('en-US', { weekday: 'narrow', timeZone: 'UTC' }), date: dateStr, seconds: dayMap[dateStr] || 0 })
+    heatmap.push({ date: dateStr, seconds: dayMap[dateStr] || 0 })
   }
-  const maxBarSeconds = Math.max(...rawBars.map(b => b.seconds), 1)
-  const barData = rawBars.map(b => ({
-    day: b.day,
-    pct: b.seconds / maxBarSeconds,
-    active: b.date === todayStr,
-    tooltip: b.seconds > 0 ? fmtSeconds(b.seconds) : null,
-  }))
 
-  const subjectDistribution = Object.entries(subjectMap)
+  // dailyBreakdown: same as heatmap for week/month; 12 monthly aggregates for allTime
+  let dailyBreakdown: { date: string; seconds: number }[]
+  if (normalized === 'allTime') {
+    dailyBreakdown = []
+    for (let i = 11; i >= 0; i--) {
+      const d = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - i, 1))
+      const monthFirstDay = d.toISOString().split('T')[0]
+      const monthPrefix = monthFirstDay.slice(0, 7)
+      const monthSeconds = Object.entries(dayMap)
+        .filter(([date]) => date.startsWith(monthPrefix))
+        .reduce((sum, [, s]) => sum + s, 0)
+      dailyBreakdown.push({ date: monthFirstDay, seconds: monthSeconds })
+    }
+  } else {
+    dailyBreakdown = heatmap
+  }
+
+  // bySubject sorted by seconds desc with percentage
+  const bySubject = Object.entries(subjectMap)
     .map(([id, data]) => ({
-      id,
+      subjectId: id,
       name: data.name,
-      color: data.colorHex,
-      pct: totalSeconds > 0 ? Math.round((data.seconds / totalSeconds) * 100) : 0,
+      colorHex: data.colorHex,
+      seconds: data.seconds,
+      percentage: totalSeconds > 0 ? Math.round((data.seconds / totalSeconds) * 100) : 0,
     }))
-    .sort((a, b) => b.pct - a.pct)
+    .sort((a, b) => b.seconds - a.seconds)
 
-  // Streak: consecutive days ending today
+  // Streak: consecutive days with sessions ending today
   let streak = 0
   let checkDate = todayStr
   while (dayMap[checkDate]) {
@@ -284,12 +269,12 @@ export async function getInsights(request: FastifyRequest, reply: FastifyReply) 
   }
 
   return reply.send({ data: {
-    totalTime: fmtSeconds(totalSeconds),
-    dailyAvg:  fmtSeconds(dailyAvgSeconds),
-    bestDay:   fmtSeconds(bestDaySeconds),
-    heatmap:   buildHeatmapGrid(dayMap, now),
-    barData,
-    subjectDistribution,
+    totalSeconds,
+    dailyAverageSeconds,
+    bestDaySeconds,
+    heatmap,
+    bySubject,
+    dailyBreakdown,
     streak,
     totalSessions,
   }})
