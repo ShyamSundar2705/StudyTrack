@@ -6,7 +6,9 @@ import {
   TouchableOpacity,
   StyleSheet,
   ActivityIndicator,
+  Alert,
 } from 'react-native';
+import * as Clipboard from 'expo-clipboard';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, radius, spacing } from '../constraints/theme';
 import { getMyGroup } from '../api/users';
@@ -14,6 +16,9 @@ import { getGroupLeaderboard } from '../api/leaderboard';
 import { getGroupSocket } from '../api/socket';
 import useUserStore from '../store/useUserStore';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import NoGroupView from '../components/NoGroupView';
+import CreateGroupSheet from '../components/CreateGroupSheet';
+import JoinGroupSheet from '../components/JoinGroupSheet';
 
 
 function fmtElapsed(seconds) {
@@ -49,52 +54,69 @@ export default function StudyGroupsScreen({ navigation }) {
   const userId = useUserStore((s) => s.id);
   const insets = useSafeAreaInsets();
 
-  const [loading,      setLoading]      = useState(true);
-  const [noGroup,      setNoGroup]      = useState(false);
-  const [groupId,      setGroupId]      = useState(null);
-  const [groupName,    setGroupName]    = useState('Study Group');
-  const [membersMap,   setMembersMap]   = useState({});
-  const [leaderboard,  setLeaderboard]  = useState([]);
-  const [activityFeed, setActivityFeed] = useState([]);
+  const [loading,         setLoading]         = useState(true);
+  const [userGroup,       setUserGroup]        = useState(null);
+  const [groupId,         setGroupId]          = useState(null);
+  const [groupName,       setGroupName]        = useState('Study Group');
+  const [membersMap,      setMembersMap]       = useState({});
+  const [leaderboard,     setLeaderboard]      = useState([]);
+  const [activityFeed,    setActivityFeed]     = useState([]);
+  const [showCreateSheet, setShowCreateSheet]  = useState(false);
+  const [showJoinSheet,   setShowJoinSheet]    = useState(false);
 
   // Keep a ref to membersMap so socket callbacks can read the latest values
   const membersMapRef = useRef({});
   useEffect(() => { membersMapRef.current = membersMap; }, [membersMap]);
 
-  // Load group data on mount
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      try {
-        const resp = await getMyGroup();
-        if (cancelled) return;
-        const group = resp?.data?.group;
-        if (!group) { setNoGroup(true); setLoading(false); return; }
+  const fetchUserGroup = async () => {
+    setLoading(true);
+    try {
+      const resp = await getMyGroup();
+      const group = resp?.data?.group;
+      if (!group) { setUserGroup(null); return; }
 
-        setGroupId(group.id);
-        setGroupName(group.name);
+      setUserGroup(group);
+      setGroupId(group.id);
+      setGroupName(group.name);
 
-        const initialMap = {};
-        for (const m of (group.members ?? [])) {
-          initialMap[m.userId] = {
-            userId: m.userId,
-            name: m.name,
-            todaySeconds: m.todaySeconds ?? 0,
-            status: 'idle',
-            subjectName: '',
-            elapsedSeconds: 0,
-          };
-        }
-        setMembersMap(initialMap);
-      } catch (err) {
-        if (cancelled) return;
-        if (err.response?.status === 404) setNoGroup(true);
-      } finally {
-        if (!cancelled) setLoading(false);
+      const initialMap = {};
+      for (const m of (group.members ?? [])) {
+        initialMap[m.userId] = {
+          userId: m.userId,
+          name: m.name,
+          todaySeconds: m.todaySeconds ?? 0,
+          status: 'idle',
+          subjectName: '',
+          elapsedSeconds: 0,
+        };
       }
-    })();
-    return () => { cancelled = true; };
+      setMembersMap(initialMap);
+    } catch (err) {
+      if (err.response?.status === 404) setUserGroup(null);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchUserGroup();
   }, []);
+
+  const handleGroupCreated = (group) => {
+    setUserGroup(group);
+    setGroupId(group.id);
+    setGroupName(group.name);
+    setMembersMap({});
+    useUserStore.getState().setGroup(group);
+  };
+
+  const handleGroupJoined = (group) => {
+    setUserGroup(group);
+    setGroupId(group.id);
+    setGroupName(group.name ?? 'Study Group');
+    setMembersMap({});
+    useUserStore.getState().setGroup(group);
+  };
 
   // Load leaderboard helper — also called on leaderboard_update socket event
   const fetchLeaderboard = async (gid) => {
@@ -151,18 +173,65 @@ export default function StudyGroupsScreen({ navigation }) {
   const studyingMembers = Object.values(membersMap).filter((m) => m.status === 'studying');
   const maxLbSeconds = leaderboard[0]?.durationSeconds || 1;
 
-  // ── Empty state: not in any group ──────────────────────────────────────────
-  if (!loading && noGroup) {
+  const showInviteCodeAlert = () => {
+    Alert.alert(
+      'Invite Code',
+      `Share this code to invite friends:\n\n${userGroup?.inviteCode ?? 'Loading...'}`,
+      [
+        {
+          text: 'Copy',
+          onPress: () => Clipboard.setStringAsync(userGroup?.inviteCode ?? ''),
+        },
+        { text: 'Done' },
+      ]
+    );
+  };
+
+  // ── Loading state ──────────────────────────────────────────────────────────
+  if (loading) {
     return (
       <View style={styles.root}>
         <View style={[styles.header, { paddingTop: insets.top + spacing.md }]}>
           <Text style={styles.headerTitle}>Groups</Text>
+          <View style={styles.headerActions}>
+            <TouchableOpacity style={styles.iconBtn}>
+              <Ionicons name="person-add-outline" size={22} color={colors.textPrimary} />
+            </TouchableOpacity>
+          </View>
         </View>
         <View style={styles.emptyState}>
-          <Ionicons name="people-outline" size={64} color={colors.textSecondary} />
-          <Text style={styles.emptyTitle}>No group yet</Text>
-          <Text style={styles.emptySubtitle}>Join or create a study group to see your team's progress here.</Text>
+          <ActivityIndicator color={colors.accentPrimary} size="large" />
         </View>
+      </View>
+    );
+  }
+
+  // ── No group empty state ───────────────────────────────────────────────────
+  if (!userGroup) {
+    return (
+      <View style={styles.root}>
+        <View style={[styles.header, { paddingTop: insets.top + spacing.md }]}>
+          <Text style={styles.headerTitle}>Groups</Text>
+          <View style={styles.headerActions}>
+            <TouchableOpacity style={styles.iconBtn} onPress={() => setShowJoinSheet(true)}>
+              <Ionicons name="person-add-outline" size={22} color={colors.textPrimary} />
+            </TouchableOpacity>
+          </View>
+        </View>
+        <NoGroupView
+          onCreateGroup={() => setShowCreateSheet(true)}
+          onJoinGroup={() => setShowJoinSheet(true)}
+        />
+        <CreateGroupSheet
+          visible={showCreateSheet}
+          onClose={() => setShowCreateSheet(false)}
+          onCreated={handleGroupCreated}
+        />
+        <JoinGroupSheet
+          visible={showJoinSheet}
+          onClose={() => setShowJoinSheet(false)}
+          onJoined={handleGroupJoined}
+        />
       </View>
     );
   }
@@ -173,7 +242,7 @@ export default function StudyGroupsScreen({ navigation }) {
       <View style={[styles.header, { paddingTop: insets.top + spacing.md }]}>
         <Text style={styles.headerTitle}>Groups</Text>
         <View style={styles.headerActions}>
-          <TouchableOpacity style={styles.iconBtn}>
+          <TouchableOpacity style={styles.iconBtn} onPress={showInviteCodeAlert}>
             <Ionicons name="person-add-outline" size={22} color={colors.textPrimary} />
           </TouchableOpacity>
           <TouchableOpacity style={[styles.iconBtn, { marginLeft: spacing.sm }]}>
@@ -192,10 +261,7 @@ export default function StudyGroupsScreen({ navigation }) {
         <View style={styles.groupCard}>
           <View style={styles.groupCardTop}>
             <View>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                <Text style={styles.groupName}>{groupName}</Text>
-                {loading && <ActivityIndicator color={colors.accentPrimary} size="small" />}
-              </View>
+              <Text style={styles.groupName}>{groupName}</Text>
               <Text style={styles.groupMeta}>{Object.keys(membersMap).length} members</Text>
             </View>
             <TouchableOpacity style={styles.manageBtn}>
@@ -220,6 +286,20 @@ export default function StudyGroupsScreen({ navigation }) {
               <Text style={styles.statLabel}>Global Rank</Text>
             </View>
           </View>
+
+          {/* Invite code row */}
+          {userGroup?.inviteCode ? (
+            <TouchableOpacity
+              style={styles.inviteCodeRow}
+              onPress={() => Clipboard.setStringAsync(userGroup.inviteCode)}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.inviteCodeLabel}>
+                Invite code: <Text style={styles.inviteCodeValue}>{userGroup.inviteCode}</Text>
+              </Text>
+              <Ionicons name="copy-outline" size={14} color={colors.accentLight} />
+            </TouchableOpacity>
+          ) : null}
         </View>
 
         {/* Studying Now */}
@@ -321,6 +401,17 @@ export default function StudyGroupsScreen({ navigation }) {
           </View>
         </TouchableOpacity>
       </ScrollView>
+
+      <CreateGroupSheet
+        visible={showCreateSheet}
+        onClose={() => setShowCreateSheet(false)}
+        onCreated={handleGroupCreated}
+      />
+      <JoinGroupSheet
+        visible={showJoinSheet}
+        onClose={() => setShowJoinSheet(false)}
+        onJoined={handleGroupJoined}
+      />
     </View>
   );
 }
@@ -382,17 +473,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingHorizontal: spacing.xxl,
     gap: spacing.lg,
-  },
-  emptyTitle: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: colors.textPrimary,
-  },
-  emptySubtitle: {
-    fontSize: 14,
-    color: colors.textSecondary,
-    textAlign: 'center',
-    lineHeight: 20,
   },
   emptySection: {
     fontSize: 13,
@@ -466,6 +546,22 @@ const styles = StyleSheet.create({
     fontSize: 11,
     color: colors.textSecondary,
     textAlign: 'center',
+  },
+  inviteCodeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: spacing.md,
+    gap: spacing.xs,
+  },
+  inviteCodeLabel: {
+    fontSize: 12,
+    color: colors.textSecondary,
+  },
+  inviteCodeValue: {
+    color: colors.accentLight,
+    fontWeight: '700',
+    letterSpacing: 2,
   },
 
   /* Active members horizontal scroll */
