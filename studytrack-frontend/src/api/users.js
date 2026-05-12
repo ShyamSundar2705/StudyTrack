@@ -12,8 +12,8 @@ export const getMe = () =>
 export const updateMe = (data) =>
   client.put('/users/me', data).then((r) => r.data);
 
-// GET /users/me/insights?period=week|month|all
-// Returns: { totalTime, dailyAvg, bestDay, heatmap, barData, subjectDistribution, streak, totalSessions }
+// GET /users/me/insights?period=week|month|allTime
+// Returns: { totalSeconds, dailyAverageSeconds, bestDaySeconds, heatmap, bySubject, dailyBreakdown, streak, totalSessions }
 export const getInsights = (period) =>
   client.get('/users/me/insights', { params: { period } }).then((r) => r.data.data ?? null);
 

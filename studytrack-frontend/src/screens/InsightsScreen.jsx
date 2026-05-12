@@ -373,7 +373,7 @@ export default function InsightsScreen({ navigation }) {
                   </TouchableOpacity>
                 ))}
                 {insightsData.bySubject.length > 5 && (
-                  <TouchableOpacity>
+                  <TouchableOpacity onPress={() => {}}>
                     <Text style={styles.seeAll}>See all subjects →</Text>
                   </TouchableOpacity>
                 )}
