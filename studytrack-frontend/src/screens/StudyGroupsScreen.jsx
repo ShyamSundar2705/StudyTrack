@@ -174,6 +174,7 @@ export default function StudyGroupsScreen({ navigation }) {
   };
 
   const handleGroupDeleted = () => {
+    disconnectGroupSocket();
     setUserGroup(null);
     setGroupId(null);
     setGroupName('Study Group');
