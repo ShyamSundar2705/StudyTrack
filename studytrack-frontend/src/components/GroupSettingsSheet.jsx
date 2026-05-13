@@ -134,7 +134,8 @@ export default function GroupSettingsSheet({
       await api.delete(`/groups/${group.id}`);
       disconnectGroupSocket();
       useUserStore.getState().setGroup(null);
-      onDeleted();
+      handleClose();
+      setTimeout(onDeleted, 300);
     } catch (err) {
       setError(err.response?.data?.error || 'Failed to delete group');
     }
@@ -395,7 +396,7 @@ const styles = StyleSheet.create({
     marginTop: spacing.md,
   },
   rowSpacing12: {
-    marginTop: 12,
+    marginTop: spacing.md,
   },
   rowLabelCol: {
     flex: 1,
