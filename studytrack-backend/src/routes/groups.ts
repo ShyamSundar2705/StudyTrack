@@ -8,7 +8,8 @@ import {
   searchGroups,
   leaveGroup,
   getGroupActivity,
-  getGroupLeaderboard
+  getGroupLeaderboard,
+  updateGroup
 } from '../controllers/groups.controller'
 
 export default async function groupRoutes(fastify: FastifyInstance) {
@@ -51,4 +52,19 @@ export default async function groupRoutes(fastify: FastifyInstance) {
   fastify.get('/groups/:id/activity', { preHandler: authenticate }, getGroupActivity)
 
   fastify.get('/groups/:id/leaderboard', { preHandler: authenticate }, getGroupLeaderboard)
+
+  fastify.patch('/groups/:id', {
+    preHandler: authenticate,
+    schema: {
+      body: {
+        type: 'object',
+        properties: {
+          name: { type: 'string', minLength: 1, maxLength: 50 },
+          isPublic: { type: 'boolean' },
+          maxMembers: { type: 'integer', minimum: 1, maximum: 100 }
+        },
+        additionalProperties: false
+      }
+    }
+  }, updateGroup)
 }

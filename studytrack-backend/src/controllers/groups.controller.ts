@@ -7,6 +7,10 @@ const generateInviteCode = () => {
   ).join('')
 }
 
+async function checkAdmin(prisma: any, groupId: string, userId: string) {
+  return prisma.groupMember.findFirst({ where: { groupId, userId, isAdmin: true } })
+}
+
 export async function createGroup(request: FastifyRequest, reply: FastifyReply) {
   const userId = request.user.id
   const { name, isPublic = false, maxMembers = 20 } = request.body as {
@@ -350,4 +354,38 @@ export async function getGroupLeaderboard(request: FastifyRequest, reply: Fastif
   }))
 
   return reply.send({ data: { leaderboard } })
+}
+
+export async function updateGroup(request: FastifyRequest, reply: FastifyReply) {
+  const { id: groupId } = request.params as { id: string }
+  const userId = request.user.id
+  const prisma = request.server.prisma
+  const { name, isPublic, maxMembers } = request.body as {
+    name?: string
+    isPublic?: boolean
+    maxMembers?: number
+  }
+
+  const admin = await checkAdmin(prisma, groupId, userId)
+  if (!admin) return reply.status(403).send({ error: 'Admin access required' })
+
+  if (maxMembers !== undefined) {
+    const memberCount = await prisma.groupMember.count({ where: { groupId } })
+    if (maxMembers < memberCount) {
+      return reply.status(400).send({
+        error: `Max members cannot be less than current member count (${memberCount})`
+      })
+    }
+  }
+
+  const group = await prisma.group.update({
+    where: { id: groupId },
+    data: {
+      ...(name !== undefined && { name }),
+      ...(isPublic !== undefined && { isPublic }),
+      ...(maxMembers !== undefined && { maxMembers })
+    }
+  })
+
+  return reply.send({ data: { group } })
 }
