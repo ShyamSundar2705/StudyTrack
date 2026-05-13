@@ -26,7 +26,7 @@ export async function createGroup(request: FastifyRequest, reply: FastifyReply) 
   const group = await prisma.group.create({
     data: { name, inviteCode: code, isPublic, maxMembers }
   })
-  const member = await prisma.groupMember.create({ data: { groupId: group.id, userId } })
+  const member = await prisma.groupMember.create({ data: { groupId: group.id, userId, isAdmin: true } })
 
   return reply.status(201).send({ data: { group, member } })
 }
@@ -68,6 +68,7 @@ export async function getGroup(request: FastifyRequest, reply: FastifyReply) {
     name: m.user.name,
     handle: m.user.handle,
     avatar: m.user.avatar,
+    isAdmin: m.isAdmin,
     joinedAt: m.joinedAt,
     todaySeconds: todayMap[m.userId] || 0
   }))

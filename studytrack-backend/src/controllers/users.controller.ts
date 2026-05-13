@@ -166,6 +166,7 @@ export async function getMyGroup(request: FastifyRequest, reply: FastifyReply) {
     name: m.user.name,
     handle: m.user.handle,
     avatar: m.user.avatar,
+    isAdmin: m.isAdmin,
     joinedAt: m.joinedAt,
     todaySeconds: todayMap[m.userId] || 0
   }))
