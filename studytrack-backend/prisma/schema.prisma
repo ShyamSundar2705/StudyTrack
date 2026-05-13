@@ -165,8 +165,9 @@ model GroupMember {
   id       String   @id @default(cuid())
   groupId  String
   userId   String
+  isAdmin  Boolean  @default(false)
   joinedAt DateTime @default(now())
-  group    Group    @relation(fields: [groupId], references: [id])
+  group    Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
   user     User     @relation(fields: [userId], references: [id])
 
   @@unique([groupId, userId])
