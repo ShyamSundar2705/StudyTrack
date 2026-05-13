@@ -389,3 +389,23 @@ export async function updateGroup(request: FastifyRequest, reply: FastifyReply) 
 
   return reply.send({ data: { group } })
 }
+
+export async function regenerateCode(request: FastifyRequest, reply: FastifyReply) {
+  const { id: groupId } = request.params as { id: string }
+  const userId = request.user.id
+  const prisma = request.server.prisma
+
+  const admin = await checkAdmin(prisma, groupId, userId)
+  if (!admin) return reply.status(403).send({ error: 'Admin access required' })
+
+  let code = generateInviteCode()
+  let existing = await prisma.group.findUnique({ where: { inviteCode: code } })
+  while (existing) {
+    code = generateInviteCode()
+    existing = await prisma.group.findUnique({ where: { inviteCode: code } })
+  }
+
+  await prisma.group.update({ where: { id: groupId }, data: { inviteCode: code } })
+
+  return reply.send({ data: { inviteCode: code } })
+}

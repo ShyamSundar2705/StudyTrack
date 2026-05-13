@@ -9,7 +9,8 @@ import {
   leaveGroup,
   getGroupActivity,
   getGroupLeaderboard,
-  updateGroup
+  updateGroup,
+  regenerateCode
 } from '../controllers/groups.controller'
 
 export default async function groupRoutes(fastify: FastifyInstance) {
@@ -42,6 +43,8 @@ export default async function groupRoutes(fastify: FastifyInstance) {
   }, joinByCode)
 
   fastify.get('/groups/search', { preHandler: authenticate }, searchGroups)
+
+  fastify.post('/groups/:id/regenerate-code', { preHandler: authenticate }, regenerateCode)
 
   fastify.get('/groups/:id', { preHandler: authenticate }, getGroup)
 
