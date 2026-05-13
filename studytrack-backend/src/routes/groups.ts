@@ -72,5 +72,14 @@ export default async function groupRoutes(fastify: FastifyInstance) {
     }
   }, updateGroup)
 
-  fastify.delete('/groups/:id', { preHandler: authenticate }, deleteGroup)
+  fastify.delete('/groups/:id', {
+    preHandler: authenticate,
+    schema: {
+      params: {
+        type: 'object',
+        properties: { id: { type: 'string' } },
+        required: ['id']
+      }
+    }
+  }, deleteGroup)
 }
