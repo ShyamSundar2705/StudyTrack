@@ -50,10 +50,12 @@ export default function SubjectSetupScreen({ navigation }) {
     }
     setSaving(true);
     try {
-      // Backend field is colorHex, not color; create one at a time (no bulk endpoint)
-      const results = await Promise.all(
-        subjects.map(({ name, color }) => createSubject({ name, colorHex: color }))
-      );
+      // Sequential to avoid Prisma prepared-statement collision on concurrent INSERTs
+      const results = [];
+      for (const { name, color } of subjects) {
+        const r = await createSubject({ name, colorHex: color });
+        results.push(r);
+      }
       const storeSubjects = results
         .map((r) => r?.data?.subject)
         .filter(Boolean)

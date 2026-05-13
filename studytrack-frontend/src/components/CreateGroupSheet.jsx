@@ -2,13 +2,17 @@ import React, { useState, useEffect, useRef } from 'react';
 import {
   Modal, View, Text, TextInput, TouchableOpacity, Switch,
   Animated, Keyboard, KeyboardAvoidingView, Platform,
-  StyleSheet, Alert, ActivityIndicator,
+  StyleSheet, ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, spacing, radius } from '../constraints/theme';
 import api from '../api/client';
+import BottomSheetPicker from './BottomSheetPicker';
 
-const MAX_MEMBERS_OPTIONS = [5, 10, 15, 20, 30, 50, 100];
+const MAX_MEMBERS_OPTIONS = [2, 5, 10, 15, 20, 30, 50, 100].map((n) => ({
+  label: String(n),
+  value: n,
+}));
 
 export default function CreateGroupSheet({ visible, onClose, onCreated }) {
   const [groupName, setGroupName] = useState('');
@@ -16,6 +20,7 @@ export default function CreateGroupSheet({ visible, onClose, onCreated }) {
   const [maxMembers, setMaxMembers] = useState(20);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState(null);
+  const [showMembersPicker, setShowMembersPicker] = useState(false);
 
   const slideAnim = useRef(new Animated.Value(500)).current;
 
@@ -64,16 +69,7 @@ export default function CreateGroupSheet({ visible, onClose, onCreated }) {
     }
   };
 
-  const openMaxMembersPicker = () => {
-    Alert.alert(
-      'Max Members',
-      'Select the maximum number of members',
-      MAX_MEMBERS_OPTIONS.map(n => ({
-        text: String(n),
-        onPress: () => setMaxMembers(n),
-      })).concat([{ text: 'Cancel', style: 'cancel' }])
-    );
-  };
+  const openMaxMembersPicker = () => setShowMembersPicker(true);
 
   const canCreate = groupName.trim().length > 0 && !isSubmitting;
 
@@ -161,6 +157,14 @@ export default function CreateGroupSheet({ visible, onClose, onCreated }) {
           ) : null}
         </KeyboardAvoidingView>
       </Animated.View>
+      <BottomSheetPicker
+        visible={showMembersPicker}
+        title="Max Members"
+        options={MAX_MEMBERS_OPTIONS}
+        selectedValue={maxMembers}
+        onSelect={setMaxMembers}
+        onClose={() => setShowMembersPicker(false)}
+      />
     </Modal>
   );
 }

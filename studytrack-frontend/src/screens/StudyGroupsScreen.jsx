@@ -12,7 +12,7 @@ import * as Clipboard from 'expo-clipboard';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, radius, spacing } from '../constraints/theme';
 import { getMyGroup } from '../api/users';
-import { getGroupLeaderboard } from '../api/leaderboard';
+import { getGroupLeaderboard, leaveGroup } from '../api/leaderboard';
 import { getGroupSocket } from '../api/socket';
 import useUserStore from '../store/useUserStore';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -63,6 +63,7 @@ export default function StudyGroupsScreen({ navigation }) {
   const [activityFeed,    setActivityFeed]     = useState([]);
   const [showCreateSheet, setShowCreateSheet]  = useState(false);
   const [showJoinSheet,   setShowJoinSheet]    = useState(false);
+  const [codeCopied,      setCodeCopied]       = useState(false);
 
   // Keep a ref to membersMap so socket callbacks can read the latest values
   const membersMapRef = useRef({});
@@ -116,6 +117,40 @@ export default function StudyGroupsScreen({ navigation }) {
     setGroupName(group.name ?? 'Study Group');
     setMembersMap({});
     useUserStore.getState().setGroup(group);
+  };
+
+  const handleCopyCode = async () => {
+    await Clipboard.setStringAsync(userGroup?.inviteCode ?? '');
+    setCodeCopied(true);
+    setTimeout(() => setCodeCopied(false), 2000);
+  };
+
+  const handleLeaveGroup = () => {
+    Alert.alert(
+      'Leave Group',
+      `Leave ${groupName}? You can rejoin with the invite code.`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Leave',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await leaveGroup(groupId);
+              setUserGroup(null);
+              setGroupId(null);
+              setGroupName('Study Group');
+              setMembersMap({});
+              setLeaderboard([]);
+              setActivityFeed([]);
+              useUserStore.getState().setGroup(null);
+            } catch (err) {
+              Alert.alert('Error', err?.response?.data?.error ?? 'Could not leave group.');
+            }
+          },
+        },
+      ]
+    );
   };
 
   // Load leaderboard helper — also called on leaderboard_update socket event
@@ -173,20 +208,6 @@ export default function StudyGroupsScreen({ navigation }) {
   const studyingMembers = Object.values(membersMap).filter((m) => m.status === 'studying');
   const maxLbSeconds = leaderboard[0]?.durationSeconds || 1;
 
-  const showInviteCodeAlert = () => {
-    Alert.alert(
-      'Invite Code',
-      `Share this code to invite friends:\n\n${userGroup?.inviteCode ?? 'Loading...'}`,
-      [
-        {
-          text: 'Copy',
-          onPress: () => Clipboard.setStringAsync(userGroup?.inviteCode ?? ''),
-        },
-        { text: 'Done' },
-      ]
-    );
-  };
-
   // ── Loading state ──────────────────────────────────────────────────────────
   if (loading) {
     return (
@@ -242,7 +263,7 @@ export default function StudyGroupsScreen({ navigation }) {
       <View style={[styles.header, { paddingTop: insets.top + spacing.md }]}>
         <Text style={styles.headerTitle}>Groups</Text>
         <View style={styles.headerActions}>
-          <TouchableOpacity style={styles.iconBtn} onPress={showInviteCodeAlert}>
+          <TouchableOpacity style={styles.iconBtn} onPress={() => setShowJoinSheet(true)}>
             <Ionicons name="person-add-outline" size={22} color={colors.textPrimary} />
           </TouchableOpacity>
           <TouchableOpacity style={[styles.iconBtn, { marginLeft: spacing.sm }]}>
@@ -264,9 +285,14 @@ export default function StudyGroupsScreen({ navigation }) {
               <Text style={styles.groupName}>{groupName}</Text>
               <Text style={styles.groupMeta}>{Object.keys(membersMap).length} members</Text>
             </View>
-            <TouchableOpacity style={styles.manageBtn}>
-              <Text style={styles.manageBtnText}>Manage</Text>
-            </TouchableOpacity>
+            <View style={styles.groupCardActions}>
+              <TouchableOpacity style={styles.manageBtn}>
+                <Text style={styles.manageBtnText}>Manage</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.leaveBtn} onPress={handleLeaveGroup}>
+                <Ionicons name="exit-outline" size={16} color={colors.danger} />
+              </TouchableOpacity>
+            </View>
           </View>
 
           {/* 3-col stats */}
@@ -291,13 +317,17 @@ export default function StudyGroupsScreen({ navigation }) {
           {userGroup?.inviteCode ? (
             <TouchableOpacity
               style={styles.inviteCodeRow}
-              onPress={() => Clipboard.setStringAsync(userGroup.inviteCode)}
+              onPress={handleCopyCode}
               activeOpacity={0.7}
             >
               <Text style={styles.inviteCodeLabel}>
                 Invite code: <Text style={styles.inviteCodeValue}>{userGroup.inviteCode}</Text>
               </Text>
-              <Ionicons name="copy-outline" size={14} color={colors.accentLight} />
+              <Ionicons
+                name={codeCopied ? 'checkmark-circle' : 'copy-outline'}
+                size={14}
+                color={codeCopied ? colors.success : colors.accentLight}
+              />
             </TouchableOpacity>
           ) : null}
         </View>
@@ -512,6 +542,11 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: colors.textSecondary,
   },
+  groupCardActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+  },
   manageBtn: {
     paddingVertical: spacing.xs,
     paddingHorizontal: spacing.md,
@@ -523,6 +558,15 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '500',
     color: colors.textPrimary,
+  },
+  leaveBtn: {
+    width: 32,
+    height: 32,
+    borderRadius: radius.sm,
+    borderWidth: 1,
+    borderColor: colors.danger,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   groupStats: {
     flexDirection: 'row',

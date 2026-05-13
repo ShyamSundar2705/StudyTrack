@@ -11,3 +11,7 @@ export const getLeaderboard = (scope = 'group', period = 'week') =>
 export const getGroupLeaderboard = (groupId, period = 'today') =>
   client.get(`/groups/${groupId}/leaderboard`, { params: { period } })
     .then((r) => r.data?.data?.leaderboard ?? []);
+
+// DELETE /groups/:id/leave
+export const leaveGroup = (groupId) =>
+  client.delete(`/groups/${groupId}/leave`).then((r) => r.data);
