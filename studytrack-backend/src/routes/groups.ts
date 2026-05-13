@@ -65,7 +65,7 @@ export default async function groupRoutes(fastify: FastifyInstance) {
         properties: {
           name: { type: 'string', minLength: 1, maxLength: 50 },
           isPublic: { type: 'boolean' },
-          maxMembers: { type: 'integer', minimum: 1, maximum: 100 }
+          maxMembers: { type: 'integer', minimum: 2, maximum: 100 }
         },
         additionalProperties: false
       }
