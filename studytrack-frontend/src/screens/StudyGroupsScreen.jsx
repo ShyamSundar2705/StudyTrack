@@ -13,12 +13,13 @@ import { Ionicons } from '@expo/vector-icons';
 import { colors, radius, spacing } from '../constraints/theme';
 import { getMyGroup } from '../api/users';
 import { getGroupLeaderboard, leaveGroup } from '../api/leaderboard';
-import { getGroupSocket } from '../api/socket';
+import { getGroupSocket, disconnectGroupSocket } from '../api/socket';
 import useUserStore from '../store/useUserStore';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import NoGroupView from '../components/NoGroupView';
 import CreateGroupSheet from '../components/CreateGroupSheet';
 import JoinGroupSheet from '../components/JoinGroupSheet';
+import GroupSettingsSheet from '../components/GroupSettingsSheet';
 
 
 function fmtElapsed(seconds) {
@@ -64,6 +65,8 @@ export default function StudyGroupsScreen({ navigation }) {
   const [showCreateSheet, setShowCreateSheet]  = useState(false);
   const [showJoinSheet,   setShowJoinSheet]    = useState(false);
   const [codeCopied,      setCodeCopied]       = useState(false);
+  const [isAdmin,           setIsAdmin]          = useState(false);
+  const [showSettingsSheet, setShowSettingsSheet] = useState(false);
 
   // Keep a ref to membersMap so socket callbacks can read the latest values
   const membersMapRef = useRef({});
@@ -92,6 +95,8 @@ export default function StudyGroupsScreen({ navigation }) {
         };
       }
       setMembersMap(initialMap);
+      const currentMember = (group.members ?? []).find(m => m.userId === userId);
+      setIsAdmin(currentMember?.isAdmin ?? false);
     } catch (err) {
       if (err.response?.status === 404) setUserGroup(null);
     } finally {
@@ -108,6 +113,7 @@ export default function StudyGroupsScreen({ navigation }) {
     setGroupId(group.id);
     setGroupName(group.name);
     setMembersMap({});
+    setIsAdmin(true);
     useUserStore.getState().setGroup(group);
   };
 
@@ -116,6 +122,7 @@ export default function StudyGroupsScreen({ navigation }) {
     setGroupId(group.id);
     setGroupName(group.name ?? 'Study Group');
     setMembersMap({});
+    setIsAdmin(false);
     useUserStore.getState().setGroup(group);
   };
 
@@ -126,23 +133,30 @@ export default function StudyGroupsScreen({ navigation }) {
   };
 
   const handleLeaveGroup = () => {
+    const memberCount = Object.keys(membersMap).length;
     Alert.alert(
-      'Leave Group',
-      `Leave ${groupName}? You can rejoin with the invite code.`,
+      'Leave Group?',
+      isAdmin && memberCount > 1
+        ? 'You are the admin. Admin role will be transferred to the next oldest member.'
+        : memberCount === 1
+          ? 'You are the only member. Leaving will delete the group.'
+          : 'You will lose access to this group and its leaderboard.',
       [
-        { text: 'Cancel', style: 'cancel' },
+        { text: 'Stay', style: 'cancel' },
         {
           text: 'Leave',
           style: 'destructive',
           onPress: async () => {
             try {
               await leaveGroup(groupId);
+              disconnectGroupSocket();
               setUserGroup(null);
               setGroupId(null);
               setGroupName('Study Group');
               setMembersMap({});
               setLeaderboard([]);
               setActivityFeed([]);
+              setIsAdmin(false);
               useUserStore.getState().setGroup(null);
             } catch (err) {
               Alert.alert('Error', err?.response?.data?.error ?? 'Could not leave group.');
@@ -151,6 +165,22 @@ export default function StudyGroupsScreen({ navigation }) {
         },
       ]
     );
+  };
+
+  const handleGroupUpdated = (updatedGroup) => {
+    setUserGroup((prev) => ({ ...prev, ...updatedGroup }));
+    setGroupName(updatedGroup.name);
+    useUserStore.getState().setGroup({ ...useUserStore.getState().group, ...updatedGroup });
+  };
+
+  const handleGroupDeleted = () => {
+    setUserGroup(null);
+    setGroupId(null);
+    setGroupName('Study Group');
+    setMembersMap({});
+    setLeaderboard([]);
+    setActivityFeed([]);
+    setIsAdmin(false);
   };
 
   // Load leaderboard helper — also called on leaderboard_update socket event
@@ -192,15 +222,22 @@ export default function StudyGroupsScreen({ navigation }) {
 
     const onLeaderboardUpdate = () => fetchLeaderboard(groupId);
 
+    const onGroupDeleted = ({ message }) => {
+      Alert.alert('Group Deleted', message);
+      handleGroupDeleted();
+    };
+
     socket.on('member_status_update', onMemberStatus);
     socket.on('activity_feed_update', onActivityFeed);
     socket.on('leaderboard_update', onLeaderboardUpdate);
+    socket.on('group_deleted', onGroupDeleted);
 
     return () => {
       socket.emit('leave_group_room', { groupId });
       socket.off('member_status_update', onMemberStatus);
       socket.off('activity_feed_update', onActivityFeed);
       socket.off('leaderboard_update', onLeaderboardUpdate);
+      socket.off('group_deleted', onGroupDeleted);
     };
   }, [groupId, userId]);
 
@@ -286,7 +323,7 @@ export default function StudyGroupsScreen({ navigation }) {
               <Text style={styles.groupMeta}>{Object.keys(membersMap).length} members</Text>
             </View>
             <View style={styles.groupCardActions}>
-              <TouchableOpacity style={styles.manageBtn}>
+              <TouchableOpacity style={styles.manageBtn} onPress={() => setShowSettingsSheet(true)}>
                 <Text style={styles.manageBtnText}>Manage</Text>
               </TouchableOpacity>
               <TouchableOpacity style={styles.leaveBtn} onPress={handleLeaveGroup}>
@@ -441,6 +478,15 @@ export default function StudyGroupsScreen({ navigation }) {
         visible={showJoinSheet}
         onClose={() => setShowJoinSheet(false)}
         onJoined={handleGroupJoined}
+      />
+      <GroupSettingsSheet
+        visible={showSettingsSheet}
+        group={userGroup ? { ...userGroup, memberCount: Object.keys(membersMap).length } : null}
+        isAdmin={isAdmin}
+        onClose={() => setShowSettingsSheet(false)}
+        onUpdated={handleGroupUpdated}
+        onDeleted={handleGroupDeleted}
+        onLeave={handleLeaveGroup}
       />
     </View>
   );
