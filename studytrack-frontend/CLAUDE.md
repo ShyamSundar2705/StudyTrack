@@ -69,6 +69,8 @@ Components added in batch 4: `SubjectFilterSheet` — modal bottom sheet for fil
 
 Components added in batch 5: `NoGroupView` — empty-state view rendered inside StudyGroupsScreen when user has no group; props: `onCreateGroup`, `onJoinGroup`. `CreateGroupSheet` — modal sheet to create a group with name, privacy toggle, max members; props: `visible`, `onClose`, `onCreated(group)`. `JoinGroupSheet` — modal sheet with two tabs (Invite Code, Search); props: `visible`, `onClose`, `onJoined(group)`; search tab uses 400ms debounce via setTimeout/clearTimeout.
 
+Components added in batch 6: `GroupSettingsSheet` — modal bottom sheet for group settings; props: `visible`, `group` (`{ id, name, inviteCode, isPublic, maxMembers, memberCount }`), `isAdmin`, `onClose`, `onUpdated(updatedGroup)`, `onDeleted()`, `onLeave()`; admin users see full edit controls (name, privacy toggle, max members picker, regenerate invite code, delete group); non-admins see read-only info and a leave button only; leave logic lives in `StudyGroupsScreen` and is passed as `onLeave` prop.
+
 | Screen file | Route name | Location | Description |
 |---|---|---|---|
 | `SplashScreen.jsx` | `Splash` | Auth stack | Google OAuth + email/password login via `AuthModal`, session restore on launch, backend pre-flight health check |
