@@ -409,3 +409,24 @@ export async function regenerateCode(request: FastifyRequest, reply: FastifyRepl
 
   return reply.send({ data: { inviteCode: code } })
 }
+
+export async function deleteGroup(request: FastifyRequest, reply: FastifyReply) {
+  const { id: groupId } = request.params as { id: string }
+  const userId = request.user.id
+  const prisma = request.server.prisma
+  const io = request.server.io
+
+  const admin = await checkAdmin(prisma, groupId, userId)
+  if (!admin) return reply.status(403).send({ error: 'Admin access required' })
+
+  if (io) {
+    io.of('/groups').to(`group_${groupId}`).emit('group_deleted', {
+      groupId,
+      message: 'This group has been deleted by the admin.'
+    })
+  }
+
+  await prisma.group.delete({ where: { id: groupId } })
+
+  return reply.send({ data: { deleted: true } })
+}

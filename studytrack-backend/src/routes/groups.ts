@@ -10,7 +10,8 @@ import {
   getGroupActivity,
   getGroupLeaderboard,
   updateGroup,
-  regenerateCode
+  regenerateCode,
+  deleteGroup
 } from '../controllers/groups.controller'
 
 export default async function groupRoutes(fastify: FastifyInstance) {
@@ -70,4 +71,6 @@ export default async function groupRoutes(fastify: FastifyInstance) {
       }
     }
   }, updateGroup)
+
+  fastify.delete('/groups/:id', { preHandler: authenticate }, deleteGroup)
 }
