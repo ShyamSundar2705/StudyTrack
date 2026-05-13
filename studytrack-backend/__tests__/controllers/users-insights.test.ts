@@ -6,9 +6,19 @@ function makeReply() {
 }
 
 function makeReq(period: string, sessions: any[]) {
+  const uniqueSubjects = [...new Map(
+    sessions
+      .filter(s => s.subject)
+      .map(s => [s.subjectId, { id: s.subjectId, name: s.subject.name, colorHex: s.subject.colorHex }])
+  ).values()]
   return {
     user: { id: 'user-1' },
-    server: { prisma: { session: { findMany: jest.fn().mockResolvedValue(sessions) } } },
+    server: {
+      prisma: {
+        session: { findMany: jest.fn().mockResolvedValue(sessions) },
+        subject: { findMany: jest.fn().mockResolvedValue(uniqueSubjects) },
+      },
+    },
     query: { period },
   } as any
 }
