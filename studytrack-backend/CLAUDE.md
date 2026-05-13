@@ -43,7 +43,7 @@ src/
 | `RecurringTaskCompletion` | `id`, `taskId`, `userId`, `date` (YYYY-MM-DD), `completedAt` | Per-day completion record for recurring tasks; `@@unique([taskId, date])` |
 | `Achievement` | `id`, `userId`, `type` (enum), `unlockedAt` | Achievement types: FIRST_SESSION, STREAK_3/7, TOTAL_1H/10H/100H, EARLY_BIRD, NIGHT_OWL |
 | `Group` | `id`, `name`, `inviteCode` (unique), `isPublic` (default false), `maxMembers` (default 20), `createdAt` | Full CRUD via `/api/groups` routes; invite code auto-generated on create |
-| `GroupMember` | `id`, `groupId`, `userId`, `joinedAt`; `@@unique([groupId, userId])` | Junction table — DB-level uniqueness enforced |
+| `GroupMember` | `id`, `groupId`, `userId`, `isAdmin` (default false), `joinedAt`; `@@unique([groupId, userId])`; `onDelete: Cascade` on group relation | Junction table — creator has `isAdmin: true`; backend verifies `isAdmin` on all three admin-only group endpoints |
 | `ScheduleEvent` | `id`, `userId`, `title`, `date` (YYYY-MM-DD), `startTime` (HH:MM), `durationMinutes` (default 60), `subjectId?`, `isRecurring`, `recurringDays (Int[])`, `color?` | One-off or recurring events in the daily planner |
 
 ### Schema operations
@@ -126,6 +126,9 @@ All routes are under `/api`. Auth routes have no authentication; all others requ
 | `GET` | `/api/groups/:id` | Group details + all members with `todaySeconds` (today's study time) |
 | `POST` | `/api/groups/:id/join` | Add caller to group; 409 if already a member |
 | `DELETE` | `/api/groups/:id/leave` | Remove caller from group; 404 if not a member |
+| `PATCH` | `/api/groups/:id` | Admin-only: update `name`, `isPublic`, `maxMembers`; validates `maxMembers` ≥ current member count |
+| `POST` | `/api/groups/:id/regenerate-code` | Admin-only: generate new unique 6-char invite code; old code immediately invalid |
+| `DELETE` | `/api/groups/:id` | Admin-only: delete group + emit `group_deleted` socket event to room before DB deletion; cascade handles GroupMember cleanup |
 | `GET` | `/api/groups/:id/activity?limit=20` | Activity feed — events: `session_complete`, `session_start`, `streak_milestone`, `member_join`; sorted newest first |
 | `GET` | `/api/groups/:id/leaderboard?period=today` | Members ranked by study duration; `period`: `today` (default), `week`, `month`; includes `rank`, `rankChange` (always 0 — no historical snapshots), `subjectName`, `subjectColor` |
 
@@ -206,6 +209,7 @@ POST and PATCH routes must define `schema.body` in route options (Fastify valida
 | `member_status_update` | `{ userId, status, subjectName?, elapsedSeconds }` | When any member's session state changes or on disconnect |
 | `activity_feed_update` | `{ type, userId, subjectName?, durationSeconds?, metadata?, createdAt }` | When session starts/completes or streak milestone reached |
 | `leaderboard_update` | (empty) | After session complete — signals clients to refetch leaderboard |
+| `group_deleted` | `{ groupId, message }` | Emitted to `group_${groupId}` room before group is deleted; non-admin members use this to show an alert and reset to NoGroupView |
 
 ### Server-side emit from HTTP controllers
 
