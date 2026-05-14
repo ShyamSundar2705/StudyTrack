@@ -9,7 +9,6 @@ import {
   TextInput,
   ScrollView,
   KeyboardAvoidingView,
-  Platform,
   ActivityIndicator,
   StyleSheet,
 } from 'react-native';
