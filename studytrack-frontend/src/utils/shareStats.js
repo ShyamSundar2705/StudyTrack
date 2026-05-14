@@ -47,3 +47,35 @@ export const shareInsightsStats = async ({
     console.error('Share stats failed:', err);
   }
 };
+
+export const shareProfile = async ({
+  name,
+  handle,
+  totalSeconds,
+  totalSessions,
+  currentStreak,
+  subjectCount,
+  topSubject,
+}) => {
+  const lines = [
+    `👤 ${name} (@${handle})`,
+    ``,
+    `📊 StudyTrack profile:`,
+    `⏱ Total studied: ${formatDuration(totalSeconds)}`,
+    `📋 Sessions completed: ${totalSessions}`,
+    currentStreak > 1 ? `🔥 Current streak: ${currentStreak} days` : null,
+    `📚 Subjects: ${subjectCount}`,
+    topSubject ? `🏆 Top subject: ${topSubject}` : null,
+    ``,
+    `Tracking my studies with StudyTrack`,
+  ].filter(Boolean);
+
+  try {
+    await Share.share({
+      message: lines.join('\n'),
+      title: `${name}'s Study Profile`,
+    });
+  } catch (err) {
+    console.error('Share profile failed:', err);
+  }
+};
