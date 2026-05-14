@@ -13,7 +13,7 @@ src/
   api/         — client.js, supabase.js, socket.js, users.js, subjects.js, sessions.js, tasks.js, leaderboard.js
   components/  — AuthModal, BottomSheetPicker, ManualLogModal, DatePickerModal, TimePickerModal,
                  NoteBottomSheet, SessionActionSheet, SubjectSwitchSheet, TaskFormSheet, ScheduleEventFormSheet,
-                 PlannerActionSheet
+                 PlannerActionSheet, EditProfileSheet, AchievementModal
   constraints/ — theme.js (colors, spacing, radius — folder is "constraints" not "constants")
   navigation/  — AppNavigator.jsx, navigationRef.js
   screens/     — SplashScreen, SubjectSetupScreen, HomeTimerScreen, SessionActiveScreen,
@@ -72,6 +72,10 @@ Components added in batch 5: `NoGroupView` — empty-state view rendered inside 
 Components added in batch 6: `GroupSettingsSheet` — modal bottom sheet for group settings; props: `visible`, `group` (`{ id, name, inviteCode, isPublic, maxMembers, memberCount }`), `isAdmin`, `onClose`, `onUpdated(updatedGroup)`, `onDeleted()`, `onLeave()`; admin users see full edit controls (name, privacy toggle, max members picker, regenerate invite code, delete group); non-admins see read-only info and a leave button only; leave logic lives in `StudyGroupsScreen` and is passed as `onLeave` prop.
 
 Components added in final batch: `InviteMemberSheet` — modal sheet for sharing a group invite code; props: `visible`, `group` (`{ id, name, inviteCode }`), `onClose`; displays invite code large with copy-to-clipboard and native share sheet; opened by person-plus icon in `StudyGroupsScreen` header when user is in a group. `JoinGroupSheet` now accepts `initialTab` prop (`'code'` | `'search'`) to open on a specific tab; used by the Discover banner to open directly on Search tab.
+
+Constants added in P3 Batch A: `src/constants/achievements.js` — exports `ACHIEVEMENT_META` (metadata for all 14 achievement types: icon, color, description, criteria, category) and `CATEGORY_LABELS`.
+
+Components added in P3 Batch A: `EditProfileSheet` — animated bottom sheet for editing name/handle/avatar color; props: `visible`, `user`, `onClose`, `onSaved(updatedUser)`. `AchievementModal` — centered fade modal for achievement detail; props: `visible`, `achievement` (`{ type, unlocked, unlockedAt }`), `onClose`.
 
 | Screen file | Route name | Location | Description |
 |---|---|---|---|
@@ -160,7 +164,7 @@ Actions: `setConfig`, `enablePomoMode`, `disablePomoMode`, `advancePhase`, `getC
 | File | Functions |
 |---|---|
 | `src/api/users.js` | `getMe`, `updateMe`, `getStats`, `getInsights(period, subjectId?)`, `getMyGroup`, `getPreferences`, `updatePreferences`, `signInWithGoogle`, `signInWithEmail`, `signOut` |
-| `src/utils/shareStats.js` | `shareInsightsStats({ period, totalSeconds, dailyAverageSeconds, bestDaySeconds, bySubject, streak, userName })` — builds formatted text and opens native share sheet |
+| `src/utils/shareStats.js` | `shareInsightsStats({ period, totalSeconds, dailyAverageSeconds, bestDaySeconds, bySubject, streak, userName })` — builds formatted text and opens native share sheet; `shareProfile({ name, handle, totalSeconds, totalSessions, currentStreak, subjectCount, topSubject })` |
 | `src/utils/notifications.js` | `requestNotificationPermission`, `schedulePomoPhaseEndAlert`, `cancelPomoAlert`, `scheduleDailyReminder`, `cancelDailyReminder`, `checkAndFireMilestone`, `fireGroupActivityNotif({ type, memberName, subjectName, durationSeconds, streakCount })` — fires immediate local notification for group activity events (session_start, session_complete, streak_milestone); only called when `groupNotifsEnabled` is true and event is not from current user, `registerNotificationTapHandler` |
 | `src/api/subjects.js` | `getSubjects`, `getSubjectDetails`, `createSubject` |
 | `src/api/sessions.js` | `getTodaySessions`, `startSession`, `completeSession`, `manualSession`, `getSessionsBySubject` |
@@ -221,6 +225,15 @@ Values are in `.env` (gitignored). Run `npx expo start --clear` after any `.env`
 - **`expo-crypto` enum name:** In SDK 54 use `CryptoEncoding.BASE64`, not `EncodingType.Base64`.
 - **`studytrack://` scheme not intercepted in Expo Go:** Use `exp://192.168.0.106:8081` as `redirectTo`.
 
+## Priority 3 Batch A Status — COMPLETE ✅
+
+P3-A features implemented:
+- Edit Profile: name/handle/avatarColor via EditProfileSheet + PATCH /api/users/me ✅
+- Share Profile: shareProfile() in shareStats.js + header share icon ✅
+- Achievement Detail Modals: AchievementModal + dynamic achievements list in ProfileScreen ✅
+- avatarColor field added to User model (prisma db push applied) ✅
+- GET /api/users/me/achievements endpoint added ✅
+
 ## Priority 2 Status — COMPLETE ✅
 
 All Priority 2 features implemented:
@@ -236,7 +249,7 @@ P2-15 Discover Groups verification: banner fixed (surfaceBlue bg, border, compas
 
 ## Next Steps
 
-- **Priority 3 — Profile features:** Edit profile (name, handle, avatar color), share profile card, achievement detail modals, theme toggle (dark/light)
+- **Priority 3 — Profile features:** Edit profile ✅, share profile card ✅, achievement detail modals ✅, theme toggle (dark/light) — pending
 - Deploy backend to Railway or Fly.io; update `EXPO_PUBLIC_API_URL` to production URL
 - Build APK, Play Store submission
 - Remote push notifications deferred to dev build / APK phase (local notifications only in Expo Go)

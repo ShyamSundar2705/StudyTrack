@@ -35,7 +35,7 @@ src/
 
 | Model | Key fields | Notes |
 |---|---|---|
-| `User` | `id` (cuid), `supabaseUid` (unique), `email` (unique), `name`, `handle` (unique), `avatar?`, `passwordHash?`, `dailyGoalSeconds` (default 3600) | `supabaseUid` is null for email-registered users |
+| `User` | `id` (cuid), `supabaseUid` (unique), `email` (unique), `name`, `handle` (unique), `avatar?`, `avatarColor String?`, `passwordHash?`, `dailyGoalSeconds` (default 3600) | `supabaseUid` is null for email-registered users |
 | `UserPreferences` | `id`, `userId` (unique), full prefs fields | 1:1 with `User`; created lazily on first `GET` or `PATCH /users/me/preferences`; `onDelete: Cascade`; fields cover Pomodoro config, daily goal, notifications, appearance, privacy, analytics |
 | `Subject` | `id`, `userId`, `name`, `colorHex` | Belongs to one user; has many sessions and tasks |
 | `Session` | `id`, `userId`, `subjectId`, `startedAt`, `endedAt?`, `durationSeconds?`, `pomodoroRound?`, `type` (FOCUS \| POMODORO), `note?` | `endedAt`/`durationSeconds` are null until `completeSession` is called; `pomodoroRound` is set only on POMODORO sessions; `note` is set only on manual sessions |
@@ -71,7 +71,7 @@ All routes are under `/api`. Auth routes have no authentication; all others requ
 |---|---|---|
 | `GET` | `/api/users/me` | Fetch caller's profile (reads userId from JWT) |
 | `PATCH` | `/api/users/me` | Update caller's name, handle, avatar, or dailyGoalSeconds |
-| `GET` | `/api/users/me/stats` | Lifetime stats: totalHours, totalSessions, totalSubjects, daysActive |
+| `GET` | `/api/users/me/stats` | Lifetime stats: totalHours, totalSessions, totalSubjects, daysActive, totalSeconds, topSubject |
 | `GET` | `/api/users/me/group` | Caller's current group + members with todaySeconds; 404 if not in any group |
 | `GET` | `/api/users/me/insights?period=week\|month\|allTime&subjectId=` | Insights: totalSeconds, dailyAverageSeconds, bestDaySeconds, heatmap [{date,seconds}], bySubject (sorted desc with %), dailyBreakdown (7/30/12 entries), streak, totalSessions; period accepts `week`, `month`, `allTime` (aliases: `all` → `allTime`); optional `subjectId` filters all aggregates to one subject — unrecognised subjectId returns empty stats (no 400) |
 | `GET` | `/api/users/me/preferences` | Fetch caller's full preferences; upserts with all defaults on first call |
@@ -148,6 +148,7 @@ All routes are under `/api`. Auth routes have no authentication; all others requ
 
 | Method | Path | Description |
 |---|---|---|
+| `GET` | `/api/users/me/achievements` | List caller's own unlocked achievements, newest first |
 | `GET` | `/api/users/:id/achievements` | List all unlocked achievements for a user, newest first |
 
 ### Health
@@ -227,6 +228,7 @@ POST and PATCH routes must define `schema.body` in route options (Fastify valida
 - **`DATABASE_URL` must be a `postgres://` TCP string** — the `prisma+postgres://` HTTP proxy URL is not compatible with PrismaClient 7.8.0. Always use the direct TCP URL output by `npx prisma dev`.
 - **Never accept `userId` from the request body or query string** — always read it from `request.user.id` (the verified JWT payload). Client-supplied userIds allow any authenticated user to read or write another user's data.
 - **Register `/me` routes before `/:id` routes** — in `src/routes/users.ts`, the static `/users/me` and `/users/me/*` routes must be registered before `/users/:id/profile` and `/users/:id/preferences`. Fastify resolves static path segments first, but registration order is the safe guard; reversing it risks `me` being matched as an `:id` param in edge cases.
+- **Register `/users/me/achievements` before `/users/:id/achievements`** — the static `/me/` path must be registered first so `me` is not captured as the `:id` param.
 
 ## Known Issues & Workarounds
 
