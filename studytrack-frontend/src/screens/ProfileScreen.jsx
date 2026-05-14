@@ -12,32 +12,22 @@ import * as SecureStore from 'expo-secure-store';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, radius, spacing } from '../constraints/theme';
 import { getMe, getStats } from '../api/users';
-import { TOKEN_KEY } from '../api/client';
+import api, { TOKEN_KEY } from '../api/client';
 import supabase from '../api/supabase';
 import useUserStore    from '../store/useUserStore';
 import useSubjectStore from '../store/useSubjectStore';
 import useSessionStore from '../store/useSessionStore';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import EditProfileSheet from '../components/EditProfileSheet';
+import AchievementModal from '../components/AchievementModal';
+import { shareProfile } from '../utils/shareStats';
+import { ACHIEVEMENT_META } from '../constants/achievements';
 
 const DEFAULT_LIFETIME = [
   { icon: 'time-outline',     value: '1,248', label: 'Total Hours' },
   { icon: 'reload-outline',   value: '412',   label: 'Sessions'    },
   { icon: 'layers-outline',   value: '8',     label: 'Subjects'    },
   { icon: 'calendar-outline', value: '184',   label: 'Days Active' },
-];
-
-const ACHIEVEMENTS_UNLOCKED = [
-  { icon: 'ribbon',       label: 'Early Bird'  },
-  { icon: 'medal',        label: 'Night Owl'   },
-  { icon: 'flash',        label: 'Hyper Focus' },
-  { icon: 'star',         label: '7 Day Run'   },
-];
-
-const ACHIEVEMENTS_LOCKED = [
-  { label: 'Centurion'   },
-  { label: 'Scholar'     },
-  { label: 'Marathon'    },
-  { label: 'Unstoppable' },
 ];
 
 const ACCOUNT_ROWS = [
@@ -62,16 +52,26 @@ export default function ProfileScreen({ navigation }) {
   const [profile,  setProfile]  = useState(null);
   const [lifetime, setLifetime] = useState(DEFAULT_LIFETIME);
   const [loading,  setLoading]  = useState(false);
+  const [profileUser,         setProfileUser]         = useState(null);
+  const [showEditSheet,       setShowEditSheet]       = useState(false);
+  const [selectedAchievement, setSelectedAchievement] = useState(null);
+  const [achievements,        setAchievements]        = useState([]);
 
   useEffect(() => {
     let cancelled = false;
     const load = async () => {
       setLoading(true);
       try {
-        const [user, stats] = await Promise.all([getMe(), getStats()]);
+        const [user, stats, achRes] = await Promise.all([
+          getMe(),
+          getStats(),
+          api.get('/users/me/achievements').then(r => r.data.data?.achievements ?? []).catch(() => []),
+        ]);
         if (!cancelled) {
           setUser(user);
           setProfile(user);
+          setProfileUser(user);
+          setAchievements(achRes);
           if (stats) {
             setLifetime([
               { icon: 'time-outline',     value: String(stats.totalHours ?? user.totalHours), label: 'Total Hours' },
@@ -91,6 +91,27 @@ export default function ProfileScreen({ navigation }) {
   const resetUser     = useUserStore((s) => s.reset);
   const setSubjects   = useSubjectStore((s) => s.setSubjects);
   const setTodaySessions = useSessionStore((s) => s.setTodaySessions);
+
+  const handleProfileSaved = (updatedUser) => {
+    setProfileUser(updatedUser);
+    setProfile(updatedUser);
+  };
+
+  const handleShareProfile = async () => {
+    const statsRes = await api.get('/users/me/stats')
+      .then(r => r.data.data?.stats ?? null)
+      .catch(() => null);
+    const u = profileUser ?? useUserStore.getState();
+    await shareProfile({
+      name:          u.name,
+      handle:        u.handle,
+      totalSeconds:  statsRes?.totalSeconds ?? 0,
+      totalSessions: statsRes?.totalSessions ?? 0,
+      currentStreak: useUserStore.getState().streak ?? 0,
+      subjectCount:  statsRes?.totalSubjects ?? 0,
+      topSubject:    statsRes?.topSubject ?? null,
+    });
+  };
 
   const handleSignOut = async () => {
     Alert.alert('Sign Out', 'Are you sure you want to sign out?', [
@@ -133,7 +154,7 @@ export default function ProfileScreen({ navigation }) {
           <Text style={styles.headerTitle}>Profile</Text>
         </View>
         <View style={styles.headerRight}>
-          <TouchableOpacity style={styles.iconBtn}>
+          <TouchableOpacity style={styles.iconBtn} onPress={handleShareProfile}>
             <Ionicons name="share-outline" size={20} color={colors.textSecondary} />
           </TouchableOpacity>
           <TouchableOpacity style={[styles.iconBtn, { marginLeft: spacing.sm }]} onPress={() => navigation.navigate('AppSettings')}>
@@ -154,8 +175,8 @@ export default function ProfileScreen({ navigation }) {
 
           <View style={styles.identityRow}>
             {/* Initial avatar */}
-            <View style={styles.avatarCircle}>
-              <Text style={styles.avatarInitial}>S</Text>
+            <View style={[styles.avatarCircle, { backgroundColor: user.avatarColor ?? 'rgba(255,255,255,0.2)' }]}>
+              <Text style={styles.avatarInitial}>{(user.name?.[0] ?? 'S').toUpperCase()}</Text>
             </View>
             <View style={styles.identityInfo}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}>
@@ -175,6 +196,15 @@ export default function ProfileScreen({ navigation }) {
             </View>
             <Text style={styles.streakSub}>Keep it up!</Text>
           </View>
+
+          {/* Edit profile pill */}
+          <TouchableOpacity
+            style={styles.editProfilePill}
+            onPress={() => setShowEditSheet(true)}
+          >
+            <Ionicons name="pencil-outline" size={14} color={colors.textPrimary} />
+            <Text style={styles.editProfilePillText}>Edit profile</Text>
+          </TouchableOpacity>
         </View>
 
         {/* Today's Progress */}
@@ -237,31 +267,54 @@ export default function ProfileScreen({ navigation }) {
         <Text style={[styles.sectionTitle, { marginTop: spacing.xl, marginBottom: spacing.md }]}>
           Achievements
         </Text>
-        <View style={styles.achievementsCard}>
-          {/* Unlocked row */}
-          <View style={styles.achievementsRow}>
-            {ACHIEVEMENTS_UNLOCKED.map((a) => (
-              <View key={a.label} style={styles.achievementItem}>
-                <View style={styles.achievementCircle}>
-                  <Ionicons name={a.icon} size={22} color={colors.accentPrimary} />
-                </View>
-                <Text style={styles.achievementLabel}>{a.label}</Text>
-              </View>
-            ))}
-          </View>
+        {(() => {
+          const unlockedTypes = new Set(achievements.map(a => a.type));
+          const allTypes = Object.keys(ACHIEVEMENT_META);
+          const unlockedItems = achievements
+            .filter(a => ACHIEVEMENT_META[a.type])
+            .map(a => ({ ...ACHIEVEMENT_META[a.type], unlockedAt: a.unlockedAt, unlocked: true }));
+          const lockedItems = allTypes
+            .filter(t => !unlockedTypes.has(t))
+            .map(t => ({ ...ACHIEVEMENT_META[t], unlockedAt: null, unlocked: false }));
+          const allDisplay = [...unlockedItems, ...lockedItems];
+          const visibleAchievements = allDisplay.slice(0, 8);
+          const remaining = allDisplay.length - visibleAchievements.length;
 
-          {/* Locked row */}
-          <View style={[styles.achievementsRow, { marginTop: spacing.xl }]}>
-            {ACHIEVEMENTS_LOCKED.map((a) => (
-              <View key={a.label} style={styles.achievementItem}>
-                <View style={styles.achievementCircleLocked}>
-                  <Ionicons name="lock-closed" size={18} color={colors.textSecondary} style={{ opacity: 0.3 }} />
-                </View>
-                <Text style={styles.achievementLabelLocked}>{a.label}</Text>
+          return (
+            <View style={styles.achievementsCard}>
+              <View style={styles.achievementsGrid}>
+                {visibleAchievements.map((a) => (
+                  <TouchableOpacity
+                    key={a.id}
+                    style={styles.achievementItem}
+                    onPress={() => setSelectedAchievement(a)}
+                    activeOpacity={0.7}
+                  >
+                    <View style={[
+                      styles.achievementCircle,
+                      a.unlocked
+                        ? { backgroundColor: `${a.iconColor}26`, borderColor: a.iconColor }
+                        : { backgroundColor: colors.surfaceDeep, borderColor: 'transparent' },
+                    ]}>
+                      {a.unlocked
+                        ? <Ionicons name={a.icon} size={22} color={a.iconColor} />
+                        : <Ionicons name="lock-closed" size={18} color={colors.textSecondary} style={{ opacity: 0.3 }} />
+                      }
+                    </View>
+                    <Text style={a.unlocked ? styles.achievementLabel : styles.achievementLabelLocked}>
+                      {a.name}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
               </View>
-            ))}
-          </View>
-        </View>
+              {remaining > 0 && (
+                <TouchableOpacity style={styles.seeAllRow}>
+                  <Text style={styles.seeAllText}>See all ({allDisplay.length}) →</Text>
+                </TouchableOpacity>
+              )}
+            </View>
+          );
+        })()}
 
         {/* Account Settings */}
         <Text style={[styles.sectionTitle, { marginTop: spacing.xl, marginBottom: spacing.md }]}>
@@ -290,6 +343,18 @@ export default function ProfileScreen({ navigation }) {
         </View>
 
       </ScrollView>
+
+      <EditProfileSheet
+        visible={showEditSheet}
+        user={profile}
+        onClose={() => setShowEditSheet(false)}
+        onSaved={handleProfileSaved}
+      />
+      <AchievementModal
+        visible={selectedAchievement !== null}
+        achievement={selectedAchievement}
+        onClose={() => setSelectedAchievement(null)}
+      />
     </View>
   );
 }
@@ -573,22 +638,22 @@ const styles = StyleSheet.create({
     borderRadius: radius.xl,
     padding: spacing.xl,
   },
-  achievementsRow: {
+  achievementsGrid: {
     flexDirection: 'row',
-    justifyContent: 'space-around',
+    flexWrap: 'wrap',
+    gap: spacing.md,
+    justifyContent: 'flex-start',
   },
   achievementItem: {
     alignItems: 'center',
     gap: spacing.sm,
-    flex: 1,
+    width: '22%',
   },
   achievementCircle: {
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: colors.surfaceBlue,
     borderWidth: 1,
-    borderColor: colors.accentPrimary,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -598,20 +663,38 @@ const styles = StyleSheet.create({
     color: colors.textPrimary,
     textAlign: 'center',
   },
-  achievementCircleLocked: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: colors.surfaceDeep,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
   achievementLabelLocked: {
     fontSize: 10,
     fontWeight: '500',
     color: colors.textSecondary,
     textAlign: 'center',
     opacity: 0.5,
+  },
+  seeAllRow: {
+    marginTop: spacing.lg,
+    alignItems: 'center',
+  },
+  seeAllText: {
+    fontSize: 13,
+    color: colors.accentPrimary,
+    fontWeight: '600',
+  },
+
+  /* Edit Profile Pill */
+  editProfilePill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+    alignSelf: 'flex-start',
+    marginTop: spacing.md,
+    backgroundColor: 'rgba(255,255,255,0.12)',
+    borderRadius: 999,
+    paddingVertical: 6,
+    paddingHorizontal: 14,
+  },
+  editProfilePillText: {
+    fontSize: 13,
+    color: colors.textPrimary,
   },
 
   /* Account */
