@@ -145,6 +145,52 @@ export async function checkAndFireMilestone(elapsedSeconds, dailyGoalSeconds, su
   }
 }
 
+// ── Group activity notifications ─────────────────────────────────
+
+const formatDurationShort = (seconds) => {
+  const h = Math.floor(seconds / 3600);
+  const m = Math.floor((seconds % 3600) / 60);
+  if (h > 0 && m > 0) return `${h}h ${m}m`;
+  if (h > 0) return `${h}h`;
+  return `${m}m`;
+};
+
+export async function fireGroupActivityNotif({
+  type,
+  memberName,
+  subjectName,
+  durationSeconds,
+  streakCount,
+}) {
+  const content = {
+    session_start: {
+      title: `📚 ${memberName} is studying`,
+      body: subjectName ? `Started a ${subjectName} session` : 'Just started a study session',
+    },
+    session_complete: {
+      title: `✅ ${memberName} finished`,
+      body: durationSeconds
+        ? `Studied for ${formatDurationShort(durationSeconds)}`
+        : 'Completed a study session',
+    },
+    streak_milestone: {
+      title: `🔥 ${memberName} is on fire!`,
+      body: `${streakCount} day streak!`,
+    },
+  }[type];
+
+  if (!content) return;
+
+  await Notifications.scheduleNotificationAsync({
+    content: {
+      ...content,
+      sound: true,
+      priority: Notifications.AndroidNotificationPriority.DEFAULT,
+    },
+    trigger: null,
+  });
+}
+
 // ── Notification tap handler ─────────────────────────────────────
 
 export function registerNotificationTapHandler(navigationRef) {

@@ -71,6 +71,8 @@ Components added in batch 5: `NoGroupView` — empty-state view rendered inside 
 
 Components added in batch 6: `GroupSettingsSheet` — modal bottom sheet for group settings; props: `visible`, `group` (`{ id, name, inviteCode, isPublic, maxMembers, memberCount }`), `isAdmin`, `onClose`, `onUpdated(updatedGroup)`, `onDeleted()`, `onLeave()`; admin users see full edit controls (name, privacy toggle, max members picker, regenerate invite code, delete group); non-admins see read-only info and a leave button only; leave logic lives in `StudyGroupsScreen` and is passed as `onLeave` prop.
 
+Components added in final batch: `InviteMemberSheet` — modal sheet for sharing a group invite code; props: `visible`, `group` (`{ id, name, inviteCode }`), `onClose`; displays invite code large with copy-to-clipboard and native share sheet; opened by person-plus icon in `StudyGroupsScreen` header when user is in a group. `JoinGroupSheet` now accepts `initialTab` prop (`'code'` | `'search'`) to open on a specific tab; used by the Discover banner to open directly on Search tab.
+
 | Screen file | Route name | Location | Description |
 |---|---|---|---|
 | `SplashScreen.jsx` | `Splash` | Auth stack | Google OAuth + email/password login via `AuthModal`, session restore on launch, backend pre-flight health check |
@@ -123,7 +125,7 @@ All stores are Zustand vanilla stores (no persist middleware).
 **Rule: never fetch data inside a component. Use store actions or `useEffect` hooks.**
 
 ### `useUserStore`
-Fields: `id`, `name`, `handle`, `avatar`, `streak`, `totalHours`, `dailyGoalSeconds`, `preferences` (full UserPreferences object, populated after auth), `group` (full group object after create/join, null otherwise)
+Fields: `id`, `name`, `handle`, `avatar`, `streak`, `totalHours`, `dailyGoalSeconds`, `preferences` (full UserPreferences object, populated after auth; includes `groupActivityAlerts: boolean` — read on mount in `StudyGroupsScreen` to initialize bell icon state), `group` (full group object after create/join, null otherwise)
 Actions: `setUser(userData)`, `updateStreak(n)`, `setPreferences(partial)`, `setGroup(group)`, `reset()`
 
 ### `useSubjectStore`
@@ -159,6 +161,7 @@ Actions: `setConfig`, `enablePomoMode`, `disablePomoMode`, `advancePhase`, `getC
 |---|---|
 | `src/api/users.js` | `getMe`, `updateMe`, `getStats`, `getInsights(period, subjectId?)`, `getMyGroup`, `getPreferences`, `updatePreferences`, `signInWithGoogle`, `signInWithEmail`, `signOut` |
 | `src/utils/shareStats.js` | `shareInsightsStats({ period, totalSeconds, dailyAverageSeconds, bestDaySeconds, bySubject, streak, userName })` — builds formatted text and opens native share sheet |
+| `src/utils/notifications.js` | `requestNotificationPermission`, `schedulePomoPhaseEndAlert`, `cancelPomoAlert`, `scheduleDailyReminder`, `cancelDailyReminder`, `checkAndFireMilestone`, `fireGroupActivityNotif({ type, memberName, subjectName, durationSeconds, streakCount })` — fires immediate local notification for group activity events (session_start, session_complete, streak_milestone); only called when `groupNotifsEnabled` is true and event is not from current user, `registerNotificationTapHandler` |
 | `src/api/subjects.js` | `getSubjects`, `getSubjectDetails`, `createSubject` |
 | `src/api/sessions.js` | `getTodaySessions`, `startSession`, `completeSession`, `manualSession`, `getSessionsBySubject` |
 | `src/api/tasks.js` | `getTasks`, `createTask`, `updateTask`, `deleteTask` |
@@ -218,8 +221,22 @@ Values are in `.env` (gitignored). Run `npx expo start --clear` after any `.env`
 - **`expo-crypto` enum name:** In SDK 54 use `CryptoEncoding.BASE64`, not `EncodingType.Base64`.
 - **`studytrack://` scheme not intercepted in Expo Go:** Use `exp://192.168.0.106:8081` as `redirectTo`.
 
+## Priority 2 Status — COMPLETE ✅
+
+All Priority 2 features implemented:
+- Batch 1: Add/Edit/Delete Task + Schedule Event ✅
+- Batch 2: Recurring Tasks + Overflow Menu ✅
+- Batch 3: Calendar Sync + Insights Toggle ✅
+- Batch 4: Export/Share Stats + Filter by Subject ✅
+- Batch 5: Create Group + Join Group ✅
+- Batch 6: Group Settings ✅
+- Final Batch: P2-13 Invite Member + P2-14 Group Notifications + P2-15 Discover Groups ✅
+
+P2-15 Discover Groups verification: banner fixed (surfaceBlue bg, border, compass+chevron layout), onPress opens JoinGroupSheet on Search tab. Backend GET /api/groups/search and JoinGroupSheet Search tab were already correctly implemented.
+
 ## Next Steps
 
+- **Priority 3 — Profile features:** Edit profile (name, handle, avatar color), share profile card, achievement detail modals, theme toggle (dark/light)
 - Deploy backend to Railway or Fly.io; update `EXPO_PUBLIC_API_URL` to production URL
 - Build APK, Play Store submission
 - Remote push notifications deferred to dev build / APK phase (local notifications only in Expo Go)

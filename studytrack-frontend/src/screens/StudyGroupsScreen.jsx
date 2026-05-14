@@ -20,6 +20,9 @@ import NoGroupView from '../components/NoGroupView';
 import CreateGroupSheet from '../components/CreateGroupSheet';
 import JoinGroupSheet from '../components/JoinGroupSheet';
 import GroupSettingsSheet from '../components/GroupSettingsSheet';
+import InviteMemberSheet from '../components/InviteMemberSheet';
+import { fireGroupActivityNotif } from '../utils/notifications';
+import api from '../api/client';
 
 
 function fmtElapsed(seconds) {
@@ -67,6 +70,9 @@ export default function StudyGroupsScreen({ navigation }) {
   const [codeCopied,      setCodeCopied]       = useState(false);
   const [isAdmin,           setIsAdmin]          = useState(false);
   const [showSettingsSheet, setShowSettingsSheet] = useState(false);
+  const [showInviteSheet,   setShowInviteSheet]   = useState(false);
+  const [showDiscoverSheet, setShowDiscoverSheet] = useState(false);
+  const [groupNotifsEnabled, setGroupNotifsEnabled] = useState(false);
 
   // Keep a ref to membersMap so socket callbacks can read the latest values
   const membersMapRef = useRef({});
@@ -106,6 +112,8 @@ export default function StudyGroupsScreen({ navigation }) {
 
   useEffect(() => {
     fetchUserGroup();
+    const prefs = useUserStore.getState().preferences;
+    setGroupNotifsEnabled(prefs?.groupActivityAlerts ?? true);
   }, []);
 
   const handleGroupCreated = (group) => {
@@ -219,6 +227,16 @@ export default function StudyGroupsScreen({ navigation }) {
       const entry = formatActivityEvent(event, name);
       if (!entry) return;
       setActivityFeed((prev) => [entry, ...prev].slice(0, 20));
+
+      if (groupNotifsEnabled && event.userId !== useUserStore.getState().id) {
+        fireGroupActivityNotif({
+          type: event.type,
+          memberName: name,
+          subjectName: event.subjectName,
+          durationSeconds: event.durationSeconds,
+          streakCount: event.metadata?.streakCount,
+        });
+      }
     };
 
     const onLeaderboardUpdate = () => fetchLeaderboard(groupId);
@@ -241,6 +259,24 @@ export default function StudyGroupsScreen({ navigation }) {
       socket.off('group_deleted', onGroupDeleted);
     };
   }, [groupId, userId]);
+
+  const handleToggleGroupNotifs = async () => {
+    const newValue = !groupNotifsEnabled;
+    setGroupNotifsEnabled(newValue);
+    try {
+      await api.patch('/users/me/preferences', { groupActivityAlerts: newValue });
+      useUserStore.getState().setPreferences({ groupActivityAlerts: newValue });
+    } catch (err) {
+      setGroupNotifsEnabled(!newValue);
+    }
+    if (newValue) {
+      Alert.alert(
+        '🔔 Group notifications on',
+        "You'll be notified when members start or complete sessions.",
+        [{ text: 'OK' }]
+      );
+    }
+  };
 
   // Derived data
   const studyingMembers = Object.values(membersMap).filter((m) => m.status === 'studying');
@@ -301,12 +337,21 @@ export default function StudyGroupsScreen({ navigation }) {
       <View style={[styles.header, { paddingTop: insets.top + spacing.md }]}>
         <Text style={styles.headerTitle}>Groups</Text>
         <View style={styles.headerActions}>
-          <TouchableOpacity style={styles.iconBtn} onPress={() => setShowJoinSheet(true)}>
+          <TouchableOpacity
+            style={styles.iconBtn}
+            onPress={() => setShowInviteSheet(true)}
+          >
             <Ionicons name="person-add-outline" size={22} color={colors.textPrimary} />
           </TouchableOpacity>
-          <TouchableOpacity style={[styles.iconBtn, { marginLeft: spacing.sm }]}>
-            <Ionicons name="notifications-outline" size={22} color={colors.textPrimary} />
-            <View style={styles.notifBadge} />
+          <TouchableOpacity
+            style={[styles.iconBtn, { marginLeft: spacing.sm }]}
+            onPress={handleToggleGroupNotifs}
+          >
+            <Ionicons
+              name={groupNotifsEnabled ? 'notifications' : 'notifications-outline'}
+              size={22}
+              color={groupNotifsEnabled ? colors.accentPrimary : colors.textSecondary}
+            />
           </TouchableOpacity>
         </View>
       </View>
@@ -459,14 +504,17 @@ export default function StudyGroupsScreen({ navigation }) {
         </View>
 
         {/* Discover Banner */}
-        <TouchableOpacity style={styles.discoverBanner} activeOpacity={0.85}>
-          <View style={styles.discoverLeft}>
+        <TouchableOpacity
+          style={styles.discoverBanner}
+          activeOpacity={0.85}
+          onPress={() => setShowDiscoverSheet(true)}
+        >
+          <Ionicons name="compass-outline" size={22} color={colors.accentPrimary} />
+          <View style={[styles.discoverLeft, { marginLeft: 12 }]}>
             <Text style={styles.discoverTitle}>Find a new group</Text>
-            <Text style={styles.discoverSub}>Discover study partners near you</Text>
+            <Text style={styles.discoverSub}>Browse public study groups by subject</Text>
           </View>
-          <View style={styles.discoverIconCircle}>
-            <Ionicons name="compass-outline" size={24} color={colors.textPrimary} />
-          </View>
+          <Ionicons name="chevron-forward" size={16} color={colors.accentPrimary} />
         </TouchableOpacity>
       </ScrollView>
 
@@ -488,6 +536,17 @@ export default function StudyGroupsScreen({ navigation }) {
         onUpdated={handleGroupUpdated}
         onDeleted={handleGroupDeleted}
         onLeave={handleLeaveGroup}
+      />
+      <InviteMemberSheet
+        visible={showInviteSheet}
+        group={userGroup}
+        onClose={() => setShowInviteSheet(false)}
+      />
+      <JoinGroupSheet
+        visible={showDiscoverSheet}
+        initialTab="search"
+        onClose={() => setShowDiscoverSheet(false)}
+        onJoined={handleGroupJoined}
       />
     </View>
   );
@@ -865,33 +924,26 @@ const styles = StyleSheet.create({
   /* Discover banner */
   discoverBanner: {
     marginTop: spacing.xl,
-    backgroundColor: colors.accentPrimary,
-    borderRadius: radius.xl,
-    padding: spacing.xl,
+    backgroundColor: colors.surfaceBlue,
+    borderRadius: radius.lg,
+    paddingVertical: 14,
+    paddingHorizontal: spacing.xl,
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
+    borderWidth: 0.5,
+    borderColor: colors.accentPrimary,
   },
   discoverLeft: {
     flex: 1,
   },
   discoverTitle: {
-    fontSize: 16,
+    fontSize: 13,
     fontWeight: '700',
-    color: colors.textPrimary,
+    color: colors.accentLight,
     marginBottom: 4,
   },
   discoverSub: {
-    fontSize: 13,
-    color: colors.textPrimary,
-    opacity: 0.8,
-  },
-  discoverIconCircle: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: 'rgba(255,255,255,0.15)',
-    alignItems: 'center',
-    justifyContent: 'center',
+    fontSize: 12,
+    color: colors.textSecondary,
   },
 });

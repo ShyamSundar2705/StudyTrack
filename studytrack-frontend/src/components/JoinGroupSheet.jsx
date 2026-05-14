@@ -7,7 +7,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { colors, spacing, radius } from '../constraints/theme';
 import api from '../api/client';
 
-export default function JoinGroupSheet({ visible, onClose, onJoined }) {
+export default function JoinGroupSheet({ visible, onClose, onJoined, initialTab = 'code' }) {
   const [activeTab, setActiveTab] = useState('code');
   const [inviteCode, setInviteCode] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
@@ -21,7 +21,7 @@ export default function JoinGroupSheet({ visible, onClose, onJoined }) {
 
   useEffect(() => {
     if (visible) {
-      setActiveTab('code');
+      setActiveTab(initialTab);
       setInviteCode('');
       setSearchQuery('');
       setSearchResults([]);
