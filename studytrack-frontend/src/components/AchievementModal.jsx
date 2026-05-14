@@ -6,13 +6,11 @@ import {
   TouchableOpacity,
   TouchableWithoutFeedback,
   StyleSheet,
-  Dimensions,
+  useWindowDimensions,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, radius, spacing } from '../constraints/theme';
 import { ACHIEVEMENT_META, CATEGORY_LABELS } from '../constants/achievements';
-
-const SCREEN_WIDTH = Dimensions.get('window').width;
 
 function formatUnlockedDate(dateStr) {
   if (!dateStr) return '';
@@ -21,6 +19,7 @@ function formatUnlockedDate(dateStr) {
 }
 
 export default function AchievementModal({ visible, achievement, onClose }) {
+  const { width: screenWidth } = useWindowDimensions();
   const meta = ACHIEVEMENT_META[achievement?.type] ?? {
     name: achievement?.type ?? 'Achievement',
     icon: 'ribbon',
@@ -45,7 +44,7 @@ export default function AchievementModal({ visible, achievement, onClose }) {
       </TouchableWithoutFeedback>
 
       <View style={styles.centeredContainer} pointerEvents="box-none">
-        <View style={styles.card}>
+        <View style={[styles.card, { width: screenWidth * 0.85 }]}>
           {/* Close button */}
           <TouchableOpacity style={styles.closeBtn} onPress={onClose}>
             <Ionicons name="close" size={20} color={colors.textSecondary} />
@@ -132,7 +131,6 @@ const styles = StyleSheet.create({
   card: {
     backgroundColor: colors.surface,
     borderRadius: 24,
-    width: SCREEN_WIDTH * 0.85,
     padding: 28,
     alignItems: 'center',
   },
