@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   Switch,
   Animated,
+  ScrollView,
   StyleSheet,
   ActivityIndicator,
   Alert,
@@ -162,6 +163,11 @@ export default function GroupSettingsSheet({
     <Modal visible={visible} transparent animationType="none" onRequestClose={handleClose}>
       <TouchableOpacity style={styles.overlay} activeOpacity={1} onPress={handleClose} />
       <Animated.View style={[styles.sheet, { transform: [{ translateY: slideAnim }] }]}>
+        <ScrollView
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+          bounces={false}
+        >
         {/* Handle */}
         <View style={styles.handleContainer}>
           <View style={styles.handle} />
@@ -170,12 +176,12 @@ export default function GroupSettingsSheet({
         {/* Header */}
         <View style={styles.header}>
           <Text style={styles.headerTitle}>Group Settings</Text>
-          {isAdmin && hasChanges ? (
-            <TouchableOpacity onPress={handleSave} disabled={isSaving}>
+          {isAdmin ? (
+            <TouchableOpacity onPress={handleSave} disabled={!hasChanges || isSaving}>
               {isSaving ? (
                 <ActivityIndicator color={colors.accentPrimary} size="small" />
               ) : (
-                <Text style={styles.saveBtn}>Save</Text>
+                <Text style={[styles.saveBtn, !hasChanges && styles.saveBtnDisabled]}>Save</Text>
               )}
             </TouchableOpacity>
           ) : null}
@@ -295,6 +301,7 @@ export default function GroupSettingsSheet({
         ) : null}
 
         <View style={styles.bottomPad} />
+        </ScrollView>
       </Animated.View>
 
       <BottomSheetPicker
@@ -322,6 +329,7 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
+    maxHeight: '90%',
     backgroundColor: colors.surface,
     borderTopLeftRadius: radius.xxl,
     borderTopRightRadius: radius.xxl,
@@ -354,6 +362,9 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '700',
     color: colors.accentPrimary,
+  },
+  saveBtnDisabled: {
+    opacity: 0.4,
   },
   sectionLabel: {
     fontSize: 12,
