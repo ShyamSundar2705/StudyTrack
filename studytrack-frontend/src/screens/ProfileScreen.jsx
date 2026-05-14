@@ -101,10 +101,10 @@ export default function ProfileScreen({ navigation }) {
     const statsRes = await api.get('/users/me/stats')
       .then(r => r.data.data?.stats ?? null)
       .catch(() => null);
-    const u = profileUser ?? useUserStore.getState();
+    const { name: storeName, handle: storeHandle } = useUserStore.getState();
     await shareProfile({
-      name:          u.name,
-      handle:        u.handle,
+      name:          profileUser?.name ?? storeName,
+      handle:        profileUser?.handle ?? storeHandle,
       totalSeconds:  statsRes?.totalSeconds ?? 0,
       totalSessions: statsRes?.totalSessions ?? 0,
       currentStreak: useUserStore.getState().streak ?? 0,
@@ -272,10 +272,10 @@ export default function ProfileScreen({ navigation }) {
           const allTypes = Object.keys(ACHIEVEMENT_META);
           const unlockedItems = achievements
             .filter(a => ACHIEVEMENT_META[a.type])
-            .map(a => ({ ...ACHIEVEMENT_META[a.type], unlockedAt: a.unlockedAt, unlocked: true }));
+            .map(a => ({ ...ACHIEVEMENT_META[a.type], type: a.type, unlockedAt: a.unlockedAt, unlocked: true }));
           const lockedItems = allTypes
             .filter(t => !unlockedTypes.has(t))
-            .map(t => ({ ...ACHIEVEMENT_META[t], unlockedAt: null, unlocked: false }));
+            .map(t => ({ ...ACHIEVEMENT_META[t], type: t, unlockedAt: null, unlocked: false }));
           const allDisplay = [...unlockedItems, ...lockedItems];
           const visibleAchievements = allDisplay.slice(0, 8);
           const remaining = allDisplay.length - visibleAchievements.length;
