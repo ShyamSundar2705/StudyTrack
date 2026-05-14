@@ -30,6 +30,7 @@ model User {
   name             String
   handle           String           @unique
   avatar           String?
+  avatarColor      String?
   passwordHash     String?
   dailyGoalSeconds Int              @default(3600)
   createdAt        DateTime         @default(now())
