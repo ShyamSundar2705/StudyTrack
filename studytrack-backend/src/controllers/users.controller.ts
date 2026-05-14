@@ -134,7 +134,7 @@ export async function getStats(request: FastifyRequest, reply: FastifyReply) {
   const [sessions, totalSubjects] = await Promise.all([
     prisma.session.findMany({
       where: { userId, durationSeconds: { not: null } },
-      select: { durationSeconds: true, startedAt: true }
+      select: { durationSeconds: true, startedAt: true, subjectId: true }
     }),
     prisma.subject.count({ where: { userId } })
   ])
@@ -143,7 +143,32 @@ export async function getStats(request: FastifyRequest, reply: FastifyReply) {
   const totalHours = Math.round((totalSeconds / 3600) * 10) / 10
   const daysActive = new Set(sessions.map(s => s.startedAt.toISOString().split('T')[0])).size
 
-  return reply.send({ data: { stats: { totalHours, totalSessions: sessions.length, totalSubjects, daysActive } } })
+  // Compute topSubject by total seconds
+  const subjectSeconds: Record<string, number> = {}
+  for (const s of sessions) {
+    subjectSeconds[s.subjectId] = (subjectSeconds[s.subjectId] || 0) + (s.durationSeconds || 0)
+  }
+
+  let topSubject: string | null = null
+  const sorted = Object.entries(subjectSeconds).sort((a, b) => b[1] - a[1])
+  if (sorted.length > 0) {
+    const topId = sorted[0][0]
+    const sub = await prisma.subject.findUnique({ where: { id: topId }, select: { name: true } })
+    topSubject = sub?.name ?? null
+  }
+
+  return reply.send({
+    data: {
+      stats: {
+        totalHours,
+        totalSessions: sessions.length,
+        totalSubjects,
+        daysActive,
+        totalSeconds,
+        topSubject,
+      }
+    }
+  })
 }
 
 // GET /users/me/group — user's current group
