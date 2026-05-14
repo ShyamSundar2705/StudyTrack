@@ -62,11 +62,11 @@ export default function EditProfileSheet({ visible, user, onClose, onSaved }) {
 
   const hasChanges =
     name.trim() !== (user?.name ?? '') ||
-    handle !== (user?.handle ?? '') ||
+    handle.trim() !== (user?.handle ?? '') ||
     avatarColor !== (user?.avatarColor ?? colors.accentPrimary);
 
   const handleSave = async () => {
-    if (!hasChanges || isSaving) return;
+    if (!hasChanges || isSaving || !!handleError) return;
     setIsSaving(true);
     setError(null);
     try {
@@ -122,7 +122,7 @@ export default function EditProfileSheet({ visible, user, onClose, onSaved }) {
           </View>
 
           <KeyboardAvoidingView
-            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+            behavior="padding"
             style={{ flex: 1 }}
           >
             <ScrollView
