@@ -7,6 +7,7 @@ const USER_SELECT = {
   name: true,
   handle: true,
   avatar: true,
+  avatarColor: true,
   dailyGoalSeconds: true,
   createdAt: true
 }
@@ -100,13 +101,28 @@ export async function updateMe(request: FastifyRequest, reply: FastifyReply) {
   const body = request.body as {
     name?: string
     handle?: string
-    avatar?: string
+    avatarColor?: string
     dailyGoalSeconds?: number
   }
-
   const prisma = request.server.prisma
-  const user = await prisma.user.update({ where: { id }, data: body, select: USER_SELECT })
 
+  if (body.handle !== undefined) {
+    if (!/^[a-zA-Z0-9_]+$/.test(body.handle)) {
+      return reply.status(400).send({ error: 'Handle can only contain letters, numbers, and underscores' })
+    }
+    const existing = await prisma.user.findUnique({ where: { handle: body.handle } })
+    if (existing && existing.id !== id) {
+      return reply.status(409).send({ error: 'Handle already taken' })
+    }
+  }
+
+  if (body.avatarColor !== undefined) {
+    if (!/^#[0-9A-Fa-f]{6}$/.test(body.avatarColor)) {
+      return reply.status(400).send({ error: 'avatarColor must be a valid hex color (e.g. #2D6BE4)' })
+    }
+  }
+
+  const user = await prisma.user.update({ where: { id }, data: body, select: USER_SELECT })
   return reply.send({ data: { user } })
 }
 

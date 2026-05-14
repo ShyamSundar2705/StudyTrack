@@ -16,9 +16,9 @@ const ME_UPDATE_SCHEMA = {
   body: {
     type: 'object',
     properties: {
-      name:             { type: 'string', minLength: 1 },
-      handle:           { type: 'string', minLength: 1 },
-      avatar:           { type: 'string' },
+      name:             { type: 'string', minLength: 1, maxLength: 50 },
+      handle:           { type: 'string', minLength: 1, maxLength: 30 },
+      avatarColor:      { type: 'string' },
       dailyGoalSeconds: { type: 'integer', minimum: 0 },
     }
   }
