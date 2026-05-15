@@ -200,13 +200,24 @@ export async function listSessions(request: FastifyRequest, reply: FastifyReply)
 
 export async function getTodaySessions(request: FastifyRequest, reply: FastifyReply) {
   const userId = request.user.id
+  const { date } = request.query as { date?: string }
   const prisma = request.server.prisma
 
-  const todayStart = new Date()
-  todayStart.setUTCHours(0, 0, 0, 0)
+  let dayStart: Date
+  let dayEnd: Date
+
+  if (date && /^\d{4}-\d{2}-\d{2}$/.test(date)) {
+    dayStart = new Date(date + 'T00:00:00.000Z')
+    dayEnd   = new Date(date + 'T23:59:59.999Z')
+  } else {
+    dayStart = new Date()
+    dayStart.setUTCHours(0, 0, 0, 0)
+    dayEnd = new Date()
+    dayEnd.setUTCHours(23, 59, 59, 999)
+  }
 
   const sessions = await prisma.session.findMany({
-    where: { userId, startedAt: { gte: todayStart }, durationSeconds: { not: null } },
+    where: { userId, startedAt: { gte: dayStart, lte: dayEnd }, durationSeconds: { not: null } },
     include: { subject: { select: { name: true } } },
     orderBy: { startedAt: 'asc' }
   })

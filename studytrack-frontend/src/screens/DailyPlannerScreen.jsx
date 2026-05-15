@@ -15,6 +15,7 @@ import ScheduleEventFormSheet from '../components/ScheduleEventFormSheet';
 import PlannerActionSheet from '../components/PlannerActionSheet';
 import api from '../api/client';
 import { getTasks } from '../api/tasks';
+import { getTodaySessions } from '../api/sessions';
 import { formatRecurringLabel } from '../utils/dateTime'
 import {
   requestCalendarPermission,
@@ -193,7 +194,7 @@ export default function DailyPlannerScreen({ navigation }) {
   const insets   = useSafeAreaInsets();
 
   const [selectedDate, setSelectedDate] = useState(isoToday());
-  const [recap,        setRecap]        = useState({ streak: 0, tasksCompleted: 0, tasksTotal: 0, incompleteTask: null });
+  const [recap,        setRecap]        = useState({ streak: 0, tasksCompleted: 0, tasksTotal: 0, studySeconds: 0, incompleteTask: null });
 
   // New API-backed state
   const [tasks,          setTasks]          = useState([]);
@@ -279,13 +280,19 @@ export default function DailyPlannerScreen({ navigation }) {
     const d = new Date();
     d.setDate(d.getDate() - 1);
     const yesterdayIso = d.toISOString().slice(0, 10);
-    getTasks(yesterdayIso).then((raw) => {
-      if (!Array.isArray(raw)) return;
+    Promise.all([
+      getTasks(yesterdayIso),
+      getTodaySessions(yesterdayIso),
+    ]).then(([rawTasks, rawSessions]) => {
+      const tasks = Array.isArray(rawTasks) ? rawTasks : [];
+      const sessions = Array.isArray(rawSessions) ? rawSessions : [];
+      const studySeconds = sessions.reduce((sum, s) => sum + (s.elapsedSeconds ?? 0), 0);
       setRecap({
         streak,
-        tasksCompleted: raw.filter((t) => t.completed).length,
-        tasksTotal:     raw.length,
-        incompleteTask: raw.find((t) => !t.completed)?.title ?? null,
+        tasksCompleted: tasks.filter((t) => t.completed).length,
+        tasksTotal:     tasks.length,
+        studySeconds,
+        incompleteTask: tasks.find((t) => !t.completed)?.title ?? null,
       });
     }).catch(() => {});
   }, []);
@@ -443,6 +450,7 @@ export default function DailyPlannerScreen({ navigation }) {
             {[
               { value: String(recap.streak), label: 'Day Streak' },
               { value: recap.tasksTotal > 0 ? `${recap.tasksCompleted}/${recap.tasksTotal}` : '—', label: 'Tasks Done' },
+              { value: recap.studySeconds > 0 ? `${Math.floor(recap.studySeconds / 3600)}h ${Math.floor((recap.studySeconds % 3600) / 60)}m` : '—', label: 'Study Time' },
             ].map((s, i) => (
               <React.Fragment key={s.label}>
                 {i > 0 && <View style={styles.recapDivider} />}

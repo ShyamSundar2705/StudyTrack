@@ -1,9 +1,9 @@
 import client from './client';
 
-// GET /sessions/today
+// GET /sessions/today?date=YYYY-MM-DD
 // Returns: [{ id, subjectId, subjectName, startedAt, elapsedSeconds }]
-export const getTodaySessions = () =>
-  client.get('/sessions/today').then((r) => r.data.data?.sessions ?? []);
+export const getTodaySessions = (date) =>
+  client.get('/sessions/today', { params: date ? { date } : undefined }).then((r) => r.data.data?.sessions ?? []);
 
 // POST /sessions/start
 // Body: { subjectId, type }
