@@ -7,6 +7,7 @@ import * as Linking from 'expo-linking';
 import AppNavigator from './src/navigation/AppNavigator';
 import { navigationRef } from './src/navigation/navigationRef';
 import { registerNotificationTapHandler } from './src/utils/notifications';
+import { ThemeProvider, useTheme } from './src/context/ThemeContext';
 
 const prefix = Linking.createURL('/');
 
@@ -23,7 +24,8 @@ const linking = {
   },
 };
 
-export default function App() {
+function AppShell() {
+  const { theme } = useTheme();
   const notificationListener = useRef(null);
 
   useEffect(() => {
@@ -38,9 +40,17 @@ export default function App() {
   return (
     <SafeAreaProvider>
       <NavigationContainer ref={navigationRef} linking={linking}>
-        <StatusBar style="light" />
+        <StatusBar style={theme === 'light' ? 'dark' : 'light'} />
         <AppNavigator />
       </NavigationContainer>
     </SafeAreaProvider>
+  );
+}
+
+export default function App() {
+  return (
+    <ThemeProvider>
+      <AppShell />
+    </ThemeProvider>
   );
 }
