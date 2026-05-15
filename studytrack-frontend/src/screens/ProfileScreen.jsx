@@ -11,7 +11,8 @@ import {
 } from 'react-native';
 import * as SecureStore from 'expo-secure-store';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, radius, spacing } from '../constraints/theme';
+import { radius, spacing } from '../constraints/theme';
+import { useTheme } from '../context/ThemeContext';
 import { getMe, getStats } from '../api/users';
 import api, { TOKEN_KEY } from '../api/client';
 import supabase from '../api/supabase';
@@ -39,6 +40,7 @@ const ACCOUNT_ROWS = [
 
 export default function ProfileScreen({ navigation }) {
   const { width: windowWidth } = useWindowDimensions();
+  const { colors } = useTheme();
   // card inner width = window - 2×scrollH padding - 2×card padding - 2×border
   const achievementItemWidth = (windowWidth - 2 * spacing.xl - 2 * spacing.xl - 2 - 3 * spacing.sm) / 4;
 
@@ -148,6 +150,8 @@ export default function ProfileScreen({ navigation }) {
   const goalPct    = Math.min(Math.round((todayTotal / (user.dailyGoalSeconds ?? 21600)) * 100), 100);
   const totalFmt   = (() => { const h = Math.floor(todayTotal / 3600); const m = Math.floor((todayTotal % 3600) / 60); return `${h}h ${m}m`; })();
   const goalFmt    = (() => { const h = Math.floor((user.dailyGoalSeconds ?? 21600) / 3600); return `${h}h`; })();
+
+  const styles = getStyles(colors);
 
   return (
     <View style={styles.root}>
@@ -370,7 +374,8 @@ export default function ProfileScreen({ navigation }) {
   );
 }
 
-const styles = StyleSheet.create({
+function getStyles(colors) {
+  return StyleSheet.create({
   root: {
     flex: 1,
     backgroundColor: colors.background,
@@ -749,4 +754,5 @@ const styles = StyleSheet.create({
   },
 
 
-});
+  });
+}
