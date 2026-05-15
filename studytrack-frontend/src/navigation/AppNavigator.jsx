@@ -87,8 +87,9 @@ function GroupsStackScreen() {
 function ProfileStackScreen() {
   return (
     <ProfileStack.Navigator screenOptions={NO_HEADER}>
-      <ProfileStack.Screen name="Profile"     component={ProfileScreen} />
-      <ProfileStack.Screen name="AppSettings" component={AppSettingsScreen} />
+      <ProfileStack.Screen name="Profile"        component={ProfileScreen} />
+      <ProfileStack.Screen name="AppSettings"    component={AppSettingsScreen} />
+      <ProfileStack.Screen name="SubjectDetails" component={SubjectDetailsScreen} />
     </ProfileStack.Navigator>
   );
 }

@@ -7,6 +7,7 @@ import {
   StyleSheet,
   ActivityIndicator,
   Alert,
+  useWindowDimensions,
 } from 'react-native';
 import * as SecureStore from 'expo-secure-store';
 import { Ionicons } from '@expo/vector-icons';
@@ -37,6 +38,10 @@ const ACCOUNT_ROWS = [
 ];
 
 export default function ProfileScreen({ navigation }) {
+  const { width: windowWidth } = useWindowDimensions();
+  // card inner width = window - 2×scrollH padding - 2×card padding - 2×border
+  const achievementItemWidth = (windowWidth - 2 * spacing.xl - 2 * spacing.xl - 2 - 3 * spacing.sm) / 4;
+
   const name             = useUserStore((s) => s.name);
   const handle           = useUserStore((s) => s.handle);
   const avatar           = useUserStore((s) => s.avatar);
@@ -259,7 +264,7 @@ export default function ProfileScreen({ navigation }) {
               key={s.name}
               style={styles.subjectCard}
               activeOpacity={0.7}
-              onPress={() => navigation.navigate('InsightsTab', { screen: 'SubjectDetails', params: { subjectId: s.id } })}
+              onPress={() => navigation.push('SubjectDetails', { subjectId: s.id })}
             >
               {/* Colored left accent bar */}
               <View style={[styles.subjectAccentBar, { backgroundColor: s.color }]} />
@@ -292,7 +297,7 @@ export default function ProfileScreen({ navigation }) {
                 {visibleAchievements.map((a) => (
                   <TouchableOpacity
                     key={a.id}
-                    style={styles.achievementItem}
+                    style={[styles.achievementItem, { width: achievementItemWidth }]}
                     onPress={() => setSelectedAchievement(a)}
                     activeOpacity={0.7}
                   >
@@ -647,13 +652,12 @@ const styles = StyleSheet.create({
   achievementsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: spacing.md,
+    gap: spacing.sm,
     justifyContent: 'flex-start',
   },
   achievementItem: {
     alignItems: 'center',
     gap: spacing.sm,
-    width: '22%',
   },
   achievementCircle: {
     width: 48,

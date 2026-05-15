@@ -100,7 +100,7 @@ export default function EditProfileSheet({ visible, user, onClose, onSaved }) {
 
   return (
     <Modal transparent visible={mounted} animationType="none" onRequestClose={onClose}>
-      <View style={StyleSheet.absoluteFill}>
+      <View style={styles.modalContainer}>
         <TouchableWithoutFeedback onPress={onClose}>
           <View style={styles.overlay} />
         </TouchableWithoutFeedback>
@@ -223,15 +223,15 @@ export default function EditProfileSheet({ visible, user, onClose, onSaved }) {
 }
 
 const styles = StyleSheet.create({
+  modalContainer: {
+    flex: 1,
+    justifyContent: 'flex-end',
+  },
   overlay: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: 'rgba(0,0,0,0.5)',
   },
   sheet: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
     backgroundColor: colors.surface,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
