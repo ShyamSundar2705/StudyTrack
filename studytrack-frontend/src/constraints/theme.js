@@ -1,4 +1,4 @@
-export const colors = {
+export const darkColors = {
   background:   '#0F0F0F',
   surface:      '#1E1E1E',
   surfaceDeep:  '#161616',
@@ -20,6 +20,31 @@ export const colors = {
   accent2:      '#A855F7',
   dangerLight:  '#FFCDD2',
 };
+
+export const lightColors = {
+  background:   '#F5F5F5',
+  surface:      '#FFFFFF',
+  surfaceDeep:  '#ECECEC',
+  surfaceBlue:  '#E8EEF8',
+  surfaceElevated: '#D6E4FF',
+  accentPrimary:'#2D6BE4',
+  accentLight:  '#4A90E2',
+  textPrimary:  '#111111',
+  textSecondary:'#666666',
+  textDark:     '#333333',
+  border:       '#DDDDDD',
+  borderLight:  '#CCCCCC',
+  danger:       '#E74C3C',
+  success:      '#27AE60',
+  warning:      '#FF6B2B',
+  gold:         '#FFD700',
+  silver:       '#C0C0C0',
+  bronze:       '#CD7F32',
+  accent2:      '#A855F7',
+  dangerLight:  '#FFCDD2',
+};
+
+export const colors = darkColors;
 
 export const radius = {
   sm: 8, md: 12, lg: 14, xl: 16, xxl: 20,
