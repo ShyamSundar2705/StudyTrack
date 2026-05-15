@@ -36,8 +36,11 @@ const DEFAULTS = {
   pomodoroSounds: true,
   appBlocker:     true,
   strictMode:     false,
-  syncDevices:    true,
-  shareAnalytics: true,
+  syncDevices:       true,
+  shareAnalytics:    true,
+  profilePublic:     true,
+  showInLeaderboard: true,
+  shareStudyStats:   true,
 };
 
 const BACKEND_KEY_MAP = {
@@ -47,8 +50,11 @@ const BACKEND_KEY_MAP = {
   achievements:   'achievementAlerts',
   hideDigits:     'hideTimerDigits',
   motivational:   'motivationalQuotes',
-  pomodoroSounds: 'pomodoroSounds',
-  shareAnalytics: 'shareAnalytics',
+  pomodoroSounds:    'pomodoroSounds',
+  shareAnalytics:    'shareAnalytics',
+  profilePublic:     'profilePublic',
+  showInLeaderboard: 'showInLeaderboard',
+  shareStudyStats:   'shareStudyStats',
 };
 
 // Interactive toggle
@@ -134,14 +140,17 @@ export default function AppSettingsScreen({ navigation, route }) {
     getPreferences().then((prefs) => {
       if (!prefs) return;
       const backendSettings = {
-        pushNotifs:     prefs.notificationsEnabled,
-        reminders:      prefs.studyReminders,
-        groupActivity:  prefs.groupActivityAlerts,
-        achievements:   prefs.achievementAlerts,
-        hideDigits:     prefs.hideTimerDigits,
-        motivational:   prefs.motivationalQuotes,
-        pomodoroSounds: prefs.pomodoroSounds,
-        shareAnalytics: prefs.shareAnalytics,
+        pushNotifs:        prefs.notificationsEnabled,
+        reminders:         prefs.studyReminders,
+        groupActivity:     prefs.groupActivityAlerts,
+        achievements:      prefs.achievementAlerts,
+        hideDigits:        prefs.hideTimerDigits,
+        motivational:      prefs.motivationalQuotes,
+        pomodoroSounds:    prefs.pomodoroSounds,
+        shareAnalytics:    prefs.shareAnalytics,
+        profilePublic:     prefs.profilePublic,
+        showInLeaderboard: prefs.showInLeaderboard,
+        shareStudyStats:   prefs.shareStudyStats,
       };
       setSettings(prev => {
         const safeBackend = Object.fromEntries(
@@ -486,6 +495,39 @@ export default function AppSettingsScreen({ navigation, route }) {
               <Text style={styles.rowSubtitle}>Help improve StudyTrack anonymously</Text>
             </View>
             <Toggle on={settings.shareAnalytics} onPress={() => toggle('shareAnalytics')} />
+          </View>
+          {/* Profile Public */}
+          <View style={[styles.row, styles.rowBorder]}>
+            <View style={styles.rowLeftColumn}>
+              <View style={styles.rowLeft}>
+                <Ionicons name="person-circle-outline" size={20} color={colors.accentLight} />
+                <Text style={styles.rowLabel}>Public Profile</Text>
+              </View>
+              <Text style={styles.rowSubtitle}>Allow others to view your profile</Text>
+            </View>
+            <Toggle on={settings.profilePublic} onPress={() => toggle('profilePublic')} />
+          </View>
+          {/* Show in Leaderboard */}
+          <View style={[styles.row, styles.rowBorder]}>
+            <View style={styles.rowLeftColumn}>
+              <View style={styles.rowLeft}>
+                <Ionicons name="podium-outline" size={20} color={colors.accentLight} />
+                <Text style={styles.rowLabel}>Show in Leaderboard</Text>
+              </View>
+              <Text style={styles.rowSubtitle}>Appear in group leaderboards</Text>
+            </View>
+            <Toggle on={settings.showInLeaderboard} onPress={() => toggle('showInLeaderboard')} />
+          </View>
+          {/* Share Study Stats */}
+          <View style={[styles.row, styles.rowBorder]}>
+            <View style={styles.rowLeftColumn}>
+              <View style={styles.rowLeft}>
+                <Ionicons name="stats-chart-outline" size={20} color={colors.accentLight} />
+                <Text style={styles.rowLabel}>Share Study Stats</Text>
+              </View>
+              <Text style={styles.rowSubtitle}>Let group members see your study time</Text>
+            </View>
+            <Toggle on={settings.shareStudyStats} onPress={() => toggle('shareStudyStats')} />
           </View>
           <TouchableOpacity>
             <SettingsRow
