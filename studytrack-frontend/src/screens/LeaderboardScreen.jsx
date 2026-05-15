@@ -5,11 +5,12 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 // TODO: useTheme() for dynamic theme support
 import { colors, radius, spacing } from '../constraints/theme';
-import { getLeaderboard } from '../api/leaderboard';
+import { getGroupLeaderboard } from '../api/leaderboard';
 import { getGroupSocket } from '../api/socket';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import useUserStore from '../store/useUserStore';
 
-const SCOPE_KEYS   = ['group', 'category', 'global'];
+const SCOPE_KEYS    = ['group', 'category', 'global'];
 const PERIOD_LABELS = ['Today', 'This Week', 'This Month', 'All Time'];
 const PERIOD_KEYS   = ['today', 'week', 'month', 'all'];
 
@@ -19,40 +20,83 @@ const TREND_CONFIG = {
   stable: { icon: 'remove-outline', color: colors.textSecondary  },
 };
 
-const DEFAULT_PODIUM = [
-  { pos: 2, name: 'Arjun', time: '7h 52m', borderColor: colors.silver, barH: 96,  isGold: false },
-  { pos: 1, name: 'Meera', time: '9h 14m', borderColor: colors.gold,   barH: 144, isGold: true  },
-  { pos: 3, name: 'Priya', time: '6h 30m', borderColor: colors.bronze, barH: 80,  isGold: false },
-];
+function fmtDuration(seconds) {
+  const h = Math.floor(seconds / 3600);
+  const m = Math.floor((seconds % 3600) / 60);
+  if (h > 0 && m > 0) return `${h}h ${m}m`;
+  if (h > 0) return `${h}h`;
+  return `${m}m`;
+}
 
-const DEFAULT_RANKED = [
-  { pos: 4, name: 'Deepa', time: '6h 12m', trend: 'down',   trendLabel: 'Dropped 1',      isMe: false },
-  { pos: 5, name: 'YOU',   time: '5h 44m', trend: 'up',     trendLabel: 'UP 2 POSITIONS',  isMe: true  },
-  { pos: 6, name: 'Karan', time: '5h 20m', trend: 'stable', trendLabel: 'Stable',          isMe: false },
-  { pos: 7, name: 'Rahul', time: '5h 10m', trend: 'down',   trendLabel: 'Dropped 3',       isMe: false },
-  { pos: 8, name: 'Nisha', time: '4h 58m', trend: 'up',     trendLabel: 'New Rank',        isMe: false },
-];
+function buildPodiumAndRanked(leaderboard, currentUserId) {
+  const sorted = [...leaderboard].sort((a, b) => a.rank - b.rank);
+  const podiumColors = { 1: colors.gold, 2: colors.silver, 3: colors.bronze };
+  const barHeights   = { 1: 144, 2: 96, 3: 80 };
+
+  const top3 = sorted.slice(0, 3);
+  const byRank = Object.fromEntries(top3.map(e => [e.rank, e]));
+
+  const podiumOrder = [byRank[2], byRank[1], byRank[3]].filter(Boolean);
+  const podium = podiumOrder.map(e => ({
+    pos:         e.rank,
+    name:        e.name,
+    time:        fmtDuration(e.durationSeconds),
+    borderColor: podiumColors[e.rank] ?? colors.border,
+    barH:        barHeights[e.rank]   ?? 60,
+    isGold:      e.rank === 1,
+  }));
+
+  const ranked = sorted.slice(3).map(e => ({
+    pos:        e.rank,
+    name:       e.userId === currentUserId ? 'YOU' : e.name,
+    time:       fmtDuration(e.durationSeconds),
+    trend:      'stable',
+    trendLabel: 'Stable',
+    isMe:       e.userId === currentUserId,
+  }));
+
+  return { podium, ranked };
+}
 
 export default function LeaderboardScreen({ navigation }) {
-  const insets = useSafeAreaInsets();
+  const insets           = useSafeAreaInsets();
+  const userId           = useUserStore((s) => s.id);
+  const group            = useUserStore((s) => s.group);
+  const dailyGoalSeconds = useUserStore((s) => s.dailyGoalSeconds);
+
   const [activeScope,  setActiveScope]  = useState(0);
   const [activePeriod, setActivePeriod] = useState(1);
-  const [podium,  setPodium]  = useState(DEFAULT_PODIUM);
-  const [ranked,  setRanked]  = useState(DEFAULT_RANKED);
-  const [loading, setLoading] = useState(false);
+  const [podium,       setPodium]       = useState([]);
+  const [ranked,       setRanked]       = useState([]);
+  const [loading,      setLoading]      = useState(false);
+  const [comingSoon,   setComingSoon]   = useState(false);
+  const [myRank,       setMyRank]       = useState(null);
 
-  // Keep a ref to the latest load function so the socket callback doesn't go stale
   const loadRef = useRef(null);
 
   useEffect(() => {
     let cancelled = false;
+    setComingSoon(false);
+
+    if (activeScope !== 0) {
+      setComingSoon(true);
+      setPodium([]);
+      setRanked([]);
+      return;
+    }
+
     const load = async () => {
       setLoading(true);
       try {
-        const data = await getLeaderboard(SCOPE_KEYS[activeScope], PERIOD_KEYS[activePeriod]);
+        const groupId = group?.id;
+        if (!groupId) { setPodium([]); setRanked([]); return; }
+        const leaderboard = await getGroupLeaderboard(groupId, PERIOD_KEYS[activePeriod]);
         if (!cancelled) {
-          if (data.podium) setPodium(data.podium);
-          if (data.ranked) setRanked(data.ranked);
+          const { podium: p, ranked: r } = buildPodiumAndRanked(leaderboard, userId);
+          setPodium(p);
+          setRanked(r);
+          const me = leaderboard.find(e => e.userId === userId);
+          setMyRank(me?.rank ?? null);
         }
       } catch (_) {}
       finally { if (!cancelled) setLoading(false); }
@@ -60,9 +104,8 @@ export default function LeaderboardScreen({ navigation }) {
     loadRef.current = load;
     load();
     return () => { cancelled = true; };
-  }, [activeScope, activePeriod]);
+  }, [activeScope, activePeriod, group?.id, userId]);
 
-  // Re-fetch when any group member completes a session
   useEffect(() => {
     const socket = getGroupSocket();
     const onLeaderboardUpdate = () => { if (loadRef.current) loadRef.current(); };
@@ -76,7 +119,7 @@ export default function LeaderboardScreen({ navigation }) {
       {/* ── Header ────────────────────────────────────────── */}
       <View style={[styles.header, { paddingTop: insets.top + spacing.md }]}>
         <View style={styles.headerLeft}>
-          <TouchableOpacity style={styles.headerBtn}>
+          <TouchableOpacity style={styles.headerBtn} onPress={() => navigation.goBack()}>
             <Ionicons name="arrow-back" size={24} color={colors.accentPrimary} />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Leaderboard</Text>
@@ -132,137 +175,145 @@ export default function LeaderboardScreen({ navigation }) {
         </ScrollView>
         {loading && <ActivityIndicator color={colors.accentPrimary} size="small" style={{ alignSelf: 'center', marginBottom: 4 }} />}
 
-        {/* ── Podium ──────────────────────────────────────── */}
-        <View style={styles.podium}>
-          {podium.map((entry) => (
-            <View
-              key={entry.pos}
-              style={[
-                styles.podiumCol,
-                entry.isGold && styles.podiumColGold,
-              ]}
-            >
-              {/* Crown above #1 */}
-              {entry.isGold && (
-                <Ionicons
-                  name="trophy"
-                  size={28}
-                  color={colors.gold}
-                  style={styles.crownIcon}
-                />
-              )}
+        {comingSoon ? (
+          <View style={styles.centeredState}>
+            <Ionicons name="construct-outline" size={48} color={colors.textSecondary} />
+            <Text style={styles.comingSoonText}>Coming Soon</Text>
+            <Text style={styles.comingSoonSub}>
+              {SCOPE_KEYS[activeScope] === 'category' ? 'Category' : 'Global'} leaderboards are not yet available.
+            </Text>
+          </View>
+        ) : (
+          <>
+            {/* ── Podium ──────────────────────────────────────── */}
+            {podium.length > 0 && (
+              <View style={styles.podium}>
+                {podium.map((entry) => (
+                  <View
+                    key={entry.pos}
+                    style={[
+                      styles.podiumCol,
+                      entry.isGold && styles.podiumColGold,
+                    ]}
+                  >
+                    {entry.isGold && (
+                      <Ionicons
+                        name="trophy"
+                        size={28}
+                        color={colors.gold}
+                        style={styles.crownIcon}
+                      />
+                    )}
 
-              {/* Avatar */}
-              <View style={[
-                styles.podiumAvatarWrap,
-                { borderColor: entry.borderColor },
-                entry.isGold && styles.podiumAvatarWrapGold,
-              ]}>
-                {/* TODO: API - replace with Image component from user profile */}
-                <View style={styles.podiumAvatarInner}>
-                  <Ionicons name="person" size={entry.isGold ? 28 : 22} color={colors.textSecondary} />
-                </View>
-              </View>
-
-              {/* Rank badge */}
-              <View style={[styles.rankBadge, { backgroundColor: entry.borderColor }]}>
-                <Text style={styles.rankBadgeText}>{entry.pos}</Text>
-              </View>
-
-              <Text style={styles.podiumName}>{entry.name}</Text>
-              <Text style={[styles.podiumTime, entry.isGold && styles.podiumTimeGold]}>
-                {entry.time}
-              </Text>
-
-              {/* Podium bar */}
-              <View style={[
-                styles.podiumBar,
-                { height: entry.barH },
-                entry.isGold
-                  ? { backgroundColor: colors.surfaceElevated, borderColor: colors.gold }
-                  : { backgroundColor: colors.surface, borderColor: colors.border },
-              ]} />
-            </View>
-          ))}
-        </View>
-
-        {/* ── Ranked list ─────────────────────────────────── */}
-        <View style={styles.rankedList}>
-          {ranked.map((entry) => {
-            const trend = TREND_CONFIG[entry.trend];
-            return (
-              <View
-                key={entry.pos}
-                style={[styles.rankedRow, entry.isMe && styles.rankedRowMe]}
-              >
-                {entry.isMe && <View style={styles.meAccentBar} />}
-                <Text style={[styles.rankedPos, entry.isMe && styles.rankedPosMe]}>
-                  {entry.pos}
-                </Text>
-
-                {/* Avatar */}
-                <View style={[
-                  styles.rankedAvatar,
-                  entry.isMe && { borderWidth: 2, borderColor: colors.accentPrimary },
-                ]}>
-                  {/* TODO: API - replace with Image from user profile */}
-                  <Ionicons name="person" size={18} color={colors.textSecondary} />
-                </View>
-
-                <View style={styles.rankedInfo}>
-                  <Text style={styles.rankedName}>{entry.name}</Text>
-                  <View style={styles.rankedTrend}>
-                    <Ionicons name={trend.icon} size={14} color={trend.color} />
-                    <Text style={[
-                      styles.rankedTrendLabel,
-                      entry.trend === 'up' && entry.isMe && { color: colors.success },
+                    <View style={[
+                      styles.podiumAvatarWrap,
+                      { borderColor: entry.borderColor },
+                      entry.isGold && styles.podiumAvatarWrapGold,
                     ]}>
-                      {entry.trendLabel}
+                      <View style={styles.podiumAvatarInner}>
+                        <Ionicons name="person" size={entry.isGold ? 28 : 22} color={colors.textSecondary} />
+                      </View>
+                    </View>
+
+                    <View style={[styles.rankBadge, { backgroundColor: entry.borderColor }]}>
+                      <Text style={styles.rankBadgeText}>{entry.pos}</Text>
+                    </View>
+
+                    <Text style={styles.podiumName}>{entry.name}</Text>
+                    <Text style={[styles.podiumTime, entry.isGold && styles.podiumTimeGold]}>
+                      {entry.time}
                     </Text>
+
+                    <View style={[
+                      styles.podiumBar,
+                      { height: entry.barH },
+                      entry.isGold
+                        ? { backgroundColor: colors.surfaceElevated, borderColor: colors.gold }
+                        : { backgroundColor: colors.surface, borderColor: colors.border },
+                    ]} />
                   </View>
+                ))}
+              </View>
+            )}
+
+            {/* ── Ranked list ─────────────────────────────────── */}
+            {ranked.length > 0 && (
+              <View style={styles.rankedList}>
+                {ranked.map((entry) => {
+                  const trend = TREND_CONFIG[entry.trend];
+                  return (
+                    <View
+                      key={entry.pos}
+                      style={[styles.rankedRow, entry.isMe && styles.rankedRowMe]}
+                    >
+                      {entry.isMe && <View style={styles.meAccentBar} />}
+                      <Text style={[styles.rankedPos, entry.isMe && styles.rankedPosMe]}>
+                        {entry.pos}
+                      </Text>
+
+                      <View style={[
+                        styles.rankedAvatar,
+                        entry.isMe && { borderWidth: 2, borderColor: colors.accentPrimary },
+                      ]}>
+                        <Ionicons name="person" size={18} color={colors.textSecondary} />
+                      </View>
+
+                      <View style={styles.rankedInfo}>
+                        <Text style={styles.rankedName}>{entry.name}</Text>
+                        <View style={styles.rankedTrend}>
+                          <Ionicons name={trend.icon} size={14} color={trend.color} />
+                          <Text style={[
+                            styles.rankedTrendLabel,
+                            entry.trend === 'up' && entry.isMe && { color: colors.success },
+                          ]}>
+                            {entry.trendLabel}
+                          </Text>
+                        </View>
+                      </View>
+
+                      <Text style={[styles.rankedTime, entry.isMe && styles.rankedTimeMe]}>
+                        {entry.time}
+                      </Text>
+                    </View>
+                  );
+                })}
+              </View>
+            )}
+
+            {/* ── Your position card ───────────────────────────── */}
+            <View style={styles.positionCard}>
+              <View style={styles.positionHeader}>
+                <Text style={styles.positionTitle}>Your position</Text>
+                {myRank != null && (
+                  <Text style={styles.positionPct}>#{myRank} in group</Text>
+                )}
+              </View>
+
+              <View style={styles.positionStats}>
+                {[
+                  { label: 'Group',    value: myRank != null ? `#${myRank}` : '–' },
+                  { label: 'Category', value: '#–' },
+                  { label: 'Global',   value: '#–' },
+                ].map((s) => (
+                  <View key={s.label} style={styles.positionStatCell}>
+                    <Text style={styles.positionStatLabel}>{s.label}</Text>
+                    <Text style={styles.positionStatValue}>{s.value}</Text>
+                  </View>
+                ))}
+              </View>
+
+              <View style={styles.nextRankRow}>
+                <View style={styles.nextRankLabels}>
+                  <Text style={styles.nextRankText}>Next Rank: {myRank != null && myRank > 1 ? `#${myRank - 1}` : '–'}</Text>
+                  <Text style={styles.nextRankText}>Keep studying!</Text>
                 </View>
-
-                <Text style={[styles.rankedTime, entry.isMe && styles.rankedTimeMe]}>
-                  {entry.time}
-                </Text>
+                <View style={styles.progressTrack}>
+                  <View style={[styles.progressFill, { width: '75%' }]} />
+                </View>
               </View>
-            );
-          })}
-        </View>
-
-        {/* ── Your position card ───────────────────────────── */}
-        <View style={styles.positionCard}>
-          <View style={styles.positionHeader}>
-            <Text style={styles.positionTitle}>Your position</Text>
-            {/* TODO: API - show real percentile */}
-            <Text style={styles.positionPct}>Top 5%</Text>
-          </View>
-
-          <View style={styles.positionStats}>
-            {/* TODO: API - pull group / category / global ranks */}
-            {[
-              { label: 'Group',    value: '#5'     },
-              { label: 'Category', value: '#312'   },
-              { label: 'Global',   value: '#4,821' },
-            ].map((s) => (
-              <View key={s.label} style={styles.positionStatCell}>
-                <Text style={styles.positionStatLabel}>{s.label}</Text>
-                <Text style={styles.positionStatValue}>{s.value}</Text>
-              </View>
-            ))}
-          </View>
-
-          <View style={styles.nextRankRow}>
-            <View style={styles.nextRankLabels}>
-              <Text style={styles.nextRankText}>Next Rank: #4</Text>
-              <Text style={styles.nextRankText}>30m more needed</Text>
             </View>
-            <View style={styles.progressTrack}>
-              {/* TODO: API - derive from (time needed - time done) / time needed */}
-              <View style={[styles.progressFill, { width: '75%' }]} />
-            </View>
-          </View>
-        </View>
+          </>
+        )}
 
         {/* ── Motivational banner ──────────────────────────── */}
         <TouchableOpacity
@@ -272,8 +323,7 @@ export default function LeaderboardScreen({ navigation }) {
           <View style={styles.motivLeft}>
             <Ionicons name="flash" size={20} color={colors.textPrimary} />
             <View>
-              {/* TODO: API - show real daily goal + remaining time */}
-              <Text style={styles.motivTitle}>Daily Goal: 6h</Text>
+              <Text style={styles.motivTitle}>Daily Goal: {Math.floor((dailyGoalSeconds ?? 3600) / 3600)}h</Text>
               <Text style={styles.motivSub}>You're just 16 minutes away from a new streak!</Text>
             </View>
           </View>
@@ -282,7 +332,6 @@ export default function LeaderboardScreen({ navigation }) {
           </View>
         </TouchableOpacity>
 
-        {/* Extra padding for floating button */}
         <View style={{ height: 80 }} />
       </ScrollView>
 
@@ -355,6 +404,24 @@ const styles = StyleSheet.create({
   },
   periodChipText: { fontSize: 14, fontWeight: '500', color: colors.textSecondary },
   periodChipTextActive: { color: colors.accentPrimary },
+
+  // ── Coming soon ───────────────────────────────────────────────
+  centeredState: {
+    alignItems: 'center',
+    paddingVertical: spacing.xxl * 2,
+    gap: spacing.md,
+  },
+  comingSoonText: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: colors.textPrimary,
+  },
+  comingSoonSub: {
+    fontSize: 14,
+    color: colors.textSecondary,
+    textAlign: 'center',
+    paddingHorizontal: spacing.xl,
+  },
 
   // ── Podium ────────────────────────────────────────────────────
   podium: {
