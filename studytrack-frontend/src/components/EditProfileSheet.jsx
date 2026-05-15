@@ -8,7 +8,7 @@ import {
   TouchableWithoutFeedback,
   TextInput,
   ScrollView,
-  KeyboardAvoidingView,
+  Keyboard,
   ActivityIndicator,
   StyleSheet,
 } from 'react-native';
@@ -33,6 +33,7 @@ export default function EditProfileSheet({ visible, user, onClose, onSaved }) {
 
   const slideAnim = useRef(new Animated.Value(700)).current;
   const [mounted, setMounted] = useState(false);
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
 
   useEffect(() => {
     if (visible) {
@@ -58,6 +59,12 @@ export default function EditProfileSheet({ visible, user, onClose, onSaved }) {
       }).start(() => setMounted(false));
     }
   }, [visible]);
+
+  useEffect(() => {
+    const show = Keyboard.addListener('keyboardDidShow', (e) => setKeyboardHeight(e.endCoordinates.height));
+    const hide = Keyboard.addListener('keyboardDidHide', () => setKeyboardHeight(0));
+    return () => { show.remove(); hide.remove(); };
+  }, []);
 
   const hasChanges =
     name.trim() !== (user?.name ?? '') ||
@@ -120,10 +127,7 @@ export default function EditProfileSheet({ visible, user, onClose, onSaved }) {
             </TouchableOpacity>
           </View>
 
-          <KeyboardAvoidingView
-            behavior="padding"
-            style={{ flex: 1 }}
-          >
+          <View style={{ flex: 1 }}>
             <ScrollView
               showsVerticalScrollIndicator={false}
               keyboardShouldPersistTaps="handled"
@@ -207,8 +211,11 @@ export default function EditProfileSheet({ visible, user, onClose, onSaved }) {
                   <Text style={styles.errorText}>{error}</Text>
                 </View>
               ) : null}
+
+              {/* Keyboard spacer */}
+              <View style={{ height: keyboardHeight }} />
             </ScrollView>
-          </KeyboardAvoidingView>
+          </View>
         </Animated.View>
       </View>
     </Modal>

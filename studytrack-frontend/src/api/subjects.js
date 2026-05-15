@@ -8,7 +8,7 @@ export const getSubjects = () =>
       id: s.id,
       name: s.name,
       color: s.colorHex,
-      totalSeconds: 0,
+      totalSeconds: s.totalSeconds ?? 0,
     }))
   );
 

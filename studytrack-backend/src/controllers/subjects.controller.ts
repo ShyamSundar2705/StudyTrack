@@ -19,7 +19,20 @@ export async function listSubjects(request: FastifyRequest, reply: FastifyReply)
     orderBy: { createdAt: 'asc' }
   })
 
-  return reply.send({ data: { subjects } })
+  const sessionAggs = await prisma.session.groupBy({
+    by: ['subjectId'],
+    where: { userId, subjectId: { in: subjects.map((s: any) => s.id) }, durationSeconds: { not: null } },
+    _sum: { durationSeconds: true },
+  })
+
+  const secondsMap: Record<string, number> = {}
+  for (const agg of sessionAggs) {
+    secondsMap[agg.subjectId] = agg._sum.durationSeconds ?? 0
+  }
+
+  const result = subjects.map((s: any) => ({ ...s, totalSeconds: secondsMap[s.id] ?? 0 }))
+
+  return reply.send({ data: { subjects: result } })
 }
 
 export async function deleteSubject(request: FastifyRequest, reply: FastifyReply) {

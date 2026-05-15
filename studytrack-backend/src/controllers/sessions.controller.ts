@@ -1,5 +1,59 @@
 import { FastifyRequest, FastifyReply } from 'fastify'
 
+async function checkAndGrantAchievements(userId: string, session: any, prisma: any) {
+  try {
+    const existing = await prisma.achievement.findMany({ where: { userId }, select: { type: true } })
+    const earned = new Set(existing.map((a: any) => a.type))
+    const toGrant: string[] = []
+
+    const sessionCount = await prisma.session.count({ where: { userId, durationSeconds: { not: null } } })
+    if (sessionCount >= 1  && !earned.has('FIRST_SESSION')) toGrant.push('FIRST_SESSION')
+    if (sessionCount >= 10 && !earned.has('SESSIONS_10'))   toGrant.push('SESSIONS_10')
+
+    const totalAgg = await prisma.session.aggregate({
+      where: { userId, durationSeconds: { not: null } },
+      _sum: { durationSeconds: true },
+    })
+    const totalSeconds = totalAgg._sum.durationSeconds ?? 0
+    if (totalSeconds >= 3600   && !earned.has('TOTAL_1H'))   toGrant.push('TOTAL_1H')
+    if (totalSeconds >= 36000  && !earned.has('TOTAL_10H'))  toGrant.push('TOTAL_10H')
+    if (totalSeconds >= 180000 && !earned.has('TOTAL_50H'))  toGrant.push('TOTAL_50H')
+    if (totalSeconds >= 360000 && !earned.has('TOTAL_100H')) toGrant.push('TOTAL_100H')
+
+    const startHour = new Date(session.startedAt).getUTCHours()
+    if (startHour < 6 && !earned.has('EARLY_BIRD')) toGrant.push('EARLY_BIRD')
+
+    if (session.endedAt) {
+      const endHour = new Date(session.endedAt).getUTCHours()
+      if (endHour < 5 && !earned.has('NIGHT_OWL')) toGrant.push('NIGHT_OWL')
+    }
+
+    const allSessions = await prisma.session.findMany({
+      where: { userId, durationSeconds: { not: null } },
+      select: { startedAt: true },
+    })
+    const daySet = new Set(allSessions.map((s: any) => s.startedAt.toISOString().split('T')[0]))
+    const todayStr = new Date().toISOString().split('T')[0]
+    let streak = 0
+    let checkDate = todayStr
+    while (daySet.has(checkDate)) {
+      streak++
+      const d = new Date(checkDate + 'T00:00:00Z')
+      d.setUTCDate(d.getUTCDate() - 1)
+      checkDate = d.toISOString().split('T')[0]
+    }
+    if (streak >= 3  && !earned.has('STREAK_3'))  toGrant.push('STREAK_3')
+    if (streak >= 7  && !earned.has('STREAK_7'))  toGrant.push('STREAK_7')
+    if (streak >= 21 && !earned.has('STREAK_21')) toGrant.push('STREAK_21')
+
+    if (toGrant.length > 0) {
+      await prisma.achievement.createMany({
+        data: toGrant.map((type: string) => ({ userId, type })),
+      })
+    }
+  } catch (_) {}
+}
+
 export async function startSession(request: FastifyRequest, reply: FastifyReply) {
   const userId = request.user.id
   const { subjectId, type, pomodoroRound } = request.body as {
@@ -71,6 +125,9 @@ export async function completeSession(request: FastifyRequest, reply: FastifyRep
     }
   } catch (_) {}
 
+  const sessionUserId = request.user.id
+  await checkAndGrantAchievements(sessionUserId, session, prisma)
+
   return reply.send({ data: { session } })
 }
 
@@ -122,6 +179,8 @@ export async function manualSession(request: FastifyRequest, reply: FastifyReply
       ...(note !== undefined && { note: note.trim() }),
     },
   })
+
+  await checkAndGrantAchievements(userId, session, prisma)
 
   return reply.status(201).send({ data: { session, durationSeconds } })
 }

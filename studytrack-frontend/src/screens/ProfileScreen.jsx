@@ -133,6 +133,7 @@ export default function ProfileScreen({ navigation }) {
 
   const user     = profile ?? storeUser;
   const subjects = storeSubjects.map((s) => ({
+    id:    s.id,
     name:  s.name,
     hours: `${(s.totalSeconds / 3600).toFixed(1)} hrs`,
     color: s.color,
@@ -183,7 +184,7 @@ export default function ProfileScreen({ navigation }) {
                 <Text style={styles.identityName}>{user.name}</Text>
                 {loading && <ActivityIndicator color="rgba(255,255,255,0.7)" size="small" />}
               </View>
-              <Text style={styles.identityHandle}>{user.handle}</Text>
+              <Text style={styles.identityHandle}>@{user.handle}</Text>
               <Text style={styles.identityMember}>Member since Sept 2023</Text>
             </View>
           </View>
@@ -254,12 +255,17 @@ export default function ProfileScreen({ navigation }) {
           contentContainerStyle={styles.subjectsRow}
         >
           {subjects.map((s) => (
-            <View key={s.name} style={styles.subjectCard}>
+            <TouchableOpacity
+              key={s.name}
+              style={styles.subjectCard}
+              activeOpacity={0.7}
+              onPress={() => navigation.navigate('InsightsTab', { screen: 'SubjectDetails', params: { subjectId: s.id } })}
+            >
               {/* Colored left accent bar */}
               <View style={[styles.subjectAccentBar, { backgroundColor: s.color }]} />
               <Text style={styles.subjectName}>{s.name}</Text>
               <Text style={styles.subjectHours}>{s.hours}</Text>
-            </View>
+            </TouchableOpacity>
           ))}
         </ScrollView>
 
