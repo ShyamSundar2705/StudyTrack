@@ -9,9 +9,12 @@ import {
   TextInput,
   ScrollView,
   Keyboard,
+  Dimensions,
   ActivityIndicator,
   StyleSheet,
 } from 'react-native';
+
+const WIN_H = Dimensions.get('window').height;
 import { Ionicons } from '@expo/vector-icons';
 import { colors, radius, spacing } from '../constraints/theme';
 import api from '../api/client';
@@ -105,7 +108,10 @@ export default function EditProfileSheet({ visible, user, onClose, onSaved }) {
           <View style={styles.overlay} />
         </TouchableWithoutFeedback>
 
-        <Animated.View style={[styles.sheet, { transform: [{ translateY: slideAnim }] }]}>
+        <Animated.View style={[styles.sheet, {
+          transform: [{ translateY: slideAnim }],
+          height: keyboardHeight > 0 ? WIN_H - keyboardHeight - 10 : WIN_H * 0.88,
+        }]}>
           {/* Handle bar */}
           <View style={styles.handleBar} />
 
@@ -127,12 +133,12 @@ export default function EditProfileSheet({ visible, user, onClose, onSaved }) {
             </TouchableOpacity>
           </View>
 
-          <View style={{ flex: 1 }}>
-            <ScrollView
-              showsVerticalScrollIndicator={false}
-              keyboardShouldPersistTaps="handled"
-              contentContainerStyle={{ paddingBottom: 32 }}
-            >
+          <ScrollView
+            style={{ flex: 1 }}
+            showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
+            contentContainerStyle={{ paddingBottom: spacing.xl }}
+          >
               {/* Avatar preview + color picker */}
               <View style={styles.avatarSection}>
                 <View style={[styles.avatarPreview, {
@@ -212,10 +218,7 @@ export default function EditProfileSheet({ visible, user, onClose, onSaved }) {
                 </View>
               ) : null}
 
-              {/* Keyboard spacer */}
-              <View style={{ height: keyboardHeight }} />
-            </ScrollView>
-          </View>
+          </ScrollView>
         </Animated.View>
       </View>
     </Modal>
@@ -235,8 +238,6 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
-    maxHeight: '90%',
-    paddingBottom: 8,
   },
   handleBar: {
     width: 40,
