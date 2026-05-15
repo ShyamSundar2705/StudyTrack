@@ -95,7 +95,7 @@ All routes are under `/api`. Auth routes have no authentication; all others requ
 | `PATCH` | `/api/sessions/:id` | Partial update — set `endedAt` and/or `durationSeconds` |
 | `POST` | `/api/sessions/:id/complete` | Complete a session — sets `endedAt` to now, computes duration from elapsed time if not provided; accepts optional `note` string (max 500 chars, trimmed before save) |
 | `POST` | `/api/sessions/manual` | Create a completed past session (`subjectId`, `startedAt`, `endedAt`, optional `note`); validates duration ≤12h, not future, not >30 days past, subject ownership |
-| `GET` | `/api/sessions/today` | List caller's completed sessions for today (UTC); returns `{ id, subjectId, subjectName, startedAt, elapsedSeconds }` |
+| `GET` | `/api/sessions/today?date=YYYY-MM-DD` | List caller's completed sessions for today (UTC) or a specific date if `date` param provided; returns `{ id, subjectId, subjectName, startedAt, elapsedSeconds }` |
 | `GET` | `/api/sessions?subjectId=` | List caller's sessions, newest first; userId from JWT; optional subjectId filter |
 
 ### Tasks — auth required
@@ -232,7 +232,8 @@ POST and PATCH routes must define `schema.body` in route options (Fastify valida
 
 ## Known Issues & Workarounds
 
-- **Leaderboard scope is group-only:** `GET /api/leaderboard` (legacy) only supports `scope=group`. The `category` and `global` scope values shown in the frontend `LeaderboardScreen` will return a 400 error. These are UI placeholder values — use `GET /api/groups/:id/leaderboard` for group leaderboards going forward.
+- **Leaderboard scope is group-only:** `GET /api/leaderboard` (legacy) only supports `scope=group`. The `category` and `global` scope values shown in the frontend `LeaderboardScreen` display "Coming Soon" — use `GET /api/groups/:id/leaderboard` for group leaderboards going forward.
+- **showInLeaderboard filter scope is group leaderboard only:** `GET /api/groups/:id/leaderboard` filters out members with `showInLeaderboard=false` in `UserPreferences`. The legacy `GET /api/leaderboard` endpoint does not apply this filter.
 - **Streak computed on every login:** The streak calculation in `supabaseLogin` runs a full session query on every OAuth login. This is acceptable at current scale but should be moved to a scheduled job or cached field before high-traffic launch.
 - **Prisma dev must be running before the backend:** `npx prisma dev` starts the local Postgres proxy on port 51214. Without it, every route returns 500.
 - **Streak in `GET /users/me/insights` is period-limited:** The streak is computed from `dayMap`, which is scoped to the period's `startDate`. For `period=week` the streak caps at 7, for `period=month` at 30. Only `period=allTime` returns the true streak. The frontend "Current Streak" card should ideally always pass `allTime`, or streak should be computed independently of the period filter.

@@ -15,6 +15,7 @@ src/
                  NoteBottomSheet, SessionActionSheet, SubjectSwitchSheet, TaskFormSheet, ScheduleEventFormSheet,
                  PlannerActionSheet, EditProfileSheet, AchievementModal
   constraints/ — theme.js (colors, spacing, radius — folder is "constraints" not "constants")
+  context/     — ThemeContext.js (ThemeProvider + useTheme hook)
   navigation/  — AppNavigator.jsx, navigationRef.js
   screens/     — SplashScreen, SubjectSetupScreen, HomeTimerScreen, SessionActiveScreen,
                  SessionCompleteScreen, DailyPlannerScreen, InsightsScreen, SubjectDetailsScreen,
@@ -26,6 +27,10 @@ src/
 ## Design System
 
 All colors, spacing, and radii live in `src/constraints/theme.js`. **Never hardcode hex values in screens.**
+
+### Theme Switching
+
+Theme is managed by `ThemeContext` (`src/context/ThemeContext.js`). `ThemeProvider` wraps the entire app in `App.js`. Screens that need dynamic theming call `const { colors } = useTheme()` and move their `StyleSheet.create` into a `getStyles(colors)` function called inside the component. Screens not yet migrated have a `// TODO: useTheme() for dynamic theme support` comment above their `colors` import. The active theme is persisted to AsyncStorage key `'app_theme'` and synced to `PATCH /users/me/preferences` with field `theme`.
 
 ### Colors
 
@@ -219,13 +224,15 @@ Values are in `.env` (gitignored). Run `npx expo start --clear` after any `.env`
 - **Capture `activeSession` fields before calling `logSession()`** — `logSession` sets `activeSession: null`. Capture `subjectId`, `startedAt`, and `backendSessionId` into locals first.
 - **Session API flow: start → complete, never POST /sessions** — `POST /sessions` does not exist. Flow: (1) `POST /sessions/start` → get `backendSessionId`, (2) `POST /sessions/:id/complete` with `durationSeconds`.
 - **Pomodoro breaks never create sessions** — only `currentPhase === 'focus'` calls `startSession`; break phases run the timer only.
+- **Use `useTheme()` for dynamic theming** — screens that reference `colors` must import `useTheme` from `../context/ThemeContext`, call `const { colors } = useTheme()` inside the component, and move `StyleSheet.create` into a `getStyles(colors)` function. Never import `colors` directly and use it in a module-level `StyleSheet.create`.
+- **Privacy toggles are server-side** — `profilePublic`, `showInLeaderboard`, `shareStudyStats` are stored in `UserPreferences` on the backend. The `showInLeaderboard` field is enforced server-side in `getGroupLeaderboard`: members with `showInLeaderboard=false` are excluded from the leaderboard response. Do not try to filter on the frontend.
 
 ## Known Issues & Workarounds
 
 - **`expo-crypto` enum name:** In SDK 54 use `CryptoEncoding.BASE64`, not `EncodingType.Base64`.
 - **`studytrack://` scheme not intercepted in Expo Go:** Use `exp://192.168.0.106:8081` as `redirectTo`.
 
-## Priority 3 Batch A Status — COMPLETE ✅
+## Priority 3 Status — COMPLETE ✅
 
 P3-A features implemented:
 - Edit Profile: name/handle/avatarColor via EditProfileSheet + PATCH /api/users/me ✅
@@ -233,6 +240,14 @@ P3-A features implemented:
 - Achievement Detail Modals: AchievementModal + dynamic achievements list in ProfileScreen ✅
 - avatarColor field added to User model (prisma db push applied) ✅
 - GET /api/users/me/achievements endpoint added ✅
+
+P3-B features implemented:
+- Theme toggle: ThemeContext + darkColors/lightColors + AppSettingsScreen wired ✅
+- Privacy settings: profilePublic/showInLeaderboard/shareStudyStats toggles in AppSettings, server-side filter in getGroupLeaderboard ✅
+- App Info card: Version from app.json, What's New modal, Rate on Play Store ✅
+- LeaderboardScreen: real API data from getGroupLeaderboard, Coming Soon for category/global ✅
+- DailyPlanner recap: yesterday's study time stat added ✅
+- sessions/today: optional ?date=YYYY-MM-DD param added to backend ✅
 
 ## Priority 2 Status — COMPLETE ✅
 
@@ -249,10 +264,10 @@ P2-15 Discover Groups verification: banner fixed (surfaceBlue bg, border, compas
 
 ## Next Steps
 
-- **Priority 3 — Profile features:** Edit profile ✅, share profile card ✅, achievement detail modals ✅, theme toggle (dark/light) — pending
 - Deploy backend to Railway or Fly.io; update `EXPO_PUBLIC_API_URL` to production URL
 - Build APK, Play Store submission
 - Remote push notifications deferred to dev build / APK phase (local notifications only in Expo Go)
+- Apply `useTheme()` to remaining screens marked with TODO (HomeTimerScreen, DailyPlannerScreen, InsightsScreen, StudyGroupsScreen, SessionCompleteScreen, LeaderboardScreen)
 
 ---
 
