@@ -302,8 +302,19 @@ export async function getGroupLeaderboard(request: FastifyRequest, reply: Fastif
   })
   if (!groupMembers.length) return reply.send({ data: { leaderboard: [] } })
 
-  const memberIds = groupMembers.map(m => m.userId)
-  const userMap = Object.fromEntries(groupMembers.map(m => [m.userId, m.user]))
+  const allMemberIds = groupMembers.map(m => m.userId)
+  const prefsRows = await prisma.userPreferences.findMany({
+    where: { userId: { in: allMemberIds } },
+    select: { userId: true, showInLeaderboard: true }
+  })
+  const prefsMap: Record<string, boolean> = Object.fromEntries(
+    prefsRows.map((p: any) => [p.userId, p.showInLeaderboard])
+  )
+  const visibleMembers = groupMembers.filter(m => prefsMap[m.userId] !== false)
+  if (!visibleMembers.length) return reply.send({ data: { leaderboard: [] } })
+
+  const memberIds = visibleMembers.map(m => m.userId)
+  const userMap = Object.fromEntries(visibleMembers.map(m => [m.userId, m.user]))
 
   const sessions = await prisma.session.findMany({
     where: {
