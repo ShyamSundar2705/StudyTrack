@@ -6,6 +6,8 @@ import {
   TouchableOpacity,
   StyleSheet,
   Alert,
+  Linking,
+  Modal,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Notifications from 'expo-notifications';
@@ -20,6 +22,7 @@ import TimePickerModal from '../components/TimePickerModal';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { scheduleDailyReminder, cancelDailyReminder } from '../utils/notifications';
 import { formatTime12h } from '../utils/dateTime';
+import appJson from '../../app.json';
 
 const SETTINGS_KEY = 'studytrack:settings';
 
@@ -57,6 +60,12 @@ const BACKEND_KEY_MAP = {
   shareStudyStats:   'shareStudyStats',
 };
 
+const APP_VERSION = appJson.expo.version;
+
+const CHANGELOG = [
+  { version: '1.0.0', items: ['Achievement system with 11 unlockable badges', 'Edit profile — name, handle, avatar color', 'Share your profile card with friends', 'Theme toggle: Dark / Light mode', 'Privacy settings for leaderboard and profile'] },
+];
+
 // Interactive toggle
 const Toggle = ({ on, onPress }) => (
   <TouchableOpacity onPress={onPress} activeOpacity={0.8}>
@@ -91,6 +100,7 @@ export default function AppSettingsScreen({ navigation, route }) {
   const [pickerTarget,       setPickerTarget]       = useState(null);
   const [showReminderPicker, setShowReminderPicker] = useState(false);
   const [reminderTime,       setReminderTime]       = useState({ hours: 20, minutes: 0 });
+  const [showWhatsNew, setShowWhatsNew] = useState(false);
   const touchedKeys = useRef(new Set());
   const scrollRef   = useRef(null);
   const pomoY       = useRef(0);
@@ -218,6 +228,10 @@ export default function AppSettingsScreen({ navigation, route }) {
     }
     updatePreferences({ reminderTime: timeStr }).catch(() => {});
     useUserStore.getState().setPreferences({ reminderTime: timeStr });
+  };
+
+  const handleRateApp = () => {
+    Linking.openURL('https://play.google.com/store/apps/details?id=com.anonymous.StudyTrack').catch(() => {});
   };
 
   const handleSignOut = () => {
@@ -571,19 +585,57 @@ export default function AppSettingsScreen({ navigation, route }) {
           </TouchableOpacity>
         </View>
 
-        {/* App Info footer */}
-        <View style={styles.appInfo}>
-          <Text style={styles.appVersion}>StudyTrack v2.4.1</Text>
-          <View style={styles.starsRow}>
-            {[1, 2, 3, 4, 5].map((i) => (
-              <Ionicons key={i} name="star" size={18} color={colors.gold} />
-            ))}
-          </View>
-          <TouchableOpacity style={styles.whatsNewBtn}>
-            <Text style={styles.whatsNewText}>What's New in this version</Text>
-            <Ionicons name="open-outline" size={14} color={colors.accentPrimary} />
+        {/* ── APP INFO ── */}
+        <Text style={styles.sectionHeader}>APP INFO</Text>
+        <View style={styles.card}>
+          <SettingsRow
+            icon="information-circle-outline"
+            label="Version"
+            right={<Text style={styles.mutedText}>{APP_VERSION}</Text>}
+          />
+          <TouchableOpacity onPress={() => setShowWhatsNew(true)}>
+            <SettingsRow
+              icon="sparkles-outline"
+              label="What's New"
+              right={<Ionicons name="chevron-forward" size={16} color={colors.textSecondary} />}
+            />
+          </TouchableOpacity>
+          <TouchableOpacity onPress={handleRateApp}>
+            <SettingsRow
+              icon="star-outline"
+              label="Rate StudyTrack"
+              right={<Ionicons name="open-outline" size={16} color={colors.textSecondary} />}
+              borderBottom={false}
+            />
           </TouchableOpacity>
         </View>
+
+        {/* What's New modal */}
+        <Modal
+          visible={showWhatsNew}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setShowWhatsNew(false)}
+        >
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalCard}>
+              <View style={styles.modalHeader}>
+                <Text style={styles.modalTitle}>What's New</Text>
+                <TouchableOpacity onPress={() => setShowWhatsNew(false)}>
+                  <Ionicons name="close" size={22} color={colors.textSecondary} />
+                </TouchableOpacity>
+              </View>
+              {CHANGELOG.map((entry) => (
+                <View key={entry.version} style={styles.changelogEntry}>
+                  <Text style={styles.changelogVersion}>v{entry.version}</Text>
+                  {entry.items.map((item, i) => (
+                    <Text key={i} style={styles.changelogItem}>• {item}</Text>
+                  ))}
+                </View>
+              ))}
+            </View>
+          </View>
+        </Modal>
 
         {/* Sign Out button */}
         <TouchableOpacity style={styles.signOutBtn} onPress={handleSignOut}>
@@ -841,34 +893,45 @@ const styles = StyleSheet.create({
     marginRight: spacing.lg,
   },
 
-  /* App Info */
-  appInfo: {
+  /* What's New Modal */
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.6)',
+    justifyContent: 'center',
     alignItems: 'center',
-    paddingTop: spacing.xl,
-    gap: spacing.sm,
+    padding: spacing.xl,
   },
-  appVersion: {
-    fontSize: 12,
+  modalCard: {
+    backgroundColor: colors.surface,
+    borderRadius: radius.xl,
+    padding: spacing.xl,
+    width: '100%',
+    maxHeight: '70%',
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: spacing.lg,
+  },
+  modalTitle: {
+    fontSize: 18,
     fontWeight: '700',
-    color: colors.textSecondary,
-    letterSpacing: 2,
-    textTransform: 'uppercase',
+    color: colors.textPrimary,
   },
-  starsRow: {
-    flexDirection: 'row',
-    gap: 2,
-    marginTop: 4,
+  changelogEntry: {
+    marginBottom: spacing.lg,
   },
-  whatsNewBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    marginTop: spacing.sm,
-  },
-  whatsNewText: {
+  changelogVersion: {
     fontSize: 14,
-    fontWeight: '500',
+    fontWeight: '700',
     color: colors.accentPrimary,
+    marginBottom: spacing.sm,
+  },
+  changelogItem: {
+    fontSize: 13,
+    color: colors.textSecondary,
+    lineHeight: 20,
   },
 
   /* Sign Out */
