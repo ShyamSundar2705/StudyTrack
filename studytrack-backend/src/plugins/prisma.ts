@@ -8,7 +8,7 @@ import { PrismaPg } from '@prisma/adapter-pg'
 // PREPARE the same name again on a connection that already has it, causing
 // "prepared statement already exists". A unique name per execution avoids this.
 // Statements accumulate on each connection but are freed when the connection closes.
-let _psSeq = 0
+let _psSeq = Math.floor(Math.random() * 1e9)
 
 async function prismaPlugin(fastify: FastifyInstance) {
   // DATABASE_URL is a direct postgres:// TCP connection string (from `npx prisma dev`).
