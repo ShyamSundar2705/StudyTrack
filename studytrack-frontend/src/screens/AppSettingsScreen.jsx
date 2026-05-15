@@ -11,6 +11,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Notifications from 'expo-notifications';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, radius, spacing } from '../constraints/theme';
+import { useTheme } from '../context/ThemeContext';
 import useUserStore from '../store/useUserStore';
 import usePomodoroStore from '../store/usePomodoroStore';
 import { signOut, getPreferences, updatePreferences } from '../api/users';
@@ -226,6 +227,7 @@ export default function AppSettingsScreen({ navigation, route }) {
   };
 
   const insets = useSafeAreaInsets();
+  const { theme: activeTheme, setTheme } = useTheme();
 
   return (
     <View style={styles.root}>
@@ -418,11 +420,21 @@ export default function AppSettingsScreen({ navigation, route }) {
             label="Theme"
             right={
               <View style={styles.themeSegment}>
-                <View style={styles.themeSegmentActive}>
-                  <Text style={styles.themeSegmentActiveText}>Dark</Text>
-                </View>
-                <TouchableOpacity style={styles.themeSegmentInactive}>
-                  <Text style={styles.themeSegmentInactiveText}>Light</Text>
+                <TouchableOpacity
+                  style={activeTheme === 'dark' ? styles.themeSegmentActive : styles.themeSegmentInactive}
+                  onPress={() => setTheme('dark')}
+                >
+                  <Text style={activeTheme === 'dark' ? styles.themeSegmentActiveText : styles.themeSegmentInactiveText}>
+                    Dark
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={activeTheme === 'light' ? styles.themeSegmentActive : styles.themeSegmentInactive}
+                  onPress={() => setTheme('light')}
+                >
+                  <Text style={activeTheme === 'light' ? styles.themeSegmentActiveText : styles.themeSegmentInactiveText}>
+                    Light
+                  </Text>
                 </TouchableOpacity>
               </View>
             }
