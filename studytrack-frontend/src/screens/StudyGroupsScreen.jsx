@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import * as Clipboard from 'expo-clipboard';
 import { Ionicons } from '@expo/vector-icons';
+// TODO: useTheme() for dynamic theme support
 import { colors, radius, spacing } from '../constraints/theme';
 import { getMyGroup } from '../api/users';
 import { getGroupLeaderboard, leaveGroup } from '../api/leaderboard';

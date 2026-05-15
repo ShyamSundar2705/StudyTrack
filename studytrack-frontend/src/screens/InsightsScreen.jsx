@@ -5,6 +5,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
+// TODO: useTheme() for dynamic theme support
 import { colors, radius, spacing } from '../constraints/theme';
 import { getInsights } from '../api/users';
 import useUserStore from '../store/useUserStore';

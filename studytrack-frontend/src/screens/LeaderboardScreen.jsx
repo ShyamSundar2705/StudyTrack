@@ -3,6 +3,7 @@ import {
   View, Text, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+// TODO: useTheme() for dynamic theme support
 import { colors, radius, spacing } from '../constraints/theme';
 import { getLeaderboard } from '../api/leaderboard';
 import { getGroupSocket } from '../api/socket';

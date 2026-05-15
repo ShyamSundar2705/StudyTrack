@@ -5,6 +5,7 @@ import {
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Svg, { Circle } from 'react-native-svg';
 import { Ionicons } from '@expo/vector-icons';
+// TODO: useTheme() for dynamic theme support
 import { colors, radius, spacing } from '../constraints/theme';
 
 import useTimerStore    from '../store/useTimerStore';
