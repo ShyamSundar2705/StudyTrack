@@ -7,14 +7,17 @@ REST API and WebSocket server for the StudyTrack mobile app. Handles user auth (
 - **Runtime:** Node.js with `ts-node --transpile-only` for development
 - **Language:** TypeScript (strict mode off)
 - **Framework:** Fastify v5
-- **Database:** PostgreSQL via Prisma ORM with direct `postgres://` TCP connection via `@prisma/adapter-pg`
+- **Database:** PostgreSQL via Prisma ORM with direct `postgres://` TCP connection to **Prisma Postgres** (cloud-managed) via `@prisma/adapter-pg`
 
 ## Folder Structure
 
 ```
 server.ts          — entry point
+prisma.config.ts   — Prisma CLI config (datasource URL, migrations path)
 prisma/schema.prisma — single source of truth for models
-generated/prisma/client/ — auto-generated, never edit
+generated/prisma/  — auto-generated Prisma client, never edit
+lib/
+  prisma.ts        — standalone PrismaClient singleton (for scripts/seeds)
 src/
   plugins/   — prisma.ts (decorates fastify.prisma), socket.ts (decorates fastify.io)
   middleware/ — auth.ts (jwtVerify preHandler), errorHandler.ts
@@ -28,7 +31,7 @@ src/
 ### ORM & connection
 
 - **ORM:** Prisma v7
-- **Connection:** Direct `postgres://` TCP URL (from `npx prisma dev` default ports). `PrismaClient` is instantiated with `@prisma/adapter-pg`: `new PrismaPg(DATABASE_URL)` → `new PrismaClient({ adapter })`. See `src/plugins/prisma.ts`. The `prisma+postgres://` HTTP proxy URL is **not supported** with Prisma Client 7.8.0 + current `prisma dev` version.
+- **Connection:** Direct `postgres://` TCP URL from Prisma Postgres cloud (set in `.env` via `npx prisma postgres link`). `PrismaClient` is instantiated with `@prisma/adapter-pg`: `new PrismaPg(DATABASE_URL)` → `new PrismaClient({ adapter })`. See `src/plugins/prisma.ts` (Fastify plugin) and `lib/prisma.ts` (standalone singleton for scripts/seeds).
 - **Client output:** `generated/prisma/client` (set in `generator client` block)
 
 ### Schema models
@@ -48,10 +51,10 @@ src/
 
 ### Schema operations
 
-- `npx prisma db push` — apply schema changes (**never** `npx prisma migrate dev` — requires shadow DB)
+- `npx prisma migrate dev` — apply schema changes to Prisma Postgres (Prisma Postgres supports migrations natively; no shadow DB issue)
 - `npx prisma generate` — regenerate client after schema changes
 - `npx prisma studio` — GUI browser
-- **`npx prisma dev` must be running first** (separate terminal) — starts the local Postgres proxy on port 51214
+- **No local proxy needed** — `DATABASE_URL` points directly to Prisma Postgres cloud; `npx prisma dev` is no longer required
 
 ## API Endpoints
 
@@ -169,7 +172,7 @@ Option B token exchange: mobile completes Supabase auth → POSTs Supabase token
 
 | Key | Required | Description |
 |---|---|---|
-| `DATABASE_URL` | Yes | Direct `postgres://` TCP URL from `npx prisma dev` output (default: `postgres://postgres:postgres@localhost:51214/template1?...`). `npx prisma dev` must be running. |
+| `DATABASE_URL` | Yes | Direct `postgres://` TCP URL from Prisma Postgres cloud. Set via `npx prisma postgres link --database <db-id>`. No local proxy required. |
 | `JWT_SECRET` | Yes | Secret for signing/verifying app JWTs (`@fastify/jwt`). App won't start if missing (passed to `jwt` plugin with `!`). |
 | `PORT` | No | Server port (default 3000) |
 | `SUPABASE_URL` | Yes | Supabase project URL — used by admin client in `supabase-auth.controller.ts` |
@@ -223,9 +226,7 @@ POST and PATCH routes must define `schema.body` in route options (Fastify valida
 - **Single Prisma client instance** — created once in `src/plugins/prisma.ts` and accessed via `request.server.prisma`. Never call `new PrismaClient()` anywhere else.
 - **All routes must be registered with prefix `/api`** — enforced in `server.ts` via `{ prefix: '/api' }` on every `app.register()` call.
 - **`dotenv` must be the first import in `server.ts`** — `import 'dotenv/config'` is line 1. Moving it breaks env var availability in all plugins.
-- **Use `npx prisma db push` not `npx prisma migrate dev`** — `migrate dev` requires a shadow database that the Prisma Postgres local proxy does not support.
-- **`npx prisma dev` must be running** before starting the server, pushing schema, or opening Studio. Start it in a separate terminal. `DATABASE_URL` is a direct `postgres://` TCP string to PostgreSQL on port 51214 (default) — if nothing is listening every Prisma query throws → 500. The error is surfaced via `request.log.error` in the error handler.
-- **`DATABASE_URL` must be a `postgres://` TCP string** — the `prisma+postgres://` HTTP proxy URL is not compatible with PrismaClient 7.8.0. Always use the direct TCP URL output by `npx prisma dev`.
+- **`DATABASE_URL` must be the direct `postgres://` TCP string from Prisma Postgres** — run `npx prisma postgres link` to update it. The `prisma+postgres://` accelerate URL is not used with `@prisma/adapter-pg`; use the direct TCP URL.
 - **Never accept `userId` from the request body or query string** — always read it from `request.user.id` (the verified JWT payload). Client-supplied userIds allow any authenticated user to read or write another user's data.
 - **Register `/me` routes before `/:id` routes** — in `src/routes/users.ts`, the static `/users/me` and `/users/me/*` routes must be registered before `/users/:id/profile` and `/users/:id/preferences`. Fastify resolves static path segments first, but registration order is the safe guard; reversing it risks `me` being matched as an `:id` param in edge cases.
 - **Register `/users/me/achievements` before `/users/:id/achievements`** — the static `/me/` path must be registered first so `me` is not captured as the `:id` param.
@@ -235,12 +236,12 @@ POST and PATCH routes must define `schema.body` in route options (Fastify valida
 - **Leaderboard scope is group-only:** `GET /api/leaderboard` (legacy) only supports `scope=group`. The `category` and `global` scope values shown in the frontend `LeaderboardScreen` display "Coming Soon" — use `GET /api/groups/:id/leaderboard` for group leaderboards going forward.
 - **showInLeaderboard filter scope is group leaderboard only:** `GET /api/groups/:id/leaderboard` filters out members with `showInLeaderboard=false` in `UserPreferences`. The legacy `GET /api/leaderboard` endpoint does not apply this filter.
 - **Streak computed on every login:** The streak calculation in `supabaseLogin` runs a full session query on every OAuth login. This is acceptable at current scale but should be moved to a scheduled job or cached field before high-traffic launch.
-- **Prisma dev must be running before the backend:** `npx prisma dev` starts the local Postgres proxy on port 51214. Without it, every route returns 500.
+- ~~**Prisma dev must be running:**~~ **Resolved** — database is now Prisma Postgres cloud; no local proxy needed.
 - **Streak in `GET /users/me/insights` is period-limited:** The streak is computed from `dayMap`, which is scoped to the period's `startDate`. For `period=week` the streak caps at 7, for `period=month` at 30. Only `period=allTime` returns the true streak. The frontend "Current Streak" card should ideally always pass `allTime`, or streak should be computed independently of the period filter.
 
 ## Next Steps
 
-- Deploy to Railway or Fly.io; switch `DATABASE_URL` to production Prisma Postgres URL; set all env vars in platform secret manager
+- Deploy to Railway or Fly.io; set `DATABASE_URL` (Prisma Postgres direct TCP URL), `JWT_SECRET`, `SUPABASE_URL`, and `SUPABASE_SERVICE_ROLE_KEY` as env vars in the platform's secret manager; run `npx prisma migrate deploy` on first boot
 
 ---
 
