@@ -252,6 +252,9 @@ export default function AppSettingsScreen({ navigation, route }) {
           autoStartBreaks:   prefs.autoStartBreaks,
         });
       }
+      if (prefs.accentColor && ACCENT_COLORS[prefs.accentColor]) {
+        setAccent(prefs.accentColor);
+      }
     }).catch(() => {});
   }, []);
 

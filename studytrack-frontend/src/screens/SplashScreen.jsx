@@ -13,6 +13,7 @@ import useUserStore from '../store/useUserStore';
 import AuthModal from '../components/AuthModal';
 import { getPreferences } from '../api/users';
 import { requestNotificationPermission, scheduleDailyReminder } from '../utils/notifications';
+import { useTheme, ACCENT_COLORS } from '../context/ThemeContext';
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -21,6 +22,7 @@ export default function SplashScreen({ navigation }) {
   const [authLoading, setAuthLoading] = useState(false);
   const [showEmailModal, setShowEmailModal] = useState(false);
   const setUser = useUserStore((s) => s.setUser);
+  const { setAccent } = useTheme();
 
   useEffect(() => {
     // Warm up browser
@@ -77,6 +79,9 @@ export default function SplashScreen({ navigation }) {
         useUserStore.getState().setPreferences(prefs);
         if (prefs.studyReminders) {
           await scheduleDailyReminder(prefs.reminderTime ?? '20:00');
+        }
+        if (prefs.accentColor && ACCENT_COLORS[prefs.accentColor]) {
+          setAccent(prefs.accentColor);
         }
       }).catch(() => {});
     } catch (error) {
