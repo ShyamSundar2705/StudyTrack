@@ -140,7 +140,7 @@ function getStyles(colors) {
     themeSegmentInactiveText: { fontSize: 12, color: colors.textSecondary },
     accentSwatchRow:    { flexDirection: 'row', gap: 8 },
     accentSwatchCircle: { width: 28, height: 28, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
-    accentSwatchSelected: { borderWidth: 2, borderColor: '#fff' },
+    accentSwatchSelected: { borderWidth: 2, borderColor: colors.textPrimary },
     deleteRow:       { paddingLeft: 0, paddingRight: spacing.lg },
     deleteAccentBar: { width: 3, alignSelf: 'stretch', backgroundColor: colors.danger, marginRight: spacing.lg },
     modalOverlay:    { flex: 1, backgroundColor: 'rgba(0,0,0,0.6)', justifyContent: 'center', alignItems: 'center', padding: spacing.xl },
@@ -541,6 +541,10 @@ export default function AppSettingsScreen({ navigation, route }) {
                   <TouchableOpacity
                     key={key}
                     onPress={() => setAccent(key)}
+                    activeOpacity={0.8}
+                    accessibilityLabel={`${key} accent color`}
+                    accessibilityRole="button"
+                    accessibilityState={{ selected: accent === key }}
                     style={[
                       styles.accentSwatchCircle,
                       { backgroundColor: primary },
