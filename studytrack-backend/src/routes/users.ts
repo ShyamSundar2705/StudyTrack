@@ -42,7 +42,7 @@ const USER_PREFS_SCHEMA = {
       achievementAlerts:    { type: 'boolean' },
       pomodoroSounds:       { type: 'boolean' },
       theme:                { type: 'string' },
-      accentColor:          { type: 'string' },
+      accentColor:          { type: 'string', enum: ['blue', 'purple', 'green', 'orange', 'teal'] },
       compactMode:          { type: 'boolean' },
       hideTimerDigits:      { type: 'boolean' },
       motivationalQuotes:   { type: 'boolean' },

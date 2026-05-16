@@ -36,7 +36,7 @@ src/
 | Model | Key fields | Notes |
 |---|---|---|
 | `User` | `id` (cuid), `supabaseUid` (unique), `email` (unique), `name`, `handle` (unique), `avatar?`, `avatarColor String?`, `passwordHash?`, `dailyGoalSeconds` (default 3600) | `supabaseUid` is null for email-registered users |
-| `UserPreferences` | `id`, `userId` (unique), full prefs fields | 1:1 with `User`; created lazily on first `GET` or `PATCH /users/me/preferences`; `onDelete: Cascade`; fields cover Pomodoro config, daily goal, notifications, appearance, privacy, analytics |
+| `UserPreferences` | `id`, `userId` (unique), full prefs fields | 1:1 with `User`; created lazily on first `GET` or `PATCH /users/me/preferences`; `onDelete: Cascade`; fields cover Pomodoro config, daily goal, notifications, appearance, privacy, analytics; appearance includes `theme` and `accentColor` (accent palette key, `@default("blue")`) |
 | `Subject` | `id`, `userId`, `name`, `colorHex` | Belongs to one user; has many sessions and tasks |
 | `Session` | `id`, `userId`, `subjectId`, `startedAt`, `endedAt?`, `durationSeconds?`, `pomodoroRound?`, `type` (FOCUS \| POMODORO), `note?` | `endedAt`/`durationSeconds` are null until `completeSession` is called; `pomodoroRound` is set only on POMODORO sessions; `note` is set only on manual sessions |
 | `Task` | `id`, `userId`, `title`, `subjectId?`, `dueDate?`, `estimatedMinutes?`, `completed`, `completedAt?`, `carriedOver`, `isRecurring` (default false), `recurringDays Int[]`, `createdAt` | `carriedOver` flags tasks rolled from a previous day; `isRecurring` + `recurringDays` define weekly repeat schedule |
