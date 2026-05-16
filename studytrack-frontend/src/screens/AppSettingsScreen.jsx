@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -12,8 +12,8 @@ import {
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Notifications from 'expo-notifications';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, radius, spacing } from '../constraints/theme';
-import { useTheme } from '../context/ThemeContext';
+import { radius, spacing } from '../constraints/theme';
+import { useTheme, ACCENT_COLORS } from '../context/ThemeContext';
 import useUserStore from '../store/useUserStore';
 import usePomodoroStore from '../store/usePomodoroStore';
 import { signOut, getPreferences, updatePreferences } from '../api/users';
@@ -67,24 +67,93 @@ const CHANGELOG = [
 ];
 
 // Interactive toggle
-const Toggle = ({ on, onPress }) => (
-  <TouchableOpacity onPress={onPress} activeOpacity={0.8}>
-    <View style={[styles.toggleTrack, on && styles.toggleTrackOn]}>
-      <View style={[styles.toggleKnob, on && styles.toggleKnobOn]} />
-    </View>
-  </TouchableOpacity>
-);
+const Toggle = ({ on, onPress }) => {
+  const { colors } = useTheme();
+  return (
+    <TouchableOpacity onPress={onPress} activeOpacity={0.8}>
+      <View style={{
+        width: 44, height: 24, borderRadius: 12,
+        backgroundColor: on ? colors.accentPrimary : colors.border,
+        justifyContent: 'center', paddingHorizontal: 2,
+      }}>
+        <View style={{
+          width: 20, height: 20, borderRadius: 10,
+          backgroundColor: colors.textPrimary,
+          alignSelf: on ? 'flex-end' : 'flex-start',
+        }} />
+      </View>
+    </TouchableOpacity>
+  );
+};
 
 // Standard settings row with left icon + label + right content
-const SettingsRow = ({ icon, iconColor = colors.accentLight, label, right, borderBottom = true, rowStyle }) => (
-  <View style={[styles.row, borderBottom && styles.rowBorder, rowStyle]}>
-    <View style={styles.rowLeft}>
-      <Ionicons name={icon} size={20} color={iconColor} />
-      <Text style={styles.rowLabel}>{label}</Text>
+const SettingsRow = ({ icon, iconColor, label, right, borderBottom = true, rowStyle }) => {
+  const { colors } = useTheme();
+  return (
+    <View style={[
+      { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: spacing.md, paddingHorizontal: spacing.lg, minHeight: 52 },
+      borderBottom && { borderBottomWidth: 1, borderBottomColor: colors.border },
+      rowStyle,
+    ]}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
+        <Ionicons name={icon} size={20} color={iconColor ?? colors.accentLight} />
+        <Text style={{ fontSize: 14, fontWeight: '500', color: colors.textPrimary }}>{label}</Text>
+      </View>
+      {right}
     </View>
-    {right}
-  </View>
-);
+  );
+};
+
+function getStyles(colors) {
+  return StyleSheet.create({
+    root:            { flex: 1, backgroundColor: colors.background },
+    header:          { flexDirection: 'row', alignItems: 'center', gap: spacing.md, paddingBottom: spacing.md, paddingHorizontal: spacing.xl, backgroundColor: colors.background, borderBottomWidth: 1, borderBottomColor: colors.border },
+    backBtn:         { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
+    headerTitle:     { fontSize: 18, fontWeight: '700', color: colors.accentPrimary },
+    scroll:          { flex: 1 },
+    scrollContent:   { paddingHorizontal: spacing.lg, paddingTop: spacing.xl },
+    profileRow:      { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, borderRadius: radius.xl, padding: spacing.lg, marginBottom: spacing.xl },
+    profileLeft:     { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
+    profileAvatar:   { width: 56, height: 56, borderRadius: 28, backgroundColor: colors.accentPrimary, alignItems: 'center', justifyContent: 'center' },
+    profileInitial:  { fontSize: 22, fontWeight: '700', color: colors.textPrimary },
+    profileName:     { fontSize: 17, fontWeight: '600', color: colors.textPrimary },
+    profileHandle:   { fontSize: 12, color: colors.textSecondary, marginTop: 2 },
+    editProfileBtn:  { flexDirection: 'row', alignItems: 'center', gap: 4 },
+    editProfileText: { fontSize: 14, fontWeight: '500', color: colors.accentPrimary },
+    sectionHeader:   { fontSize: 12, fontWeight: '700', color: colors.textSecondary, letterSpacing: 1, textTransform: 'uppercase', marginBottom: spacing.sm, marginTop: spacing.xl, paddingLeft: 2 },
+    card:            { backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, borderRadius: radius.lg, overflow: 'hidden' },
+    row:             { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: spacing.md, paddingHorizontal: spacing.lg, minHeight: 52 },
+    rowBorder:       { borderBottomWidth: 1, borderBottomColor: colors.border },
+    rowLeft:         { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
+    rowLeftColumn:   { flex: 1, gap: 4 },
+    rowLabel:        { fontSize: 14, fontWeight: '500', color: colors.textPrimary },
+    rowSubtitle:     { fontSize: 11, color: colors.textSecondary, marginLeft: 36, lineHeight: 15 },
+    rowRightGroup:   { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
+    valueText:       { fontSize: 13, color: colors.accentLight },
+    mutedText:       { fontSize: 12, color: colors.textSecondary },
+    strictRow:       { backgroundColor: 'rgba(231,76,60,0.06)', paddingLeft: 0, paddingRight: spacing.lg, position: 'relative' },
+    strictAccentBar: { width: 3, alignSelf: 'stretch', backgroundColor: colors.danger, marginRight: spacing.lg },
+    themeSegment:         { flexDirection: 'row', backgroundColor: colors.surfaceDeep, borderRadius: radius.sm, borderWidth: 1, borderColor: colors.accentPrimary, padding: 3 },
+    themeSegmentActive:   { width: 44, height: 26, backgroundColor: colors.surface, borderRadius: 6, alignItems: 'center', justifyContent: 'center' },
+    themeSegmentActiveText:   { fontSize: 12, fontWeight: '700', color: colors.textPrimary },
+    themeSegmentInactive:     { width: 44, height: 26, alignItems: 'center', justifyContent: 'center' },
+    themeSegmentInactiveText: { fontSize: 12, color: colors.textSecondary },
+    accentSwatchRow:    { flexDirection: 'row', gap: 8 },
+    accentSwatchCircle: { width: 28, height: 28, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
+    accentSwatchSelected: { borderWidth: 2, borderColor: '#fff' },
+    deleteRow:       { paddingLeft: 0, paddingRight: spacing.lg },
+    deleteAccentBar: { width: 3, alignSelf: 'stretch', backgroundColor: colors.danger, marginRight: spacing.lg },
+    modalOverlay:    { flex: 1, backgroundColor: 'rgba(0,0,0,0.6)', justifyContent: 'center', alignItems: 'center', padding: spacing.xl },
+    modalCard:       { backgroundColor: colors.surface, borderRadius: radius.xl, padding: spacing.xl, width: '100%', maxHeight: '70%' },
+    modalHeader:     { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: spacing.lg },
+    modalTitle:      { fontSize: 18, fontWeight: '700', color: colors.textPrimary },
+    changelogEntry:  { marginBottom: spacing.lg },
+    changelogVersion:{ fontSize: 14, fontWeight: '700', color: colors.accentPrimary, marginBottom: spacing.sm },
+    changelogItem:   { fontSize: 13, color: colors.textSecondary, lineHeight: 20 },
+    signOutBtn:      { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.sm, marginTop: spacing.lg, backgroundColor: colors.surfaceDeep, borderWidth: 1, borderColor: colors.border, borderRadius: radius.xl, paddingVertical: spacing.lg },
+    signOutText:     { fontSize: 15, fontWeight: '700', color: colors.danger },
+  });
+}
 
 export default function AppSettingsScreen({ navigation, route }) {
   const name   = useUserStore((s) => s.name);
@@ -250,7 +319,8 @@ export default function AppSettingsScreen({ navigation, route }) {
   };
 
   const insets = useSafeAreaInsets();
-  const { theme: activeTheme, setTheme } = useTheme();
+  const { theme: activeTheme, colors, setTheme, accent, setAccent } = useTheme();
+  const styles = useMemo(() => getStyles(colors), [colors]);
 
   return (
     <View style={styles.root}>
@@ -647,311 +717,3 @@ export default function AppSettingsScreen({ navigation, route }) {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  root: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-
-  /* Header */
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.md,
-    paddingBottom: spacing.md,
-    paddingHorizontal: spacing.xl,
-    backgroundColor: colors.background,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-  },
-  backBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: colors.accentPrimary,
-  },
-
-  /* Scroll */
-  scroll: { flex: 1 },
-  scrollContent: { paddingHorizontal: spacing.lg, paddingTop: spacing.xl },
-
-  /* Profile row */
-  profileRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: radius.xl,
-    padding: spacing.lg,
-    marginBottom: spacing.xl,
-  },
-  profileLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.md,
-  },
-  profileAvatar: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: colors.accentPrimary,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  profileInitial: {
-    fontSize: 22,
-    fontWeight: '700',
-    color: colors.textPrimary,
-  },
-  profileName: {
-    fontSize: 17,
-    fontWeight: '600',
-    color: colors.textPrimary,
-  },
-  profileHandle: {
-    fontSize: 12,
-    color: colors.textSecondary,
-    marginTop: 2,
-  },
-  editProfileBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  editProfileText: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: colors.accentPrimary,
-  },
-
-  /* Section header */
-  sectionHeader: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: colors.textSecondary,
-    letterSpacing: 1,
-    textTransform: 'uppercase',
-    marginBottom: spacing.sm,
-    marginTop: spacing.xl,
-    paddingLeft: 2,
-  },
-
-  /* Card */
-  card: {
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: radius.lg,
-    overflow: 'hidden',
-  },
-
-  /* Standard row */
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: spacing.md,
-    paddingHorizontal: spacing.lg,
-    minHeight: 52,
-  },
-  rowBorder: {
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-  },
-  rowLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.md,
-  },
-  rowLeftColumn: {
-    flex: 1,
-    gap: 4,
-  },
-  rowLabel: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: colors.textPrimary,
-  },
-  rowSubtitle: {
-    fontSize: 11,
-    color: colors.textSecondary,
-    marginLeft: 36, // icon width + gap
-    lineHeight: 15,
-  },
-  rowRightGroup: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-  },
-  valueText: {
-    fontSize: 13,
-    color: colors.accentLight,
-  },
-  mutedText: {
-    fontSize: 12,
-    color: colors.textSecondary,
-  },
-
-  /* Toggle */
-  toggleTrack: {
-    width: 44,
-    height: 24,
-    borderRadius: 12,
-    backgroundColor: colors.border,
-    justifyContent: 'center',
-    paddingHorizontal: 2,
-  },
-  toggleTrackOn: {
-    backgroundColor: colors.accentPrimary,
-  },
-  toggleKnob: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    backgroundColor: colors.textPrimary,
-    alignSelf: 'flex-start',
-  },
-  toggleKnobOn: {
-    alignSelf: 'flex-end',
-  },
-
-  /* Strict Mode row */
-  strictRow: {
-    backgroundColor: 'rgba(231,76,60,0.06)',
-    paddingLeft: 0,
-    paddingRight: spacing.lg,
-    position: 'relative',
-  },
-  strictAccentBar: {
-    width: 3,
-    alignSelf: 'stretch',
-    backgroundColor: colors.danger,
-    marginRight: spacing.lg,
-  },
-
-  /* Theme segment */
-  themeSegment: {
-    flexDirection: 'row',
-    backgroundColor: colors.surfaceDeep,
-    borderRadius: radius.sm,
-    borderWidth: 1,
-    borderColor: colors.accentPrimary,
-    padding: 3,
-  },
-  themeSegmentActive: {
-    width: 44,
-    height: 26,
-    backgroundColor: colors.surface,
-    borderRadius: 6,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  themeSegmentActiveText: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: colors.textPrimary,
-  },
-  themeSegmentInactive: {
-    width: 44,
-    height: 26,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  themeSegmentInactiveText: {
-    fontSize: 12,
-    color: colors.textSecondary,
-  },
-
-  /* Accent swatch */
-  accentSwatch: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    backgroundColor: colors.accentPrimary,
-    borderWidth: 2,
-    borderColor: colors.border,
-  },
-
-  /* Delete Account row */
-  deleteRow: {
-    paddingLeft: 0,
-    paddingRight: spacing.lg,
-  },
-  deleteAccentBar: {
-    width: 3,
-    alignSelf: 'stretch',
-    backgroundColor: colors.danger,
-    marginRight: spacing.lg,
-  },
-
-  /* What's New Modal */
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.6)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: spacing.xl,
-  },
-  modalCard: {
-    backgroundColor: colors.surface,
-    borderRadius: radius.xl,
-    padding: spacing.xl,
-    width: '100%',
-    maxHeight: '70%',
-  },
-  modalHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: spacing.lg,
-  },
-  modalTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: colors.textPrimary,
-  },
-  changelogEntry: {
-    marginBottom: spacing.lg,
-  },
-  changelogVersion: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: colors.accentPrimary,
-    marginBottom: spacing.sm,
-  },
-  changelogItem: {
-    fontSize: 13,
-    color: colors.textSecondary,
-    lineHeight: 20,
-  },
-
-  /* Sign Out */
-  signOutBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: spacing.sm,
-    marginTop: spacing.lg,
-    backgroundColor: colors.surfaceDeep,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: radius.xl,
-    paddingVertical: spacing.lg,
-  },
-  signOutText: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: colors.danger,
-  },
-
-
-});
