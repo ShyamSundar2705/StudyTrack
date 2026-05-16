@@ -4,9 +4,9 @@
   "description": "",
   "main": "dist/server.js",
   "scripts": {
-    "dev": "ts-node --transpile-only server.ts",
+    "start": "node -r ts-node/register server.ts",
+    "dev": "nodemon --exec ts-node server.ts",
     "build": "tsc",
-    "start": "node dist/server.js",
     "test": "jest",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev"
@@ -30,7 +30,9 @@
     "jsonwebtoken": "^9.0.3",
     "pg": "^8.20.0",
     "prisma": "^7.8.0",
-    "socket.io": "^4.8.3"
+    "socket.io": "^4.8.3",
+    "ts-node": "^10.9.2",
+    "typescript": "^6.0.3"
   },
   "devDependencies": {
     "@types/bcrypt": "^6.0.0",
@@ -38,8 +40,6 @@
     "@types/node": "^25.6.0",
     "jest": "^30.3.0",
     "ts-jest": "^29.4.9",
-    "ts-node": "^10.9.2",
-    "tsx": "^4.22.0",
-    "typescript": "^6.0.3"
+    "tsx": "^4.22.0"
   }
 }
