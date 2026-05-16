@@ -536,7 +536,23 @@ export default function AppSettingsScreen({ navigation, route }) {
             icon="color-palette-outline"
             label="Accent Color"
             right={
-              <View style={styles.accentSwatch} />
+              <View style={styles.accentSwatchRow}>
+                {Object.entries(ACCENT_COLORS).map(([key, { primary }]) => (
+                  <TouchableOpacity
+                    key={key}
+                    onPress={() => setAccent(key)}
+                    style={[
+                      styles.accentSwatchCircle,
+                      { backgroundColor: primary },
+                      accent === key && styles.accentSwatchSelected,
+                    ]}
+                  >
+                    {accent === key && (
+                      <Ionicons name="checkmark" size={12} color="#fff" />
+                    )}
+                  </TouchableOpacity>
+                ))}
+              </View>
             }
             borderBottom={false}
           />
