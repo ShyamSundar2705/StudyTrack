@@ -22,6 +22,7 @@ import { getSubjects } from '../api/subjects';
 import { getPreferences } from '../api/users';
 import { requestNotificationPermission, schedulePomoPhaseEndAlert } from '../utils/notifications';
 import ManualLogModal from '../components/ManualLogModal';
+import AddSubjectSheet from '../components/AddSubjectSheet';
 
 const RING_RADIUS        = 130;
 const RING_CIRCUMFERENCE = Math.round(2 * Math.PI * RING_RADIUS); // ~817
@@ -73,6 +74,7 @@ export default function HomeTimerScreen({ navigation }) {
 
   const [selectedId, setSelectedId] = useState(subjects[0]?.id ?? '1');
   const [showManualLog, setShowManualLog] = useState(false);
+  const [showAddSubject, setShowAddSubject] = useState(false);
 
   const selectedSubject = subjects.find((s) => s.id === selectedId);
   const ringColor       = selectedSubject?.color ?? colors.accentLight;
@@ -236,7 +238,7 @@ export default function HomeTimerScreen({ navigation }) {
               </Text>
             </TouchableOpacity>
           ))}
-          <TouchableOpacity style={styles.addChip}>
+          <TouchableOpacity style={styles.addChip} onPress={() => setShowAddSubject(true)}>
             <Ionicons name="add" size={18} color={colors.accentPrimary} />
             <Text style={styles.addChipText}>Add</Text>
           </TouchableOpacity>
@@ -353,6 +355,12 @@ export default function HomeTimerScreen({ navigation }) {
         visible={showManualLog}
         onClose={() => setShowManualLog(false)}
         onSaved={(session) => addSession(session)}
+      />
+
+      <AddSubjectSheet
+        visible={showAddSubject}
+        onClose={() => setShowAddSubject(false)}
+        onAdded={(s) => setSelectedId(s.id)}
       />
     </View>
   );
