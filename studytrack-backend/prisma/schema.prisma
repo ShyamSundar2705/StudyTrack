@@ -74,6 +74,7 @@ model UserPreferences {
 
   // Appearance
   theme                String   @default("dark")
+  accentColor          String   @default("blue")
   compactMode          Boolean  @default(false)
   hideTimerDigits      Boolean  @default(false)
   motivationalQuotes   Boolean  @default(true)

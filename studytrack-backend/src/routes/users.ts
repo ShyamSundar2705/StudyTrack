@@ -42,6 +42,7 @@ const USER_PREFS_SCHEMA = {
       achievementAlerts:    { type: 'boolean' },
       pomodoroSounds:       { type: 'boolean' },
       theme:                { type: 'string' },
+      accentColor:          { type: 'string' },
       compactMode:          { type: 'boolean' },
       hideTimerDigits:      { type: 'boolean' },
       motivationalQuotes:   { type: 'boolean' },
