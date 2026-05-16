@@ -288,7 +288,10 @@ export default function StudyGroupsScreen({ navigation }) {
     return (
       <View style={styles.root}>
         <View style={[styles.header, { paddingTop: insets.top + spacing.md }]}>
-          <Text style={styles.headerTitle}>Groups</Text>
+          <View style={styles.headerLeft}>
+            <Ionicons name="people-outline" size={24} color={colors.accentPrimary} />
+            <Text style={styles.headerTitle}>Groups</Text>
+          </View>
           <View style={styles.headerActions}>
             <TouchableOpacity style={styles.iconBtn}>
               <Ionicons name="person-add-outline" size={22} color={colors.textPrimary} />
@@ -307,7 +310,10 @@ export default function StudyGroupsScreen({ navigation }) {
     return (
       <View style={styles.root}>
         <View style={[styles.header, { paddingTop: insets.top + spacing.md }]}>
-          <Text style={styles.headerTitle}>Groups</Text>
+          <View style={styles.headerLeft}>
+            <Ionicons name="people-outline" size={24} color={colors.accentPrimary} />
+            <Text style={styles.headerTitle}>Groups</Text>
+          </View>
           <View style={styles.headerActions}>
             <TouchableOpacity style={styles.iconBtn} onPress={() => setShowJoinSheet(true)}>
               <Ionicons name="person-add-outline" size={22} color={colors.textPrimary} />
@@ -336,7 +342,10 @@ export default function StudyGroupsScreen({ navigation }) {
     <View style={styles.root}>
       {/* Header */}
       <View style={[styles.header, { paddingTop: insets.top + spacing.md }]}>
-        <Text style={styles.headerTitle}>Groups</Text>
+        <View style={styles.headerLeft}>
+          <Ionicons name="people-outline" size={24} color={colors.accentPrimary} />
+          <Text style={styles.headerTitle}>Groups</Text>
+        </View>
         <View style={styles.headerActions}>
           <TouchableOpacity
             style={styles.iconBtn}
@@ -569,6 +578,11 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
+  },
+  headerLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
   },
   headerTitle: {
     fontSize: 18,

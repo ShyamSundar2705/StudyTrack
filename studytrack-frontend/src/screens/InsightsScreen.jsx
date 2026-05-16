@@ -330,9 +330,7 @@ export default function InsightsScreen({ navigation }) {
       {/* ── Header ────────────────────────────────────────── */}
       <View style={[styles.header, { paddingTop: insets.top + spacing.md }]}>
         <View style={styles.headerLeft}>
-          <TouchableOpacity style={styles.headerBtn}>
-            <Ionicons name="menu-outline" size={24} color={colors.textSecondary} />
-          </TouchableOpacity>
+          <Ionicons name="analytics-outline" size={24} color={colors.accentPrimary} />
           <Text style={styles.headerTitle}>Insights</Text>
         </View>
         <View style={styles.headerRight}>
@@ -345,9 +343,7 @@ export default function InsightsScreen({ navigation }) {
             <Ionicons name="filter-outline" size={22} color={selectedSubjectId ? colors.accentPrimary : colors.textSecondary} />
             {selectedSubjectId != null && <View style={styles.filterDot} />}
           </TouchableOpacity>
-          <View style={styles.avatar}>
-            <Ionicons name="person-outline" size={18} color={colors.textSecondary} />
-          </View>
+
         </View>
       </View>
 
@@ -592,10 +588,6 @@ const styles = StyleSheet.create({
   headerRight: { flexDirection: 'row', alignItems: 'center', gap: spacing.lg },
   headerBtn:   { padding: spacing.xs },
   headerTitle: { fontSize: 18, fontWeight: '700', color: colors.accentPrimary },
-  avatar: {
-    width: 32, height: 32, borderRadius: 16, backgroundColor: colors.surface,
-    borderWidth: 1, borderColor: colors.border, alignItems: 'center', justifyContent: 'center',
-  },
   filterDot: {
     position: 'absolute', top: 0, right: 0,
     width: 6, height: 6, borderRadius: 3, backgroundColor: colors.accentPrimary,

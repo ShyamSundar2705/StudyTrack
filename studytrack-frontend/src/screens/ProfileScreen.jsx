@@ -158,9 +158,7 @@ export default function ProfileScreen({ navigation }) {
       {/* Header */}
       <View style={[styles.header, { paddingTop: insets.top + spacing.md }]}>
         <View style={styles.headerLeft}>
-          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-            <Ionicons name="arrow-back" size={22} color={colors.accentPrimary} />
-          </TouchableOpacity>
+          <Ionicons name="person-outline" size={24} color={colors.accentPrimary} />
           <Text style={styles.headerTitle}>Profile</Text>
         </View>
         <View style={styles.headerRight}>
@@ -396,12 +394,6 @@ function getStyles(colors) {
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.md,
-  },
-  backBtn: {
-    width: 36,
-    height: 36,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
   headerTitle: {
     fontSize: 18,
