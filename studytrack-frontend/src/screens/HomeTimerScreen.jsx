@@ -209,14 +209,6 @@ export default function HomeTimerScreen({ navigation }) {
       {/* ── Header ──────────────────────────────────────────── */}
       <View style={[styles.header, { paddingTop: insets.top + spacing.md }]}>
         <Text style={styles.headerTitle}>StudyTrack</Text>
-        <View style={styles.headerActions}>
-          <TouchableOpacity style={styles.iconBtn}>
-            <Ionicons name="notifications-outline" size={24} color={colors.textSecondary} />
-          </TouchableOpacity>
-          <View style={styles.avatar}>
-            <Ionicons name="person-outline" size={20} color={colors.textSecondary} />
-          </View>
-        </View>
       </View>
 
       {/* ── Scrollable body ─────────────────────────────────── */}
@@ -386,23 +378,6 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '700',
     color: colors.accentPrimary,
-  },
-  headerActions: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.lg,
-  },
-  iconBtn: {
-    padding: spacing.xs,
-    borderRadius: 20,
-  },
-  avatar: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: colors.surface,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
 
   // ── Scroll ────────────────────────────────────────────────────
