@@ -3,8 +3,8 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
 
-import { colors } from '../constraints/theme';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useTheme } from '../context/ThemeContext';
 
 // Auth / onboarding
 import SplashScreen        from '../screens/SplashScreen';
@@ -110,6 +110,7 @@ function tabIcon(outlineName, filledName) {
 
 function MainTabs() {
   const insets = useSafeAreaInsets();
+  const { colors } = useTheme();
   const tabBarStyle = {
     backgroundColor: colors.surfaceDeep,
     borderTopColor: colors.border,

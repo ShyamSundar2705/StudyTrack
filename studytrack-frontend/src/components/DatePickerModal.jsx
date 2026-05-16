@@ -1,9 +1,12 @@
 import React, { useMemo } from 'react';
 import { View, Text, Modal, TouchableOpacity, FlatList, StyleSheet } from 'react-native';
-import { colors, spacing, radius } from '../constraints/theme';
+import { spacing, radius } from '../constraints/theme';
+import { useTheme } from '../context/ThemeContext';
 import { formatDateLabel } from '../utils/dateTime';
 
 export default function DatePickerModal({ visible, selected, onSelect, onClose }) {
+  const { colors } = useTheme();
+  const styles = getStyles(colors);
   const days = useMemo(() => {
     const result = [];
     const today = new Date();
@@ -48,7 +51,7 @@ export default function DatePickerModal({ visible, selected, onSelect, onClose }
   );
 }
 
-const styles = StyleSheet.create({
+function getStyles(colors) { return StyleSheet.create({
   overlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.5)',
@@ -94,4 +97,4 @@ const styles = StyleSheet.create({
     color: colors.accentLight,
     fontWeight: '600',
   },
-});
+}); }

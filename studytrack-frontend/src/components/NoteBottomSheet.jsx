@@ -3,7 +3,8 @@ import {
   Modal, View, Text, TextInput, TouchableOpacity, ScrollView,
   Animated, StyleSheet, Alert, Keyboard, Dimensions,
 } from 'react-native';
-import { colors, radius, spacing } from '../constraints/theme';
+import { radius, spacing } from '../constraints/theme';
+import { useTheme } from '../context/ThemeContext';
 
 const OFF_SCREEN = Dimensions.get('window').height;
 
@@ -13,6 +14,8 @@ const QUICK_TAGS = [
 ];
 
 export default function NoteBottomSheet({ visible, initialNote, onSave, onClose }) {
+  const { colors } = useTheme();
+  const styles = getStyles(colors);
   const [noteText, setNoteText]         = useState(initialNote ?? '');
   const [keyboardHeight, setKeyboardHeight] = useState(0);
   const translateY = useRef(new Animated.Value(OFF_SCREEN)).current;
@@ -154,7 +157,7 @@ export default function NoteBottomSheet({ visible, initialNote, onSave, onClose 
   );
 }
 
-const styles = StyleSheet.create({
+function getStyles(colors) { return StyleSheet.create({
   overlay: {
     flex: 1,
     justifyContent: 'flex-end',
@@ -250,4 +253,4 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color:    colors.textSecondary,
   },
-});
+}); }

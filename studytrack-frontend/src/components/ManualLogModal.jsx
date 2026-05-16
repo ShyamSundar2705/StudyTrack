@@ -5,7 +5,8 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { colors, spacing, radius } from '../constraints/theme';
+import { spacing, radius } from '../constraints/theme';
+import { useTheme } from '../context/ThemeContext';
 import { manualSession as apiManualSession } from '../api/sessions';
 import useSubjectStore from '../store/useSubjectStore';
 import {
@@ -26,6 +27,8 @@ function todayMidnight() {
 }
 
 export default function ManualLogModal({ visible, onClose, onSaved }) {
+  const { colors } = useTheme();
+  const styles = getStyles(colors);
   const insets = useSafeAreaInsets();
   const subjects = useSubjectStore((s) => s.subjects);
 
@@ -222,7 +225,7 @@ export default function ManualLogModal({ visible, onClose, onSaved }) {
   );
 }
 
-const styles = StyleSheet.create({
+function getStyles(colors) { return StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
@@ -323,4 +326,4 @@ const styles = StyleSheet.create({
     fontSize: 15,
     minHeight: 80,
   },
-});
+}); }

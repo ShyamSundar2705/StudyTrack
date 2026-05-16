@@ -1,9 +1,12 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, spacing, radius } from '../constraints/theme';
+import { spacing, radius } from '../constraints/theme';
+import { useTheme } from '../context/ThemeContext';
 
 export default function NoGroupView({ onCreateGroup, onJoinGroup }) {
+  const { colors } = useTheme();
+  const styles = getStyles(colors);
   return (
     <View style={styles.container}>
       <Ionicons name="people-outline" size={64} color={colors.border} />
@@ -29,7 +32,7 @@ export default function NoGroupView({ onCreateGroup, onJoinGroup }) {
   );
 }
 
-const styles = StyleSheet.create({
+function getStyles(colors) { return StyleSheet.create({
   container: {
     flex: 1,
     alignItems: 'center',
@@ -102,4 +105,4 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '500',
   },
-});
+}); }

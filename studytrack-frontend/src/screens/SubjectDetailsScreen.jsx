@@ -3,7 +3,8 @@ import {
   View, Text, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, radius, spacing } from '../constraints/theme';
+import { radius, spacing } from '../constraints/theme';
+import { useTheme } from '../context/ThemeContext';
 import { getSubjectDetails } from '../api/subjects';
 import { getSessionsBySubject } from '../api/sessions';
 import useSubjectStore from '../store/useSubjectStore';
@@ -66,6 +67,9 @@ function buildSessionGroups(rawSessions) {
 }
 
 export default function SubjectDetailsScreen({ navigation, route }) {
+  const { colors } = useTheme();
+  const styles = getStyles(colors);
+
   const subjectId = route?.params?.subjectId;
   const insets    = useSafeAreaInsets();
   const storeSubject = useSubjectStore((s) => s.subjects.find((sub) => sub.id === subjectId));
@@ -322,7 +326,7 @@ export default function SubjectDetailsScreen({ navigation, route }) {
   );
 }
 
-const styles = StyleSheet.create({
+function getStyles(colors) { return StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
@@ -635,4 +639,4 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   emptyStateText: { fontSize: 14, color: colors.textSecondary },
-});
+}); }

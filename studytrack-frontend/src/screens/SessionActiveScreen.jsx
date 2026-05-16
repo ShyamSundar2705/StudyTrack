@@ -4,7 +4,8 @@ import { View, Text, TouchableOpacity, StyleSheet, Platform, Alert } from 'react
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Svg, { Circle, Defs, LinearGradient, Stop } from 'react-native-svg';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, radius, spacing } from '../constraints/theme';
+import { radius, spacing } from '../constraints/theme';
+import { useTheme } from '../context/ThemeContext';
 
 import useTimerStore    from '../store/useTimerStore';
 import useSessionStore  from '../store/useSessionStore';
@@ -48,6 +49,9 @@ function ordinal(n) {
 }
 
 export default function SessionActiveScreen({ navigation, route }) {
+  const { colors } = useTheme();
+  const styles = getStyles(colors);
+
   useKeepAwake();
 
   const isPomo    = route.params?.isPomo    ?? false;
@@ -493,7 +497,7 @@ export default function SessionActiveScreen({ navigation, route }) {
   );
 }
 
-const styles = StyleSheet.create({
+function getStyles(colors) { return StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
@@ -761,4 +765,4 @@ const styles = StyleSheet.create({
     borderRadius: 2,
     opacity: 0.5,
   },
-});
+}); }

@@ -5,8 +5,8 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
-// TODO: useTheme() for dynamic theme support
-import { colors, radius, spacing } from '../constraints/theme';
+import { radius, spacing } from '../constraints/theme';
+import { useTheme } from '../context/ThemeContext';
 import { getInsights } from '../api/users';
 import useUserStore from '../store/useUserStore';
 import useSubjectStore from '../store/useSubjectStore';
@@ -63,6 +63,8 @@ function monthAbbrLabel(dateStr) {
 }
 
 export default function InsightsScreen({ navigation }) {
+  const { colors } = useTheme();
+  const styles = getStyles(colors);
   const storeStreak = useUserStore((s) => s.streak);
   const insets = useSafeAreaInsets();
   const todayStr = useMemo(utcTodayStr, []);
@@ -576,7 +578,7 @@ export default function InsightsScreen({ navigation }) {
   );
 }
 
-const styles = StyleSheet.create({
+function getStyles(colors) { return StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
 
   header: {
@@ -703,4 +705,4 @@ const styles = StyleSheet.create({
     alignItems: 'center', justifyContent: 'center',
   },
   cancelText: { fontSize: 15, color: colors.textPrimary },
-});
+}); }

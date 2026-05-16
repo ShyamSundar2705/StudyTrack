@@ -16,7 +16,8 @@ import {
 
 const WIN_H = Dimensions.get('window').height;
 import { Ionicons } from '@expo/vector-icons';
-import { colors, radius, spacing } from '../constraints/theme';
+import { radius, spacing } from '../constraints/theme';
+import { useTheme } from '../context/ThemeContext';
 import api from '../api/client';
 import useUserStore from '../store/useUserStore';
 
@@ -27,6 +28,8 @@ const AVATAR_COLORS = [
 ];
 
 export default function EditProfileSheet({ visible, user, onClose, onSaved }) {
+  const { colors } = useTheme();
+  const styles = getStyles(colors);
   const [name, setName] = useState('');
   const [handle, setHandle] = useState('');
   const [avatarColor, setAvatarColor] = useState(colors.accentPrimary);
@@ -225,7 +228,7 @@ export default function EditProfileSheet({ visible, user, onClose, onSaved }) {
   );
 }
 
-const styles = StyleSheet.create({
+function getStyles(colors) { return StyleSheet.create({
   modalContainer: {
     flex: 1,
     justifyContent: 'flex-end',
@@ -391,4 +394,4 @@ const styles = StyleSheet.create({
     color: colors.danger,
     fontSize: 13,
   },
-});
+}); }

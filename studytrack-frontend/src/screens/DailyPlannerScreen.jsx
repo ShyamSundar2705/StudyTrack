@@ -5,8 +5,8 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
-// TODO: useTheme() for dynamic theme support
-import { colors, radius, spacing } from '../constraints/theme';
+import { radius, spacing } from '../constraints/theme';
+import { useTheme } from '../context/ThemeContext';
 import useSubjectStore from '../store/useSubjectStore';
 import useUserStore from '../store/useUserStore';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -51,7 +51,7 @@ function isoToDate(isoStr) {
 }
 
 // Transform backend task { id, title, completed, dueDate, subjectId } to frontend shape
-function transformTask(task, subjects) {
+function transformTask(task, subjects, colors) {
   const now = new Date();
   let status = 'pending';
   let overdue = false;
@@ -91,7 +91,7 @@ function transformTask(task, subjects) {
 }
 
 // ── SwipeableTaskRow ────────────────────────────────────────────────────────
-function SwipeableTaskRow({ task, onToggle, onEdit, onDelete }) {
+function SwipeableTaskRow({ task, onToggle, onEdit, onDelete, colors, styles }) {
   const swipeX = useRef(new Animated.Value(0)).current;
   const DELETE_THRESHOLD = 80;
   const DELETE_BTN_WIDTH = 72;
@@ -189,6 +189,8 @@ function SwipeableTaskRow({ task, onToggle, onEdit, onDelete }) {
 
 // ── Main Screen ─────────────────────────────────────────────────────────────
 export default function DailyPlannerScreen({ navigation }) {
+  const { colors } = useTheme();
+  const styles = getStyles(colors);
   const subjects = useSubjectStore((s) => s.subjects);
   const streak   = useUserStore((s) => s.streak);
   const insets   = useSafeAreaInsets();
@@ -260,7 +262,7 @@ export default function DailyPlannerScreen({ navigation }) {
         api.get(`/schedule-events?date=${isoDate}`),
       ]);
       const rawTasks = tasksRes.data.data.tasks;
-      setTasks(Array.isArray(rawTasks) ? rawTasks.map((t) => transformTask(t, subjects)) : []);
+      setTasks(Array.isArray(rawTasks) ? rawTasks.map((t) => transformTask(t, subjects, colors)) : []);
       const rawEvents = eventsRes.data.data.events;
       setEvents(Array.isArray(rawEvents) ? rawEvents : []);
     } catch (err) {
@@ -362,9 +364,9 @@ export default function DailyPlannerScreen({ navigation }) {
 
   const handleTaskSaved = (savedTask) => {
     if (editingTask) {
-      setTasks((prev) => prev.map((t) => t.id === savedTask.id ? transformTask(savedTask, subjects) : t));
+      setTasks((prev) => prev.map((t) => t.id === savedTask.id ? transformTask(savedTask, subjects, colors) : t));
     } else {
-      setTasks((prev) => [...prev, transformTask(savedTask, subjects)]);
+      setTasks((prev) => [...prev, transformTask(savedTask, subjects, colors)]);
     }
   };
 
@@ -503,6 +505,8 @@ export default function DailyPlannerScreen({ navigation }) {
                 onToggle={handleToggleComplete}
                 onEdit={(t) => { setEditingTask(t); setShowTaskForm(true); }}
                 onDelete={handleDeleteTask}
+                colors={colors}
+                styles={styles}
               />
             ))
           )}
@@ -645,7 +649,7 @@ export default function DailyPlannerScreen({ navigation }) {
   );
 }
 
-const styles = StyleSheet.create({
+function getStyles(colors) { return StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
 
   // ── Header ───────────────────────────────────────────────────
@@ -941,4 +945,4 @@ const styles = StyleSheet.create({
     borderLeftWidth: 4,
   },
   deviceEventIcon: { position: 'absolute', top: spacing.sm, right: spacing.sm },
-});
+}); }

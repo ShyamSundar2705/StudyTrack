@@ -4,10 +4,13 @@ import {
   Animated, Keyboard, StyleSheet, ActivityIndicator, ScrollView,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, spacing, radius } from '../constraints/theme';
+import { spacing, radius } from '../constraints/theme';
+import { useTheme } from '../context/ThemeContext';
 import api from '../api/client';
 
 export default function JoinGroupSheet({ visible, onClose, onJoined, initialTab = 'code' }) {
+  const { colors } = useTheme();
+  const styles = getStyles(colors);
   const [activeTab, setActiveTab] = useState('code');
   const [inviteCode, setInviteCode] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
@@ -254,7 +257,7 @@ export default function JoinGroupSheet({ visible, onClose, onJoined, initialTab 
   );
 }
 
-const styles = StyleSheet.create({
+function getStyles(colors) { return StyleSheet.create({
   overlay: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: 'rgba(0,0,0,0.5)',
@@ -458,4 +461,4 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '700',
   },
-});
+}); }

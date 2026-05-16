@@ -1,7 +1,8 @@
 import React, { useEffect, useRef } from 'react'
 import { Modal, View, Text, TouchableOpacity, Animated, StyleSheet } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
-import { colors, spacing, radius } from '../constraints/theme'
+import { spacing, radius } from '../constraints/theme'
+import { useTheme } from '../context/ThemeContext'
 
 export default function PlannerActionSheet({
   visible,
@@ -14,6 +15,8 @@ export default function PlannerActionSheet({
   completedCount,
   currentSort,
 }) {
+  const { colors } = useTheme()
+  const styles = getStyles(colors)
   const slideAnim = useRef(new Animated.Value(400)).current
 
   useEffect(() => {
@@ -98,7 +101,7 @@ export default function PlannerActionSheet({
   )
 }
 
-const styles = StyleSheet.create({
+function getStyles(colors) { return StyleSheet.create({
   overlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.6)',
@@ -167,4 +170,4 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '600',
   },
-})
+}) }

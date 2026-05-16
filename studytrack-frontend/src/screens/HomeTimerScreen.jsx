@@ -5,8 +5,8 @@ import {
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Svg, { Circle } from 'react-native-svg';
 import { Ionicons } from '@expo/vector-icons';
-// TODO: useTheme() for dynamic theme support
-import { colors, radius, spacing } from '../constraints/theme';
+import { radius, spacing } from '../constraints/theme';
+import { useTheme } from '../context/ThemeContext';
 
 import useTimerStore    from '../store/useTimerStore';
 import useSessionStore  from '../store/useSessionStore';
@@ -54,6 +54,8 @@ function fmtSessionTime(isoStart, elapsedSeconds) {
 }
 
 export default function HomeTimerScreen({ navigation }) {
+  const { colors } = useTheme();
+  const styles = getStyles(colors);
   const subjects              = useSubjectStore((s) => s.subjects);
   const setSubjects           = useSubjectStore((s) => s.setSubjects);
   const { startSession }      = useSessionStore();
@@ -366,7 +368,7 @@ export default function HomeTimerScreen({ navigation }) {
   );
 }
 
-const styles = StyleSheet.create({
+function getStyles(colors) { return StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
@@ -607,4 +609,4 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
   },
 
-});
+}); }

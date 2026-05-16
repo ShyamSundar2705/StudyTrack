@@ -14,7 +14,8 @@ import {
 } from 'react-native';
 import * as Clipboard from 'expo-clipboard';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, spacing, radius } from '../constraints/theme';
+import { spacing, radius } from '../constraints/theme';
+import { useTheme } from '../context/ThemeContext';
 import api from '../api/client';
 import { disconnectGroupSocket } from '../api/socket';
 import useUserStore from '../store/useUserStore';
@@ -29,6 +30,8 @@ export default function GroupSettingsSheet({
   onDeleted,
   onLeave,
 }) {
+  const { colors } = useTheme();
+  const styles = getStyles(colors);
   const [groupName, setGroupName] = useState('');
   const [isPublic, setIsPublic] = useState(false);
   const [maxMembers, setMaxMembers] = useState(20);
@@ -319,7 +322,7 @@ export default function GroupSettingsSheet({
   );
 }
 
-const styles = StyleSheet.create({
+function getStyles(colors) { return StyleSheet.create({
   overlay: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: 'rgba(0,0,0,0.5)',
@@ -532,4 +535,4 @@ const styles = StyleSheet.create({
   bottomPad: {
     height: 32,
   },
-});
+}); }

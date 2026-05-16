@@ -5,7 +5,7 @@ import {
 import * as WebBrowser from 'expo-web-browser';
 import * as SecureStore from 'expo-secure-store';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, radius, spacing } from '../constraints/theme';
+import { radius, spacing } from '../constraints/theme';
 import { TOKEN_KEY } from '../api/client';
 import supabase from '../api/supabase';
 import client from '../api/client';
@@ -18,11 +18,13 @@ import { useTheme, ACCENT_COLORS } from '../context/ThemeContext';
 WebBrowser.maybeCompleteAuthSession();
 
 export default function SplashScreen({ navigation }) {
+  const { colors, setAccent } = useTheme();
+  const styles = getStyles(colors);
+
   const [checking, setChecking] = useState(true);
   const [authLoading, setAuthLoading] = useState(false);
   const [showEmailModal, setShowEmailModal] = useState(false);
   const setUser = useUserStore((s) => s.setUser);
-  const { setAccent } = useTheme();
 
   useEffect(() => {
     // Warm up browser
@@ -248,7 +250,7 @@ export default function SplashScreen({ navigation }) {
   );
 }
 
-const styles = StyleSheet.create({
+function getStyles(colors) { return StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
@@ -375,4 +377,4 @@ const styles = StyleSheet.create({
     color: colors.textPrimary,
     textDecorationLine: 'underline',
   },
-});
+}); }

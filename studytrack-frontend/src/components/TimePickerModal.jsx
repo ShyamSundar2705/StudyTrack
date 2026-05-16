@@ -2,7 +2,8 @@ import React, { useRef, useEffect, useState } from 'react';
 import {
   View, Text, Modal, TouchableOpacity, ScrollView, StyleSheet,
 } from 'react-native';
-import { colors, spacing, radius } from '../constraints/theme';
+import { spacing, radius } from '../constraints/theme';
+import { useTheme } from '../context/ThemeContext';
 
 const ITEM_HEIGHT = 48;
 const VISIBLE_ITEMS = 5;
@@ -22,6 +23,8 @@ function to24h(hour12, period) {
 }
 
 export default function TimePickerModal({ visible, value, onChange, onClose }) {
+  const { colors } = useTheme();
+  const styles = getStyles(colors);
   const [hour12Idx, setHour12Idx] = useState(0);
   const [minuteIdx, setMinuteIdx] = useState(0);
   const [period, setPeriod] = useState('AM');
@@ -133,7 +136,7 @@ export default function TimePickerModal({ visible, value, onChange, onClose }) {
 
 const PICKER_HEIGHT = ITEM_HEIGHT * VISIBLE_ITEMS;
 
-const styles = StyleSheet.create({
+function getStyles(colors) { return StyleSheet.create({
   overlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.5)',
@@ -228,4 +231,4 @@ const styles = StyleSheet.create({
     color: colors.textPrimary,
     backgroundColor: colors.accentPrimary,
   },
-});
+}); }

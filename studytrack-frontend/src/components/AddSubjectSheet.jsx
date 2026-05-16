@@ -5,21 +5,24 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { colors, radius, spacing } from '../constraints/theme';
+import { radius, spacing } from '../constraints/theme';
+import { useTheme } from '../context/ThemeContext';
 import { createSubject } from '../api/subjects';
 import useSubjectStore from '../store/useSubjectStore';
 
 const OFF_SCREEN = Dimensions.get('window').height;
 
 const SWATCH_COLORS = [
-  colors.accentLight,
-  colors.success,
-  colors.accent2,
-  colors.danger,
-  colors.gold,
+  '#4A90E2',
+  '#27AE60',
+  '#A855F7',
+  '#E74C3C',
+  '#FFD700',
 ];
 
 export default function AddSubjectSheet({ visible, onClose, onAdded }) {
+  const { colors } = useTheme();
+  const styles = getStyles(colors);
   const translateY = useRef(new Animated.Value(OFF_SCREEN)).current;
   const insets = useSafeAreaInsets();
   const addSubject = useSubjectStore((s) => s.addSubject);
@@ -128,7 +131,7 @@ export default function AddSubjectSheet({ visible, onClose, onAdded }) {
   );
 }
 
-const styles = StyleSheet.create({
+function getStyles(colors) { return StyleSheet.create({
   overlay: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: 'rgba(0,0,0,0.6)',
@@ -215,4 +218,4 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: colors.textPrimary,
   },
-});
+}); }

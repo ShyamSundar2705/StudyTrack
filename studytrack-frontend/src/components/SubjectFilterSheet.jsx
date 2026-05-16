@@ -5,7 +5,8 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { colors, radius, spacing } from '../constraints/theme';
+import { radius, spacing } from '../constraints/theme';
+import { useTheme } from '../context/ThemeContext';
 import useSubjectStore from '../store/useSubjectStore';
 
 const OFF_SCREEN = Dimensions.get('window').height;
@@ -17,6 +18,8 @@ export default function SubjectFilterSheet({
   onClose,
   subjectHours = {},
 }) {
+  const { colors } = useTheme();
+  const styles = getStyles(colors);
   const translateY = useRef(new Animated.Value(OFF_SCREEN)).current;
   const insets = useSafeAreaInsets();
   const subjects = useSubjectStore((s) => s.subjects);
@@ -124,7 +127,7 @@ export default function SubjectFilterSheet({
   );
 }
 
-const styles = StyleSheet.create({
+function getStyles(colors) { return StyleSheet.create({
   overlay: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: 'rgba(0,0,0,0.6)',
@@ -186,4 +189,4 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   cancelText: { fontSize: 15, color: colors.textPrimary },
-});
+}); }

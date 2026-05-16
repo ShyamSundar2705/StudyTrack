@@ -3,22 +3,16 @@ import {
   View, Text, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-// TODO: useTheme() for dynamic theme support
-import { colors, radius, spacing } from '../constraints/theme';
+import { radius, spacing } from '../constraints/theme';
 import { getGroupLeaderboard } from '../api/leaderboard';
 import { getGroupSocket } from '../api/socket';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import useUserStore from '../store/useUserStore';
+import { useTheme } from '../context/ThemeContext';
 
 const SCOPE_KEYS    = ['group', 'category', 'global'];
 const PERIOD_LABELS = ['Today', 'This Week', 'This Month', 'All Time'];
 const PERIOD_KEYS   = ['today', 'week', 'month', 'all'];
-
-const TREND_CONFIG = {
-  up:     { icon: 'arrow-up',       color: colors.success        },
-  down:   { icon: 'arrow-down',     color: colors.danger         },
-  stable: { icon: 'remove-outline', color: colors.textSecondary  },
-};
 
 function fmtDuration(seconds) {
   const h = Math.floor(seconds / 3600);
@@ -28,7 +22,7 @@ function fmtDuration(seconds) {
   return `${m}m`;
 }
 
-function buildPodiumAndRanked(leaderboard, currentUserId) {
+function buildPodiumAndRanked(leaderboard, currentUserId, colors) {
   const sorted = [...leaderboard].sort((a, b) => a.rank - b.rank);
   const podiumColors = { 1: colors.gold, 2: colors.silver, 3: colors.bronze };
   const barHeights   = { 1: 144, 2: 96, 3: 80 };
@@ -59,6 +53,14 @@ function buildPodiumAndRanked(leaderboard, currentUserId) {
 }
 
 export default function LeaderboardScreen({ navigation }) {
+  const { colors } = useTheme();
+  const styles = getStyles(colors);
+  const TREND_CONFIG = {
+    up:     { icon: 'arrow-up',       color: colors.success        },
+    down:   { icon: 'arrow-down',     color: colors.danger         },
+    stable: { icon: 'remove-outline', color: colors.textSecondary  },
+  };
+
   const insets           = useSafeAreaInsets();
   const userId           = useUserStore((s) => s.id);
   const group            = useUserStore((s) => s.group);
@@ -92,7 +94,7 @@ export default function LeaderboardScreen({ navigation }) {
         if (!groupId) { setPodium([]); setRanked([]); return; }
         const leaderboard = await getGroupLeaderboard(groupId, PERIOD_KEYS[activePeriod]);
         if (!cancelled) {
-          const { podium: p, ranked: r } = buildPodiumAndRanked(leaderboard, userId);
+          const { podium: p, ranked: r } = buildPodiumAndRanked(leaderboard, userId, colors);
           setPodium(p);
           setRanked(r);
           const me = leaderboard.find(e => e.userId === userId);
@@ -347,7 +349,7 @@ export default function LeaderboardScreen({ navigation }) {
   );
 }
 
-const styles = StyleSheet.create({
+function getStyles(colors) { return StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
 
   // ── Header ───────────────────────────────────────────────────
@@ -611,4 +613,4 @@ const styles = StyleSheet.create({
     elevation: 10,
   },
   floatingBtnText: { fontSize: 16, fontWeight: '700', color: colors.textPrimary },
-});
+}); }

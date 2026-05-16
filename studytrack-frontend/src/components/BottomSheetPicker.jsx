@@ -3,7 +3,8 @@ import {
   Modal, View, Text, TouchableOpacity, ScrollView,
   Animated, StyleSheet, Dimensions,
 } from 'react-native';
-import { colors, radius, spacing } from '../constraints/theme';
+import { radius, spacing } from '../constraints/theme';
+import { useTheme } from '../context/ThemeContext';
 
 const SHEET_HEIGHT = Dimensions.get('window').height * 0.5;
 const OFF_SCREEN   = SHEET_HEIGHT + 50;
@@ -16,6 +17,8 @@ export default function BottomSheetPicker({
   onSelect,
   onClose,
 }) {
+  const { colors } = useTheme();
+  const styles = getStyles(colors);
   const translateY = useRef(new Animated.Value(OFF_SCREEN)).current;
 
   useEffect(() => {
@@ -88,7 +91,7 @@ export default function BottomSheetPicker({
   );
 }
 
-const styles = StyleSheet.create({
+function getStyles(colors) { return StyleSheet.create({
   overlay: {
     flex: 1,
     justifyContent: 'flex-end',
@@ -139,4 +142,4 @@ const styles = StyleSheet.create({
   optionTextSelected: {
     fontWeight: '700',
   },
-});
+}); }

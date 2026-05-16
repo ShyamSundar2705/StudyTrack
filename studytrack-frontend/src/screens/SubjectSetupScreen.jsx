@@ -4,22 +4,26 @@ import {
   TextInput, StyleSheet, ActivityIndicator, Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, radius, spacing } from '../constraints/theme';
+import { radius, spacing } from '../constraints/theme';
+import { useTheme } from '../context/ThemeContext';
 import { createSubject } from '../api/subjects';
 import useSubjectStore from '../store/useSubjectStore';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-const SWATCH_COLORS = [
-  colors.accentLight,
-  colors.success,
-  colors.accent2,
-  colors.danger,
-  colors.gold,
-];
-
 const QUICK_ADD = ['History', 'Biology', 'Programming', 'Art'];
 
 export default function SubjectSetupScreen({ navigation }) {
+  const { colors } = useTheme();
+  const styles = getStyles(colors);
+
+  const SWATCH_COLORS = [
+    colors.accentLight,
+    colors.success,
+    colors.accent2,
+    colors.danger,
+    colors.gold,
+  ];
+
   const { setSubjects: storeSetSubjects } = useSubjectStore();
   const insets = useSafeAreaInsets();
 
@@ -212,7 +216,7 @@ export default function SubjectSetupScreen({ navigation }) {
   );
 }
 
-const styles = StyleSheet.create({
+function getStyles(colors) { return StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
@@ -454,4 +458,4 @@ const styles = StyleSheet.create({
     color: colors.accentLight,
     textDecorationLine: 'underline',
   },
-});
+}); }

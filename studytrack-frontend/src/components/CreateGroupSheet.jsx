@@ -5,7 +5,8 @@ import {
   StyleSheet, ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, spacing, radius } from '../constraints/theme';
+import { spacing, radius } from '../constraints/theme';
+import { useTheme } from '../context/ThemeContext';
 import api from '../api/client';
 import BottomSheetPicker from './BottomSheetPicker';
 
@@ -15,6 +16,8 @@ const MAX_MEMBERS_OPTIONS = [2, 5, 10, 15, 20, 30, 50, 100].map((n) => ({
 }));
 
 export default function CreateGroupSheet({ visible, onClose, onCreated }) {
+  const { colors } = useTheme();
+  const styles = getStyles(colors);
   const [groupName, setGroupName] = useState('');
   const [isPublic, setIsPublic] = useState(false);
   const [maxMembers, setMaxMembers] = useState(20);
@@ -169,7 +172,7 @@ export default function CreateGroupSheet({ visible, onClose, onCreated }) {
   );
 }
 
-const styles = StyleSheet.create({
+function getStyles(colors) { return StyleSheet.create({
   overlay: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: 'rgba(0,0,0,0.5)',
@@ -298,4 +301,4 @@ const styles = StyleSheet.create({
     fontSize: 13,
     textAlign: 'center',
   },
-});
+}); }

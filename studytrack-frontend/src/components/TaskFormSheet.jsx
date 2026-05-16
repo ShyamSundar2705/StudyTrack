@@ -5,11 +5,14 @@ import {
   Platform, StyleSheet, Switch
 } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
-import { colors, spacing, radius } from '../constraints/theme'
+import { spacing, radius } from '../constraints/theme'
+import { useTheme } from '../context/ThemeContext'
 import useSubjectStore from '../store/useSubjectStore'
 import api from '../api/client'
 
 export default function TaskFormSheet({ visible, task, defaultDate, onSave, onClose }) {
+  const { colors } = useTheme()
+  const styles = getStyles(colors)
   const subjects = useSubjectStore(s => s.subjects)
 
   const [title, setTitle] = useState('')
@@ -263,7 +266,7 @@ export default function TaskFormSheet({ visible, task, defaultDate, onSave, onCl
   )
 }
 
-const styles = StyleSheet.create({
+function getStyles(colors) { return StyleSheet.create({
   overlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.6)',
@@ -446,4 +449,4 @@ const styles = StyleSheet.create({
   bottomPad: {
     height: spacing.xl,
   },
-})
+}) }

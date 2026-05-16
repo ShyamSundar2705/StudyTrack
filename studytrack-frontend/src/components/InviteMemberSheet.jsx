@@ -10,9 +10,12 @@ import {
 } from 'react-native';
 import * as Clipboard from 'expo-clipboard';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, spacing, radius } from '../constraints/theme';
+import { spacing, radius } from '../constraints/theme';
+import { useTheme } from '../context/ThemeContext';
 
 export default function InviteMemberSheet({ visible, group, onClose }) {
+  const { colors } = useTheme();
+  const styles = getStyles(colors);
   const [codeCopied, setCodeCopied] = useState(false);
   const slideAnim = useRef(new Animated.Value(600)).current;
 
@@ -117,7 +120,7 @@ export default function InviteMemberSheet({ visible, group, onClose }) {
   );
 }
 
-const styles = StyleSheet.create({
+function getStyles(colors) { return StyleSheet.create({
   overlay: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: 'rgba(0,0,0,0.5)',
@@ -247,4 +250,4 @@ const styles = StyleSheet.create({
   bottomSafe: {
     height: 24,
   },
-});
+}); }

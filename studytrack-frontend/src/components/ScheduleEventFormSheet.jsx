@@ -5,7 +5,8 @@ import {
   Platform, StyleSheet
 } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
-import { colors, spacing, radius } from '../constraints/theme'
+import { spacing, radius } from '../constraints/theme'
+import { useTheme } from '../context/ThemeContext'
 import useSubjectStore from '../store/useSubjectStore'
 import TimePickerModal from './TimePickerModal'
 import api from '../api/client'
@@ -30,6 +31,8 @@ function formatDisplayTime({ hours, minutes }) {
 }
 
 export default function ScheduleEventFormSheet({ visible, event, defaultDate, onSave, onClose }) {
+  const { colors } = useTheme()
+  const styles = getStyles(colors)
   const subjects = useSubjectStore(s => s.subjects)
 
   const [title, setTitle] = useState('')
@@ -244,7 +247,7 @@ export default function ScheduleEventFormSheet({ visible, event, defaultDate, on
   )
 }
 
-const styles = StyleSheet.create({
+function getStyles(colors) { return StyleSheet.create({
   overlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.6)',
@@ -388,4 +391,4 @@ const styles = StyleSheet.create({
   bottomPad: {
     height: spacing.xl,
   },
-})
+}) }

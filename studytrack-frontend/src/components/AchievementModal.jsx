@@ -9,7 +9,8 @@ import {
   useWindowDimensions,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, radius, spacing } from '../constraints/theme';
+import { radius, spacing } from '../constraints/theme';
+import { useTheme } from '../context/ThemeContext';
 import { ACHIEVEMENT_META, CATEGORY_LABELS } from '../constants/achievements';
 
 function formatUnlockedDate(dateStr) {
@@ -19,6 +20,8 @@ function formatUnlockedDate(dateStr) {
 }
 
 export default function AchievementModal({ visible, achievement, onClose }) {
+  const { colors } = useTheme();
+  const styles = getStyles(colors);
   const { width: screenWidth } = useWindowDimensions();
   const meta = ACHIEVEMENT_META[achievement?.type] ?? {
     name: achievement?.type ?? 'Achievement',
@@ -117,7 +120,7 @@ export default function AchievementModal({ visible, achievement, onClose }) {
   );
 }
 
-const styles = StyleSheet.create({
+function getStyles(colors) { return StyleSheet.create({
   overlay: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: 'rgba(0,0,0,0.75)',
@@ -237,4 +240,4 @@ const styles = StyleSheet.create({
     color: colors.textPrimary,
     fontSize: 14,
   },
-});
+}); }

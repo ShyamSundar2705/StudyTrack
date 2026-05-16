@@ -10,8 +10,8 @@ import {
 } from 'react-native';
 import * as Clipboard from 'expo-clipboard';
 import { Ionicons } from '@expo/vector-icons';
-// TODO: useTheme() for dynamic theme support
-import { colors, radius, spacing } from '../constraints/theme';
+import { radius, spacing } from '../constraints/theme';
+import { useTheme } from '../context/ThemeContext';
 import { getMyGroup } from '../api/users';
 import { getGroupLeaderboard, leaveGroup } from '../api/leaderboard';
 import { getGroupSocket, disconnectGroupSocket } from '../api/socket';
@@ -56,6 +56,8 @@ function formatActivityEvent(event, memberName) {
 }
 
 export default function StudyGroupsScreen({ navigation }) {
+  const { colors } = useTheme();
+  const styles = getStyles(colors);
   const userId = useUserStore((s) => s.id);
   const insets = useSafeAreaInsets();
 
@@ -562,7 +564,7 @@ export default function StudyGroupsScreen({ navigation }) {
   );
 }
 
-const styles = StyleSheet.create({
+function getStyles(colors) { return StyleSheet.create({
   root: {
     flex: 1,
     backgroundColor: colors.background,
@@ -961,4 +963,4 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: colors.textSecondary,
   },
-});
+}); }

@@ -3,8 +3,8 @@ import {
   View, Text, ScrollView, TouchableOpacity, StyleSheet, Platform, ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-// TODO: useTheme() for dynamic theme support
-import { colors, radius, spacing } from '../constraints/theme';
+import { radius, spacing } from '../constraints/theme';
+import { useTheme } from '../context/ThemeContext';
 
 import { completeSession as apiCompleteSession, startSession as apiStartSession } from '../api/sessions';
 import { shareSession } from '../utils/shareSession';
@@ -25,6 +25,9 @@ function fmtTime(iso) {
 }
 
 export default function SessionCompleteScreen({ navigation, route }) {
+  const { colors } = useTheme();
+  const styles = getStyles(colors);
+
   const { durationSeconds = 0, subjectId, subjectName, startedAt, endedAt, backendSessionId, note } = route.params ?? {};
 
   const subjects         = useSubjectStore((s) => s.subjects);
@@ -231,7 +234,7 @@ export default function SessionCompleteScreen({ navigation, route }) {
   );
 }
 
-const styles = StyleSheet.create({
+function getStyles(colors) { return StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
@@ -563,4 +566,4 @@ const styles = StyleSheet.create({
     textDecorationLine: 'underline',
     textDecorationColor: colors.border,
   },
-});
+}); }
