@@ -46,7 +46,7 @@ export default function AddSubjectSheet({ visible, onClose, onAdded }) {
 
   const handleSave = async () => {
     const trimmed = name.trim();
-    if (!trimmed) return;
+    if (!trimmed || saving) return;
     setSaving(true);
     try {
       const r = await createSubject({ name: trimmed, colorHex: selectedColor });
