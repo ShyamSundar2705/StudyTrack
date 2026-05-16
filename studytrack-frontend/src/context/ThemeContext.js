@@ -43,6 +43,7 @@ export function ThemeProvider({ children }) {
   };
 
   const setAccent = async (newAccent) => {
+    if (!ACCENT_COLORS[newAccent]) return;
     setAccentState(newAccent);
     await AsyncStorage.setItem('app_accent', newAccent).catch(() => {});
     try {
