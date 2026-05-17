@@ -594,7 +594,7 @@ export default function AppSettingsScreen({ navigation, route }) {
             label="Sync Across Devices"
             right={<Toggle on={settings.syncDevices} onPress={() => toggle('syncDevices')} />}
           />
-          <TouchableOpacity>
+          <TouchableOpacity onPress={() => Alert.alert('Backup Study Data', 'Cloud backup is coming soon.')}>
             <SettingsRow
               icon="download-outline"
               label="Backup Study Data"
@@ -606,7 +606,7 @@ export default function AppSettingsScreen({ navigation, route }) {
               }
             />
           </TouchableOpacity>
-          <TouchableOpacity>
+          <TouchableOpacity onPress={() => Alert.alert('Export Data', 'Data export is coming soon.')}>
             <SettingsRow
               icon="share-outline"
               label="Export My Data"
@@ -657,14 +657,14 @@ export default function AppSettingsScreen({ navigation, route }) {
             </View>
             <Toggle on={settings.shareStudyStats} onPress={() => toggle('shareStudyStats')} />
           </View>
-          <TouchableOpacity>
+          <TouchableOpacity onPress={() => Linking.openURL('https://studytrack.app/privacy').catch(() => Alert.alert('Error', 'Could not open link.'))}>
             <SettingsRow
               icon="shield-outline"
               label="Privacy Policy"
               right={<Ionicons name="open-outline" size={16} color={colors.textSecondary} />}
             />
           </TouchableOpacity>
-          <TouchableOpacity>
+          <TouchableOpacity onPress={() => Linking.openURL('https://studytrack.app/terms').catch(() => Alert.alert('Error', 'Could not open link.'))}>
             <SettingsRow
               icon="document-text-outline"
               label="Terms of Service"
@@ -677,7 +677,7 @@ export default function AppSettingsScreen({ navigation, route }) {
         {/* ── ACCOUNT ── */}
         <Text style={styles.sectionHeader}>ACCOUNT</Text>
         <View style={styles.card}>
-          <TouchableOpacity>
+          <TouchableOpacity onPress={() => Alert.alert('Change Email', 'Email change is coming soon.')}>
             <SettingsRow
               icon="mail-outline"
               label="Change Email"
@@ -685,7 +685,16 @@ export default function AppSettingsScreen({ navigation, route }) {
             />
           </TouchableOpacity>
           {/* Delete Account — danger row */}
-          <TouchableOpacity>
+          <TouchableOpacity onPress={() => {
+            Alert.alert(
+              'Delete Account',
+              'This will permanently erase all your study data and cannot be undone. Are you sure?',
+              [
+                { text: 'Cancel', style: 'cancel' },
+                { text: 'Delete', style: 'destructive', onPress: () => Alert.alert('Coming Soon', 'Account deletion will be available at launch.') },
+              ],
+            );
+          }}>
             <View style={[styles.row, styles.deleteRow]}>
               <View style={styles.deleteAccentBar} />
               <View style={styles.rowLeftColumn}>

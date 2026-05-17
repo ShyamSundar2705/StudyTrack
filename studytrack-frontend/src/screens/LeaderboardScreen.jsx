@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import {
-  View, Text, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator,
+  View, Text, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator, Share,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { radius, spacing } from '../constraints/theme';
@@ -8,6 +8,7 @@ import { getGroupLeaderboard } from '../api/leaderboard';
 import { getGroupSocket } from '../api/socket';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import useUserStore from '../store/useUserStore';
+import useSessionStore from '../store/useSessionStore';
 import { useTheme } from '../context/ThemeContext';
 
 const SCOPE_KEYS    = ['group', 'category', 'global'];
@@ -65,6 +66,12 @@ export default function LeaderboardScreen({ navigation }) {
   const userId           = useUserStore((s) => s.id);
   const group            = useUserStore((s) => s.group);
   const dailyGoalSeconds = useUserStore((s) => s.dailyGoalSeconds);
+  const todaySessions    = useSessionStore((s) => s.todaySessions);
+  const todayTotal       = todaySessions.reduce((sum, s) => sum + s.elapsedSeconds, 0);
+  const remaining        = Math.max(0, (dailyGoalSeconds ?? 3600) - todayTotal);
+  const motivSub         = remaining <= 0
+    ? "You've hit your daily goal today! Keep it up!"
+    : `You're ${fmtDuration(remaining)} away from your daily goal!`;
 
   const [activeScope,  setActiveScope]  = useState(0);
   const [activePeriod, setActivePeriod] = useState(1);
@@ -126,14 +133,20 @@ export default function LeaderboardScreen({ navigation }) {
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Leaderboard</Text>
         </View>
-        <View style={styles.headerRight}>
-          <TouchableOpacity style={styles.headerBtn}>
-            <Ionicons name="share-outline" size={22} color={colors.textPrimary} />
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.headerBtn}>
-            <Ionicons name="options-outline" size={22} color={colors.textPrimary} />
-          </TouchableOpacity>
-        </View>
+        <TouchableOpacity
+          style={styles.headerBtn}
+          onPress={() => {
+            const topEntry = podium.find(e => e.pos === 1);
+            const lines = [
+              `StudyTrack Leaderboard — ${['Today', 'This Week', 'This Month', 'All Time'][activePeriod]}`,
+              topEntry ? `#1 ${topEntry.name} · ${topEntry.time}` : '',
+              myRank != null ? `My rank: #${myRank} in group` : '',
+            ].filter(Boolean).join('\n');
+            Share.share({ message: lines });
+          }}
+        >
+          <Ionicons name="share-outline" size={22} color={colors.textPrimary} />
+        </TouchableOpacity>
       </View>
 
       <ScrollView
@@ -326,7 +339,7 @@ export default function LeaderboardScreen({ navigation }) {
             <Ionicons name="flash" size={20} color={colors.textPrimary} />
             <View>
               <Text style={styles.motivTitle}>Daily Goal: {Math.floor((dailyGoalSeconds ?? 3600) / 3600)}h</Text>
-              <Text style={styles.motivSub}>You're just 16 minutes away from a new streak!</Text>
+              <Text style={styles.motivSub}>{motivSub}</Text>
             </View>
           </View>
           <View style={styles.motivPlayBtn}>

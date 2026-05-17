@@ -192,7 +192,11 @@ export default function ProfileScreen({ navigation }) {
                 {loading && <ActivityIndicator color="rgba(255,255,255,0.7)" size="small" />}
               </View>
               <Text style={styles.identityHandle}>{user.handle?.startsWith('@') ? user.handle : `@${user.handle}`}</Text>
-              <Text style={styles.identityMember}>Member since Sept 2023</Text>
+              {profileUser?.createdAt && (
+                <Text style={styles.identityMember}>
+                  Member since {new Date(profileUser.createdAt).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}
+                </Text>
+              )}
             </View>
           </View>
 
@@ -252,7 +256,7 @@ export default function ProfileScreen({ navigation }) {
         {/* Subjects Overview */}
         <View style={[styles.sectionHeader, { marginTop: spacing.xl }]}>
           <Text style={styles.sectionTitle}>Subjects Overview</Text>
-          <TouchableOpacity>
+          <TouchableOpacity onPress={() => navigation.navigate('InsightsTab')}>
             <Text style={styles.editBtn}>Edit</Text>
           </TouchableOpacity>
         </View>
