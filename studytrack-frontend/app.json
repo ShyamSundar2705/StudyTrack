@@ -39,7 +39,7 @@
           ]
         }
       ],
-      "package": "com.anonymous.StudyTrack"
+      "package": "com.shyam.studytrack"
     },
     "web": {
       "favicon": "./assets/favicon.png"
