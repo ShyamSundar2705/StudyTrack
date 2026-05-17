@@ -24,13 +24,15 @@ StudyTrack/
 ## Features
 
 - Study session timer with focus and Pomodoro modes
-- Subject management with color coding
+- Subject management with color coding and per-subject daily goals
+- Per-subject stats: weekly trend chart, daily goal ring, session history with filter tabs, study-now shortcut
 - Daily planner with tasks and schedule events
 - Insights: heatmap, subject breakdown, weekly bar chart, streaks
 - Live study groups with real-time member status and leaderboard
 - Google OAuth and email/password authentication
 - Manual session logging and session notes
 - Push notifications for Pomodoro phases, daily reminders, and milestones
+- Dark/light theme toggle and privacy settings
 
 ## Prerequisites
 
@@ -52,23 +54,18 @@ npm install
 Copy `.env.example` to `.env` and fill in the required values:
 
 ```
-DATABASE_URL=postgres://postgres:postgres@localhost:51214/template1
+DATABASE_URL=postgres://...  # Direct TCP URL from Prisma Postgres cloud
 JWT_SECRET=your_jwt_secret
 SUPABASE_URL=https://your-project.supabase.co
 SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
 PORT=3000
 ```
 
-Start the Prisma local database proxy (keep this running in a separate terminal):
+> **Note:** The database is hosted on **Prisma Postgres** (cloud). `npx prisma dev` is not required — `DATABASE_URL` should be the direct `postgres://` TCP URL obtained via `npx prisma postgres link`.
+
+Generate the Prisma client:
 
 ```bash
-npx prisma dev
-```
-
-Push the schema and generate the Prisma client:
-
-```bash
-npx prisma db push
 npx prisma generate
 ```
 
@@ -192,8 +189,6 @@ Fetch via `GET /api/users/:id/achievements`.
 
 ## Troubleshooting
 
-**`Error: connect ECONNREFUSED 127.0.0.1:51214`** — `npx prisma dev` is not running. Start it in a separate terminal before the backend.
-
 **`Can't reach development server`** on device — the `EXPO_PUBLIC_API_URL` must be your machine's LAN IP (e.g. `192.168.x.x`), not `localhost`.
 
 **Tasks/events appear on the wrong date** — timezone mismatch. The frontend builds dates from local date parts (`getFullYear/getMonth/getDate`), not `toISOString()`. The API expects `YYYY-MM-DD` strings in the device's local calendar date.
@@ -204,8 +199,8 @@ Fetch via `GET /api/users/:id/achievements`.
 
 ## Development Notes
 
-- Run `npx prisma dev` before starting the backend — it provides the local PostgreSQL proxy on port 51214.
-- Use `npx prisma db push` to apply schema changes (not `migrate dev` — it requires a shadow database).
+- The database is Prisma Postgres cloud — no local proxy (`npx prisma dev`) is needed. `DATABASE_URL` points directly to the hosted `postgres://` TCP URL.
+- Use `npx prisma migrate dev` to apply schema changes (Prisma Postgres supports migrations natively; no shadow DB issue).
 - Test on a physical Android device via Expo Go; the emulator behaves differently for deep links and secure storage.
 - Run `npx expo start --clear` after any `.env` or `app.json` change.
 

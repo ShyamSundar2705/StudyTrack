@@ -91,7 +91,7 @@ Components added in P3 Batch A: `EditProfileSheet` — animated bottom sheet for
 | `SessionCompleteScreen.jsx` | `SessionComplete` | Root stack (fullscreen) | Summary card after session ends; start-another shortcut |
 | `DailyPlannerScreen.jsx` | `DailyPlanner` | PlannerTab stack | Weekly date strip + task list for selected day |
 | `InsightsScreen.jsx` | `Insights` | InsightsTab stack | Study heatmap, subject breakdown bars, weekly bar chart |
-| `SubjectDetailsScreen.jsx` | `SubjectDetails` | InsightsTab stack (drill-down) | Per-subject time history and weekly bar chart |
+| `SubjectDetailsScreen.jsx` | `SubjectDetails` | InsightsTab stack (drill-down) | Per-subject stats: weekly trend bar chart, daily goal ring, session history with filter tabs (All/Week/Month); Study now button (navigates HomeTimer with preSelectSubjectId), Set goal (BottomSheetPicker → updateSubject), Change color (inline swatches → updateSubject), Add note (NoteBottomSheet) |
 | `StudyGroupsScreen.jsx` | `StudyGroups` | GroupsTab stack | Live active members, top contributors, group stats |
 | `LeaderboardScreen.jsx` | `Leaderboard` | GroupsTab stack (drill-down) | Podium + ranked list; scope (group/category/global) |
 | `ProfileScreen.jsx` | `Profile` | ProfileTab stack | User stats, subjects list, daily goal ring |
@@ -171,7 +171,7 @@ Actions: `setConfig`, `enablePomoMode`, `disablePomoMode`, `advancePhase`, `getC
 | `src/api/users.js` | `getMe`, `updateMe`, `getStats`, `getInsights(period, subjectId?)`, `getMyGroup`, `getPreferences`, `updatePreferences`, `signInWithGoogle`, `signInWithEmail`, `signOut` |
 | `src/utils/shareStats.js` | `shareInsightsStats({ period, totalSeconds, dailyAverageSeconds, bestDaySeconds, bySubject, streak, userName })` — builds formatted text and opens native share sheet; `shareProfile({ name, handle, totalSeconds, totalSessions, currentStreak, subjectCount, topSubject })` |
 | `src/utils/notifications.js` | `requestNotificationPermission`, `schedulePomoPhaseEndAlert`, `cancelPomoAlert`, `scheduleDailyReminder`, `cancelDailyReminder`, `checkAndFireMilestone`, `fireGroupActivityNotif({ type, memberName, subjectName, durationSeconds, streakCount })` — fires immediate local notification for group activity events (session_start, session_complete, streak_milestone); only called when `groupNotifsEnabled` is true and event is not from current user, `registerNotificationTapHandler` |
-| `src/api/subjects.js` | `getSubjects`, `getSubjectDetails`, `createSubject` |
+| `src/api/subjects.js` | `getSubjects`, `getSubjectDetails`, `createSubject`, `createBulkSubjects`, `updateSubject`, `deleteSubject` |
 | `src/api/sessions.js` | `getTodaySessions`, `startSession`, `completeSession`, `manualSession`, `getSessionsBySubject` |
 | `src/api/tasks.js` | `getTasks`, `createTask`, `updateTask`, `deleteTask` |
 | `src/api/leaderboard.js` | `getLeaderboard`, `getGroupLeaderboard` |
@@ -227,10 +227,57 @@ Values are in `.env` (gitignored). Run `npx expo start --clear` after any `.env`
 - **Use `useTheme()` for dynamic theming** — screens that reference `colors` must import `useTheme` from `../context/ThemeContext`, call `const { colors } = useTheme()` inside the component, and move `StyleSheet.create` into a `getStyles(colors)` function. Never import `colors` directly and use it in a module-level `StyleSheet.create`.
 - **Privacy toggles are server-side** — `profilePublic`, `showInLeaderboard`, `shareStudyStats` are stored in `UserPreferences` on the backend. The `showInLeaderboard` field is enforced server-side in `getGroupLeaderboard`: members with `showInLeaderboard=false` are excluded from the leaderboard response. Do not try to filter on the frontend.
 
+## API Behaviour Notes
+
+### `subjects.js` API details
+- `getSubjectDetails(id)` unwraps `{ data: { subject } }` → returns `{ id, name, color (colorHex), totalSeconds, dailyGoalSeconds, createdAt }`. The subject object has `colorHex` on the wire; the API module normalises it to `color`.
+- `updateSubject(id, data)` accepts `{ name?, colorHex?, dailyGoalSeconds? }` — used by SubjectDetailsScreen to persist goal and color changes.
+
+### AppSettingsScreen — `scrollToSection` param
+
+`AppSettings` accepts `route.params?.scrollToSection` to auto-scroll to a section after mount. Supported values: `'notifications'` / `'reminders'` (scrolls to NOTIFICATIONS header), `'privacy'` (scrolls to DATA & PRIVACY header), `'pomodoro'` (scrolls to POMODORO header). Profile account row buttons pass this when navigating:
+```js
+navigation.navigate('AppSettings', { scrollToSection: 'notifications' })
+```
+
+### HomeTimerScreen — `preSelectSubjectId` param
+
+`HomeTimerScreen` accepts `route.params?.preSelectSubjectId`. On mount (or when the param changes), it calls `setSelectedId(preId)` if that subject exists in the store. Used by SubjectDetailsScreen "Study now" button:
+```js
+navigation.navigate('Main', {
+  screen: 'HomeTab',
+  params: { screen: 'HomeTimer', params: { preSelectSubjectId: subjectId } },
+})
+```
+
+### Bottom-sheet keyboard avoidance on Android
+
+`KeyboardAvoidingView` with `behavior={undefined}` is a no-op on Android. The correct pattern is keyboard event listeners:
+```js
+const [kbHeight, setKbHeight] = useState(0);
+useEffect(() => {
+  const show = Keyboard.addListener('keyboardDidShow', e => setKbHeight(e.endCoordinates.height));
+  const hide = Keyboard.addListener('keyboardDidHide', () => setKbHeight(0));
+  return () => { show.remove(); hide.remove(); };
+}, []);
+```
+- **Flex-positioned sheets** (TaskFormSheet, ScheduleEventFormSheet): apply `marginBottom: kbHeight` on the sheet's `Animated.View`.
+- **Absolute-positioned sheets** (AddSubjectSheet, JoinGroupSheet — `position: absolute, bottom: 0`): apply `bottom: kbHeight` on the sheet's `Animated.View` instead.
+
 ## Known Issues & Workarounds
 
 - **`expo-crypto` enum name:** In SDK 54 use `CryptoEncoding.BASE64`, not `EncodingType.Base64`.
 - **`studytrack://` scheme not intercepted in Expo Go:** Use `exp://192.168.0.106:8081` as `redirectTo`.
+
+## 2026-05-18 APK Bug-Fix Batch — APPLIED ✅
+
+- Removed `1` min option from Pomodoro focus duration picker (AppSettingsScreen)
+- Fixed double `@` in profile handle display: now checks `startsWith('@')` before prepending
+- Profile account rows (Notifications, Reminders, Privacy & Security) now navigate to `AppSettings` with `scrollToSection` param — same pattern as Pomodoro settings button in SessionActiveScreen
+- Keyboard avoidance on Android fixed for all bottom sheets (TaskFormSheet, ScheduleEventFormSheet, JoinGroupSheet, AddSubjectSheet) — replaced `KeyboardAvoidingView` with keyboard event listener pattern
+- SubjectDetailsScreen fully implemented: Study now, Set goal, Change color, Add note, real weekly bar chart, real daily goal ring, filter tabs (All/Week/Month), real session history
+- `getSubjectDetails` fixed to properly unwrap `{ data: { subject } }` API response
+- HomeTimerScreen now accepts `route.params.preSelectSubjectId` to pre-select a subject
 
 ## Priority 3 Status — COMPLETE ✅
 

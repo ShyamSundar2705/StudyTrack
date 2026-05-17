@@ -40,7 +40,7 @@ src/
 |---|---|---|
 | `User` | `id` (cuid), `supabaseUid` (unique), `email` (unique), `name`, `handle` (unique), `avatar?`, `avatarColor String?`, `passwordHash?`, `dailyGoalSeconds` (default 3600) | `supabaseUid` is null for email-registered users |
 | `UserPreferences` | `id`, `userId` (unique), full prefs fields | 1:1 with `User`; created lazily on first `GET` or `PATCH /users/me/preferences`; `onDelete: Cascade`; fields cover Pomodoro config, daily goal, notifications, appearance, privacy, analytics; appearance includes `theme` and `accentColor` (accent palette key, `@default("blue")`) |
-| `Subject` | `id`, `userId`, `name`, `colorHex` | Belongs to one user; has many sessions and tasks |
+| `Subject` | `id`, `userId`, `name`, `colorHex`, `dailyGoalSeconds` (default 0) | Belongs to one user; has many sessions and tasks |
 | `Session` | `id`, `userId`, `subjectId`, `startedAt`, `endedAt?`, `durationSeconds?`, `pomodoroRound?`, `type` (FOCUS \| POMODORO), `note?` | `endedAt`/`durationSeconds` are null until `completeSession` is called; `pomodoroRound` is set only on POMODORO sessions; `note` is set only on manual sessions |
 | `Task` | `id`, `userId`, `title`, `subjectId?`, `dueDate?`, `estimatedMinutes?`, `completed`, `completedAt?`, `carriedOver`, `isRecurring` (default false), `recurringDays Int[]`, `createdAt` | `carriedOver` flags tasks rolled from a previous day; `isRecurring` + `recurringDays` define weekly repeat schedule |
 | `RecurringTaskCompletion` | `id`, `taskId`, `userId`, `date` (YYYY-MM-DD), `completedAt` | Per-day completion record for recurring tasks; `@@unique([taskId, date])` |
@@ -88,6 +88,8 @@ All routes are under `/api`. Auth routes have no authentication; all others requ
 |---|---|---|
 | `POST` | `/api/subjects` | Create a subject (`name`, `colorHex` — must be `#RRGGBB`); userId from JWT |
 | `GET` | `/api/subjects` | List caller's subjects, ordered by createdAt asc; userId from JWT |
+| `GET` | `/api/subjects/:id` | Get a single subject by ID with `totalSeconds`; ownership check |
+| `PUT` | `/api/subjects/:id` | Update subject fields (`name?`, `colorHex?`, `dailyGoalSeconds?`); ownership check |
 | `DELETE` | `/api/subjects/:id` | Delete a subject by ID |
 
 ### Sessions — auth required
