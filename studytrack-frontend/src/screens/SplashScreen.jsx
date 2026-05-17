@@ -34,8 +34,20 @@ export default function SplashScreen({ navigation }) {
     const triggered = { current: false };
 
     const handleUrl = async ({ url }) => {
-      if (!url || !url.includes('auth/callback') || triggered.current) return;
-      const { data, error } = await supabase.auth.getSessionFromUrl({ url });
+      console.log('[AUTH] Linking handleUrl fired, url:', url);
+      if (!url || !url.includes('auth/callback') || triggered.current) {
+        console.log('[AUTH] handleUrl early-exit — url falsy, not callback, or already triggered');
+        return;
+      }
+      // getSessionFromUrl reads window.location internally and is unavailable in
+      // React Native. Extract the PKCE code and call exchangeCodeForSession directly,
+      // matching the approach already used in handleGoogleSignIn.
+      let code;
+      try { code = new URL(url).searchParams.get('code'); } catch (_) {}
+      console.log('[AUTH] handleUrl code extracted:', code ? code.substring(0, 20) + '…' : 'null');
+      if (!code) return;
+      const { data, error } = await supabase.auth.exchangeCodeForSession(code);
+      console.log('[AUTH] exchangeCodeForSession — session:', !!data?.session, 'error:', error?.message ?? null);
       if (!error && data?.session) {
         triggered.current = true;
         setChecking(false);
@@ -44,13 +56,20 @@ export default function SplashScreen({ navigation }) {
     };
 
     // Cold-start: app was launched by the deep link
-    Linking.getInitialURL().then((url) => { if (url) handleUrl({ url }); });
+    Linking.getInitialURL().then((url) => {
+      console.log('[AUTH] getInitialURL resolved:', url);
+      if (url) handleUrl({ url });
+    });
 
     // Foreground: app was already open when OAuth redirected back
-    const linkingSub = Linking.addEventListener('url', handleUrl);
+    const linkingSub = Linking.addEventListener('url', (e) => {
+      console.log('[AUTH] addEventListener url event:', e.url);
+      handleUrl(e);
+    });
 
     // Fallback: covers cases where Linking misses the URL (e.g. some Android variants)
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log('[AUTH] onAuthStateChange event:', event, 'session:', !!session);
       if (event === 'SIGNED_IN' && session && !triggered.current) {
         triggered.current = true;
         setChecking(false);
@@ -60,6 +79,7 @@ export default function SplashScreen({ navigation }) {
 
     // Returning users: restore existing session on launch
     supabase.auth.getSession().then(({ data: { session } }) => {
+      console.log('[AUTH] getSession resolved, session:', !!session);
       if (session && !triggered.current) {
         triggered.current = true;
         handleSupabaseSession(session).finally(() => setChecking(false));
@@ -129,6 +149,7 @@ export default function SplashScreen({ navigation }) {
   };
 
   const handleSupabaseSession = async (session) => {
+    console.log('[AUTH] handleSupabaseSession token:', session?.access_token?.substring(0, 20) + '…');
     await exchangeAndNavigate(session.access_token);
   };
 
