@@ -39,6 +39,9 @@ export default function SplashScreen({ navigation }) {
         console.log('[AUTH] handleUrl early-exit — url falsy, not callback, or already triggered');
         return;
       }
+      // Claim the slot immediately — before any await — so a second event that
+      // fires while exchangeCodeForSession is in-flight hits the guard above.
+      triggered.current = true;
       // getSessionFromUrl reads window.location internally and is unavailable in
       // React Native. Extract the PKCE code and call exchangeCodeForSession directly,
       // matching the approach already used in handleGoogleSignIn.
@@ -49,7 +52,6 @@ export default function SplashScreen({ navigation }) {
       const { data, error } = await supabase.auth.exchangeCodeForSession(code);
       console.log('[AUTH] exchangeCodeForSession — session:', !!data?.session, 'error:', error?.message ?? null);
       if (!error && data?.session) {
-        triggered.current = true;
         setChecking(false);
         await handleSupabaseSession(data.session);
       }

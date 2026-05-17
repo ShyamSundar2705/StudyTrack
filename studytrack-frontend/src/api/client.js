@@ -2,7 +2,6 @@ import axios from 'axios';
 import * as SecureStore from 'expo-secure-store';
 import { navigationRef } from '../navigation/navigationRef';
 import useUserStore from '../store/useUserStore';
-import supabase from './supabase';
 
 export const TOKEN_KEY = 'studytrack_token';
 
@@ -25,7 +24,6 @@ client.interceptors.response.use(
   async (error) => {
     if (error.response?.status === 401) {
       await SecureStore.deleteItemAsync(TOKEN_KEY);
-      await supabase.auth.signOut();
       useUserStore.getState().reset();
       navigationRef.current?.reset({ index: 0, routes: [{ name: 'Auth' }] });
     }
