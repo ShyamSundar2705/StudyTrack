@@ -124,6 +124,7 @@ export default function SplashScreen({ navigation }) {
       const { token, user } = response.data.data;
 
       await SecureStore.setItemAsync(TOKEN_KEY, token);
+      useUserStore.getState().setAuthReady(true);
       setUser(user);
 
       const dest = user.isNewUser ? 'SubjectSetup' : 'Main';

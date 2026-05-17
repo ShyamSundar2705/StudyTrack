@@ -11,6 +11,7 @@ const useUserStore = create((set) => ({
 
   preferences: null,
   group: null,
+  isAuthReady: false,
 
   setUser: (userData) => set(userData),
 
@@ -23,6 +24,8 @@ const useUserStore = create((set) => ({
 
   setGroup: (group) => set({ group }),
 
+  setAuthReady: (ready) => set({ isAuthReady: ready }),
+
   reset: () =>
     set({
       id: null,
@@ -34,6 +37,7 @@ const useUserStore = create((set) => ({
       dailyGoalSeconds: 21600,
       preferences: null,
       group: null,
+      isAuthReady: false,
     }),
 }));
 

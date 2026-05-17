@@ -12,6 +12,15 @@ const client = axios.create({
 });
 
 client.interceptors.request.use(async (config) => {
+  // Pre-auth routes must bypass the gate — they fire before a JWT exists.
+  const url = config.url ?? '';
+  const isPreAuth = url.includes('/auth/') || url.endsWith('/health');
+  if (!isPreAuth) {
+    const deadline = Date.now() + 5000;
+    while (!useUserStore.getState().isAuthReady && Date.now() < deadline) {
+      await new Promise((r) => setTimeout(r, 100));
+    }
+  }
   const token = await SecureStore.getItemAsync(TOKEN_KEY);
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
