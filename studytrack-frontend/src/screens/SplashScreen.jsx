@@ -106,7 +106,7 @@ export default function SplashScreen({ navigation }) {
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: 'exp://192.168.0.106:8081',
+          redirectTo: 'studytrack://auth/callback',
           skipBrowserRedirect: true,
         },
       });
