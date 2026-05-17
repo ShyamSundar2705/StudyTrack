@@ -13,9 +13,19 @@ export const getSubjects = () =>
   );
 
 // GET /subjects/:id
-// Returns: { id, name, color, totalSeconds, createdAt, stats: { sessions, streakDays, avgSeconds, weeklySeconds } }
+// Returns normalised subject: { id, name, color, totalSeconds, dailyGoalSeconds, createdAt }
 export const getSubjectDetails = (id) =>
-  client.get(`/subjects/${id}`).then((r) => r.data);
+  client.get(`/subjects/${id}`).then((r) => {
+    const s = r.data.data?.subject ?? r.data;
+    return {
+      id:               s.id,
+      name:             s.name,
+      color:            s.colorHex ?? s.color,
+      totalSeconds:     s.totalSeconds   ?? 0,
+      dailyGoalSeconds: s.dailyGoalSeconds ?? 0,
+      createdAt:        s.createdAt,
+    };
+  });
 
 // POST /subjects
 // Body: { name, color }

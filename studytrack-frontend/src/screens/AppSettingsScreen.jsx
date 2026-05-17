@@ -173,6 +173,8 @@ export default function AppSettingsScreen({ navigation, route }) {
   const touchedKeys = useRef(new Set());
   const scrollRef   = useRef(null);
   const pomoY       = useRef(0);
+  const notifsY     = useRef(0);
+  const privacyY    = useRef(0);
 
   const handlePomoLayout = (e) => {
     pomoY.current = e.nativeEvent.layout.y;
@@ -183,8 +185,27 @@ export default function AppSettingsScreen({ navigation, route }) {
     }
   };
 
+  const handleNotifsLayout = (e) => {
+    notifsY.current = e.nativeEvent.layout.y;
+    const sec = route.params?.scrollToSection;
+    if (sec === 'notifications' || sec === 'reminders') {
+      setTimeout(() => {
+        scrollRef.current?.scrollTo({ y: notifsY.current - spacing.xl, animated: true });
+      }, 200);
+    }
+  };
+
+  const handlePrivacyLayout = (e) => {
+    privacyY.current = e.nativeEvent.layout.y;
+    if (route.params?.scrollToSection === 'privacy') {
+      setTimeout(() => {
+        scrollRef.current?.scrollTo({ y: privacyY.current - spacing.xl, animated: true });
+      }, 200);
+    }
+  };
+
   const POMO_OPTIONS = {
-    focusMinutes:      [1,15,20,25,30,35,40,45,50,55,60].map((v) => ({ label: `${v} min`, value: v })),
+    focusMinutes:      [15,20,25,30,35,40,45,50,55,60].map((v) => ({ label: `${v} min`, value: v })),
     shortBreakMinutes: [3,5,7,10].map((v) => ({ label: `${v} min`, value: v })),
     longBreakMinutes:  [10,15,20,25,30].map((v) => ({ label: `${v} min`, value: v })),
     longBreakAfter:    [2,3,4,5,6].map((v) => ({ label: `${v} rounds`, value: v })),
@@ -359,7 +380,7 @@ export default function AppSettingsScreen({ navigation, route }) {
         </View>
 
         {/* ── NOTIFICATIONS ── */}
-        <Text style={styles.sectionHeader}>NOTIFICATIONS</Text>
+        <Text style={styles.sectionHeader} onLayout={handleNotifsLayout}>NOTIFICATIONS</Text>
         <View style={styles.card}>
           <SettingsRow
             icon="notifications-outline"
@@ -566,7 +587,7 @@ export default function AppSettingsScreen({ navigation, route }) {
         </View>
 
         {/* ── DATA & PRIVACY ── */}
-        <Text style={styles.sectionHeader}>DATA & PRIVACY</Text>
+        <Text style={styles.sectionHeader} onLayout={handlePrivacyLayout}>DATA & PRIVACY</Text>
         <View style={styles.card}>
           <SettingsRow
             icon="cloud-outline"

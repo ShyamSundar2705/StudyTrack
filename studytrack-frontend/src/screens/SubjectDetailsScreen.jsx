@@ -1,35 +1,32 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import {
-  View, Text, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator,
+  View, Text, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator, Modal,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { radius, spacing } from '../constraints/theme';
 import { useTheme } from '../context/ThemeContext';
-import { getSubjectDetails } from '../api/subjects';
+import { getSubjectDetails, updateSubject } from '../api/subjects';
 import { getSessionsBySubject } from '../api/sessions';
 import useSubjectStore from '../store/useSubjectStore';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import BottomSheetPicker from '../components/BottomSheetPicker';
+import NoteBottomSheet from '../components/NoteBottomSheet';
 
 const CHART_HEIGHT = 160;
 
-const DEFAULT_BAR_DATA = [
-  { day: 'M', pct: 0.40, active: false },
-  { day: 'T', pct: 0.60, active: false },
-  { day: 'W', pct: 0.35, active: false },
-  { day: 'T', pct: 0.85, active: false },
-  { day: 'F', pct: 0.55, active: false },
-  { day: 'S', pct: 0.75, active: true  },
-  { day: 'S', pct: 0.20, active: false },
+const SUBJECT_COLORS = [
+  '#4A90E2', '#27AE60', '#A855F7', '#E74C3C',
+  '#FFD700', '#FF6B2B', '#2D6BE4', '#16A085',
 ];
 
-const DEFAULT_SESSION_GROUPS = [
-  { label: 'Today',     sessions: [
-    { id: '1', title: 'Calculus III Practice', time: '09:15 AM - 10:45 AM', duration: '1h 30m' },
-    { id: '2', title: 'Linear Algebra Review', time: '02:00 PM - 02:45 PM', duration: '45m'    },
-  ]},
-  { label: 'Yesterday', sessions: [
-    { id: '3', title: 'Advanced Statistics', time: '03:30 PM - 05:30 PM', duration: '2h 00m' },
-  ]},
+const GOAL_OPTIONS = [
+  { label: '30 min',   value: 1800  },
+  { label: '1 hour',   value: 3600  },
+  { label: '1.5 hours',value: 5400  },
+  { label: '2 hours',  value: 7200  },
+  { label: '3 hours',  value: 10800 },
+  { label: '4 hours',  value: 14400 },
+  { label: 'No goal',  value: 0     },
 ];
 
 function fmtSeconds(s) {
@@ -51,8 +48,8 @@ function buildSessionGroups(rawSessions) {
     const d = new Date(s.startedAt); d.setHours(0, 0, 0, 0);
     const ts = d.getTime();
     let label;
-    if (ts === now.getTime())       label = 'Today';
-    else if (ts === yesterday.getTime()) label = 'Yesterday';
+    if (ts === now.getTime())               label = 'Today';
+    else if (ts === yesterday.getTime())    label = 'Yesterday';
     else label = d.toLocaleDateString('default', { month: 'short', day: 'numeric' });
     if (!map[label]) map[label] = { label, sessions: [], ts };
     map[label].sessions.push({
@@ -66,19 +63,56 @@ function buildSessionGroups(rawSessions) {
   return Object.values(map).sort((a, b) => b.ts - a.ts);
 }
 
+function buildWeekBarData(rawSessions) {
+  const DAY_LABELS = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
+  const today = new Date();
+  const dow = today.getDay();
+  const daysFromMonday = dow === 0 ? 6 : dow - 1;
+
+  const days = [];
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(today);
+    d.setDate(today.getDate() - daysFromMonday + i);
+    d.setHours(0, 0, 0, 0);
+    days.push(d);
+  }
+
+  const secByDay = {};
+  (rawSessions ?? []).forEach((s) => {
+    if (!s.durationSeconds) return;
+    const d = new Date(s.startedAt); d.setHours(0, 0, 0, 0);
+    secByDay[d.getTime()] = (secByDay[d.getTime()] ?? 0) + s.durationSeconds;
+  });
+
+  const maxSec = Math.max(...days.map((d) => secByDay[d.getTime()] ?? 0), 1);
+  const todayStart = new Date(); todayStart.setHours(0, 0, 0, 0);
+
+  return days.map((d, i) => ({
+    day:     DAY_LABELS[i],
+    pct:     (secByDay[d.getTime()] ?? 0) / maxSec,
+    active:  d.getTime() === todayStart.getTime(),
+    seconds: secByDay[d.getTime()] ?? 0,
+  }));
+}
+
 export default function SubjectDetailsScreen({ navigation, route }) {
   const { colors } = useTheme();
   const styles = getStyles(colors);
 
   const subjectId = route?.params?.subjectId;
   const insets    = useSafeAreaInsets();
-  const storeSubject = useSubjectStore((s) => s.subjects.find((sub) => sub.id === subjectId));
+  const storeSubject  = useSubjectStore((s) => s.subjects.find((sub) => sub.id === subjectId));
+  const updateStoreSubject = useSubjectStore((s) => s.updateSubject);
 
-  const [subject,        setSubject]        = useState(storeSubject ?? null);
-  const [barData,        setBarData]        = useState(DEFAULT_BAR_DATA);
-  const [sessionGroups,  setSessionGroups]  = useState([]);
-  const [computedStats,  setComputedStats]  = useState(null);
-  const [loading,        setLoading]        = useState(false);
+  const [subject,           setSubject]           = useState(storeSubject ?? null);
+  const [rawSessions,       setRawSessions]       = useState([]);
+  const [computedStats,     setComputedStats]     = useState(null);
+  const [loading,           setLoading]           = useState(false);
+  const [activeFilter,      setActiveFilter]      = useState('all');
+  const [goalPickerVisible, setGoalPickerVisible] = useState(false);
+  const [showNoteSheet,     setShowNoteSheet]     = useState(false);
+  const [showColorPicker,   setShowColorPicker]   = useState(false);
+  const [colorSaving,       setColorSaving]       = useState(false);
 
   useEffect(() => {
     if (!subjectId) return;
@@ -95,42 +129,94 @@ export default function SubjectDetailsScreen({ navigation, route }) {
         }
         if (historyResult.status === 'fulfilled') {
           const history = historyResult.value;
-          if (history?.barData) setBarData(history.barData);
-          const rawSessions = history?.data?.sessions;
-          if (rawSessions) {
-            setSessionGroups(buildSessionGroups(rawSessions));
-            const completed = rawSessions.filter((s) => s.durationSeconds);
-            const totalSecs = completed.reduce((sum, s) => sum + s.durationSeconds, 0);
-            const avgSecs   = completed.length > 0 ? Math.round(totalSecs / completed.length) : 0;
-            // Per-subject streak: consecutive days counting back from today
-            const daySet = new Set(
-              completed.map((s) => {
-                const d = new Date(s.startedAt); d.setHours(0, 0, 0, 0); return d.getTime();
-              })
-            );
-            let streak = 0;
-            const base = new Date(); base.setHours(0, 0, 0, 0);
-            for (let i = 0; i < 365; i++) {
-              if (daySet.has(base.getTime() - i * 86_400_000)) streak++;
-              else break;
-            }
-            setComputedStats({ sessions: completed.length, streakDays: streak, avgSeconds: avgSecs, totalSeconds: totalSecs });
+          const sessions = history?.data?.sessions ?? [];
+          setRawSessions(sessions);
+          const completed = sessions.filter((s) => s.durationSeconds);
+          const totalSecs = completed.reduce((sum, s) => sum + s.durationSeconds, 0);
+          const avgSecs   = completed.length > 0 ? Math.round(totalSecs / completed.length) : 0;
+          const daySet = new Set(
+            completed.map((s) => {
+              const d = new Date(s.startedAt); d.setHours(0, 0, 0, 0); return d.getTime();
+            })
+          );
+          let streak = 0;
+          const base = new Date(); base.setHours(0, 0, 0, 0);
+          for (let i = 0; i < 365; i++) {
+            if (daySet.has(base.getTime() - i * 86_400_000)) streak++;
+            else break;
           }
+          setComputedStats({ sessions: completed.length, streakDays: streak, avgSeconds: avgSecs, totalSeconds: totalSecs });
         }
         setLoading(false);
       }
     };
     load();
     return () => { cancelled = true; };
-  }, [subjectId]);  // eslint-disable-line react-hooks/exhaustive-deps
+  }, [subjectId]);
 
-  const subjectColor = subject?.color ?? colors.accentLight;
-  const stats        = computedStats ?? { sessions: 0, streakDays: 0, avgSeconds: 0, totalSeconds: 0 };
-  const totalFmt     = fmtSeconds(stats.totalSeconds);
+  // Derived values from rawSessions
+  const weekBarData = useMemo(() => buildWeekBarData(rawSessions), [rawSessions]);
+  const weeklySeconds = useMemo(() => weekBarData.reduce((s, d) => s + d.seconds, 0), [weekBarData]);
+
+  const todaySubjectSeconds = useMemo(() => {
+    const todayStart = new Date(); todayStart.setHours(0, 0, 0, 0);
+    return rawSessions
+      .filter((s) => {
+        if (!s.durationSeconds) return false;
+        const d = new Date(s.startedAt); d.setHours(0, 0, 0, 0);
+        return d.getTime() === todayStart.getTime();
+      })
+      .reduce((sum, s) => sum + s.durationSeconds, 0);
+  }, [rawSessions]);
+
+  const filteredSessionGroups = useMemo(() => {
+    if (activeFilter === 'all') return buildSessionGroups(rawSessions);
+    const cutoff = new Date();
+    if (activeFilter === 'week') cutoff.setDate(cutoff.getDate() - 7);
+    else if (activeFilter === 'month') cutoff.setMonth(cutoff.getMonth() - 1);
+    cutoff.setHours(0, 0, 0, 0);
+    const filtered = rawSessions.filter((s) => new Date(s.startedAt) >= cutoff);
+    return buildSessionGroups(filtered);
+  }, [rawSessions, activeFilter]);
+
+  const subjectColor   = subject?.color ?? colors.accentLight;
+  const stats          = computedStats ?? { sessions: 0, streakDays: 0, avgSeconds: 0, totalSeconds: 0 };
+  const subjectGoal    = subject?.dailyGoalSeconds ?? 0;
+  const goalPct        = subjectGoal > 0
+    ? Math.min(100, Math.round((todaySubjectSeconds / subjectGoal) * 100))
+    : 0;
+
+  // ── Handlers ────────────────────────────────────────────────────────
+
+  const handleStudyNow = () => {
+    navigation.navigate('Main', {
+      screen: 'HomeTab',
+      params: { screen: 'HomeTimer', params: { preSelectSubjectId: subjectId } },
+    });
+  };
+
+  const handleSetGoal = async (seconds) => {
+    setGoalPickerVisible(false);
+    try {
+      await updateSubject(subjectId, { dailyGoalSeconds: seconds });
+      setSubject((prev) => ({ ...prev, dailyGoalSeconds: seconds }));
+    } catch (_) {}
+  };
+
+  const handleColorChange = async (color) => {
+    if (colorSaving) return;
+    setColorSaving(true);
+    try {
+      await updateSubject(subjectId, { colorHex: color });
+      setSubject((prev) => ({ ...prev, color }));
+      if (updateStoreSubject) updateStoreSubject({ id: subjectId, color });
+    } catch (_) {}
+    setColorSaving(false);
+    setShowColorPicker(false);
+  };
 
   return (
     <View style={styles.container}>
-      {/* Subtle top atmosphere glow */}
       <View style={styles.atmosphereGlow} />
 
       {/* ── Header ────────────────────────────────────────── */}
@@ -145,11 +231,8 @@ export default function SubjectDetailsScreen({ navigation, route }) {
           </View>
         </View>
         <View style={styles.headerRight}>
-          <TouchableOpacity style={styles.headerBtn}>
+          <TouchableOpacity style={styles.headerBtn} onPress={() => setShowNoteSheet(true)}>
             <Ionicons name="create-outline" size={22} color={colors.accentPrimary} />
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.headerBtn}>
-            <Ionicons name="ellipsis-vertical" size={22} color={colors.accentPrimary} />
           </TouchableOpacity>
         </View>
       </View>
@@ -162,7 +245,6 @@ export default function SubjectDetailsScreen({ navigation, route }) {
 
         {/* ── Subject hero card ───────────────────────────── */}
         <View style={styles.heroCard}>
-          {/* Identity row */}
           <View style={styles.heroTop}>
             <View style={styles.heroIdent}>
               <View style={[styles.avatar, { backgroundColor: subjectColor }]}>
@@ -171,21 +253,41 @@ export default function SubjectDetailsScreen({ navigation, route }) {
               <View>
                 <Text style={styles.heroTitle}>{subject?.name ?? 'Subject'}</Text>
                 <Text style={styles.heroSub}>
-                  {subject?.createdAt ? `Created ${new Date(subject.createdAt).toLocaleDateString('default', { month: 'short', year: 'numeric' })}` : 'Created Jan 2024'}
+                  {subject?.createdAt
+                    ? `Created ${new Date(subject.createdAt).toLocaleDateString('default', { month: 'short', year: 'numeric' })}`
+                    : 'Created Jan 2024'}
                 </Text>
               </View>
             </View>
-            <TouchableOpacity style={styles.changeColorBtn}>
+            <TouchableOpacity style={styles.changeColorBtn} onPress={() => setShowColorPicker(v => !v)}>
               <Text style={styles.changeColorText}>Change color</Text>
             </TouchableOpacity>
           </View>
 
+          {/* Inline color picker */}
+          {showColorPicker && (
+            <View style={styles.colorPickerRow}>
+              {SUBJECT_COLORS.map((c) => (
+                <TouchableOpacity
+                  key={c}
+                  style={[
+                    styles.colorSwatch,
+                    { backgroundColor: c },
+                    c === subjectColor && styles.colorSwatchSelected,
+                  ]}
+                  onPress={() => handleColorChange(c)}
+                  disabled={colorSaving}
+                />
+              ))}
+            </View>
+          )}
+
           <View style={styles.statsGrid}>
             {[
-              { label: 'Total',    value: totalFmt },
-              { label: 'Sessions', value: String(stats.sessions)             },
-              { label: 'Streak',   value: `${stats.streakDays} days`         },
-              { label: 'Avg',      value: fmtSeconds(stats.avgSeconds)        },
+              { label: 'Total',    value: fmtSeconds(stats.totalSeconds)  },
+              { label: 'Sessions', value: String(stats.sessions)          },
+              { label: 'Streak',   value: `${stats.streakDays} days`      },
+              { label: 'Avg',      value: fmtSeconds(stats.avgSeconds)    },
             ].map((s) => (
               <View key={s.label} style={styles.statCell}>
                 <Text style={styles.statCellLabel}>{s.label}</Text>
@@ -194,20 +296,16 @@ export default function SubjectDetailsScreen({ navigation, route }) {
             ))}
           </View>
 
-          {/* Action buttons */}
           <View style={styles.heroActions}>
-            <TouchableOpacity style={styles.studyBtn}>
+            <TouchableOpacity style={styles.studyBtn} onPress={handleStudyNow}>
               <Ionicons name="play" size={16} color={colors.textPrimary} />
-              {/* TODO: API - start session for this subject */}
               <Text style={styles.studyBtnText}>Study now</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.goalBtn}>
-              {/* TODO: API - open set goal modal */}
+            <TouchableOpacity style={styles.goalBtn} onPress={() => setGoalPickerVisible(true)}>
               <Text style={styles.goalBtnText}>Set goal</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.noteBtn}>
+            <TouchableOpacity style={styles.noteBtn} onPress={() => setShowNoteSheet(true)}>
               <Ionicons name="add" size={16} color={colors.textSecondary} />
-              {/* TODO: API - open add note modal */}
               <Text style={styles.noteBtnText}>Add note</Text>
             </TouchableOpacity>
           </View>
@@ -218,27 +316,17 @@ export default function SubjectDetailsScreen({ navigation, route }) {
           <View style={styles.trendHeader}>
             <View>
               <Text style={styles.cardSubLabel}>WEEKLY TREND</Text>
-              {/* TODO: API - show weekly total for selected week */}
-              <Text style={styles.cardTitle}>12h 44m</Text>
-            </View>
-            <View style={styles.weekNav}>
-              <TouchableOpacity style={styles.weekNavBtn}>
-                <Ionicons name="chevron-back" size={20} color={colors.textSecondary} />
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.weekNavBtn}>
-                <Ionicons name="chevron-forward" size={20} color={colors.textSecondary} />
-              </TouchableOpacity>
+              <Text style={styles.cardTitle}>{fmtSeconds(weeklySeconds)}</Text>
             </View>
           </View>
 
-          {/* Bar chart */}
           <View style={styles.barChart}>
-            {barData.map((bar, i) => (
+            {weekBarData.map((bar, i) => (
               <View key={i} style={styles.barCol}>
                 <View
                   style={[
                     styles.barRect,
-                    { height: CHART_HEIGHT * bar.pct },
+                    { height: Math.max(4, CHART_HEIGHT * bar.pct) },
                     bar.active ? styles.barActive : styles.barInactive,
                   ]}
                 />
@@ -255,17 +343,23 @@ export default function SubjectDetailsScreen({ navigation, route }) {
           <View style={styles.goalAccentBar} />
           <View style={styles.goalBody}>
             <Text style={styles.cardSubLabel}>DAILY GOAL</Text>
-            <View style={styles.goalRow}>
-              {/* TODO: API - show actual progress percentage */}
-              <Text style={styles.goalPct}>65%</Text>
-              <Text style={styles.goalTarget}>2h 00m / day</Text>
-            </View>
-            <View style={styles.progressTrack}>
-              {/* TODO: API - set width from (studied / goal) */}
-              <View style={[styles.progressFill, { width: '65%' }]} />
-            </View>
-            {/* TODO: API - show today's studied time for this subject */}
-            <Text style={styles.goalNote}>1h 18m studied today</Text>
+            {subjectGoal > 0 ? (
+              <>
+                <View style={styles.goalRow}>
+                  <Text style={styles.goalPct}>{goalPct}%</Text>
+                  <Text style={styles.goalTarget}>{fmtSeconds(subjectGoal)} / day</Text>
+                </View>
+                <View style={styles.progressTrack}>
+                  <View style={[styles.progressFill, { width: `${goalPct}%` }]} />
+                </View>
+                <Text style={styles.goalNote}>{fmtSeconds(todaySubjectSeconds)} studied today</Text>
+              </>
+            ) : (
+              <TouchableOpacity onPress={() => setGoalPickerVisible(true)} style={styles.noGoalRow}>
+                <Ionicons name="flag-outline" size={18} color={colors.textSecondary} />
+                <Text style={styles.noGoalText}>Tap "Set goal" to track daily progress</Text>
+              </TouchableOpacity>
+            )}
           </View>
         </View>
 
@@ -273,26 +367,27 @@ export default function SubjectDetailsScreen({ navigation, route }) {
         <View style={styles.section}>
           <View style={styles.historyHeader}>
             <Text style={styles.sectionTitle}>Session History</Text>
-            {/* TODO: API - filter sessions by period */}
             <View style={styles.filterTabs}>
-              <TouchableOpacity style={[styles.filterTab, styles.filterTabActive]}>
-                <Text style={styles.filterTabTextActive}>All</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.filterTab}>
-                <Text style={styles.filterTabText}>Week</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.filterTab}>
-                <Text style={styles.filterTabText}>Month</Text>
-              </TouchableOpacity>
+              {['all', 'week', 'month'].map((f) => (
+                <TouchableOpacity
+                  key={f}
+                  style={[styles.filterTab, activeFilter === f && styles.filterTabActive]}
+                  onPress={() => setActiveFilter(f)}
+                >
+                  <Text style={activeFilter === f ? styles.filterTabTextActive : styles.filterTabText}>
+                    {f.charAt(0).toUpperCase() + f.slice(1)}
+                  </Text>
+                </TouchableOpacity>
+              ))}
             </View>
           </View>
 
-          {sessionGroups.map((group) => (
+          {filteredSessionGroups.map((group) => (
             <View key={group.label} style={styles.sessionGroup}>
               <Text style={styles.groupLabel}>{group.label.toUpperCase()}</Text>
               {group.sessions.map((s) => (
                 <View key={s.id} style={styles.sessionCard}>
-                  <View style={styles.sessionAccentBar} />
+                  <View style={[styles.sessionAccentBar, { backgroundColor: subjectColor }]} />
                   <View style={styles.sessionBody}>
                     <View style={{ flex: 1 }}>
                       <Text style={styles.sessionTitle}>{s.title}</Text>
@@ -314,14 +409,31 @@ export default function SubjectDetailsScreen({ navigation, route }) {
           ))}
         </View>
 
-        {/* ── Session history empty state ──────────────────── */}
-        {!loading && sessionGroups.length === 0 && (
+        {!loading && filteredSessionGroups.length === 0 && (
           <View style={styles.emptyState}>
             <Ionicons name="time-outline" size={32} color={colors.border} />
             <Text style={styles.emptyStateText}>No sessions recorded yet</Text>
           </View>
         )}
       </ScrollView>
+
+      {/* ── Goal picker ─────────────────────────────────── */}
+      <BottomSheetPicker
+        visible={goalPickerVisible}
+        title="Daily Goal"
+        options={GOAL_OPTIONS}
+        selectedValue={subjectGoal}
+        onSelect={handleSetGoal}
+        onClose={() => setGoalPickerVisible(false)}
+      />
+
+      {/* ── Note sheet ──────────────────────────────────── */}
+      <NoteBottomSheet
+        visible={showNoteSheet}
+        initialNote=""
+        onSave={() => {}}
+        onClose={() => setShowNoteSheet(false)}
+      />
     </View>
   );
 }
@@ -334,9 +446,7 @@ function getStyles(colors) { return StyleSheet.create({
 
   atmosphereGlow: {
     position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
+    top: 0, left: 0, right: 0,
     height: 300,
     backgroundColor: colors.accentLight,
     opacity: 0.03,
@@ -352,9 +462,9 @@ function getStyles(colors) { return StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
   },
-  headerLeft: { flexDirection: 'row', alignItems: 'center', gap: spacing.lg },
+  headerLeft:  { flexDirection: 'row', alignItems: 'center', gap: spacing.lg },
   headerRight: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs },
-  headerBtn: { padding: spacing.xs, borderRadius: 20 },
+  headerBtn:   { padding: spacing.xs, borderRadius: 20 },
   headerTitle: { fontSize: 18, fontWeight: '700', color: colors.accentPrimary },
 
   // ── Scroll ───────────────────────────────────────────────────
@@ -383,16 +493,13 @@ function getStyles(colors) { return StyleSheet.create({
   },
   heroIdent: { flexDirection: 'row', alignItems: 'center', gap: spacing.lg },
   avatar: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+    width: 48, height: 48, borderRadius: 24,
     backgroundColor: colors.accentLight,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: 'center', justifyContent: 'center',
   },
   avatarText: { fontSize: 20, fontWeight: '700', color: colors.textPrimary },
-  heroTitle: { fontSize: 28, fontWeight: '600', color: colors.textPrimary },
-  heroSub: { fontSize: 12, color: colors.textSecondary, marginTop: 2 },
+  heroTitle:  { fontSize: 28, fontWeight: '600', color: colors.textPrimary },
+  heroSub:    { fontSize: 12, color: colors.textSecondary, marginTop: 2 },
   changeColorBtn: {
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.xs,
@@ -402,6 +509,20 @@ function getStyles(colors) { return StyleSheet.create({
     borderRadius: radius.sm,
   },
   changeColorText: { fontSize: 14, fontWeight: '500', color: colors.textPrimary },
+
+  // Color picker
+  colorPickerRow: {
+    flexDirection: 'row',
+    gap: spacing.md,
+    flexWrap: 'wrap',
+  },
+  colorSwatch: {
+    width: 36, height: 36, borderRadius: 18,
+  },
+  colorSwatchSelected: {
+    borderWidth: 3,
+    borderColor: colors.textPrimary,
+  },
 
   statsGrid: {
     flexDirection: 'row',
@@ -477,8 +598,6 @@ function getStyles(colors) { return StyleSheet.create({
     alignItems: 'flex-start',
     marginBottom: spacing.xxl,
   },
-  weekNav: { flexDirection: 'row', gap: spacing.xs },
-  weekNavBtn: { padding: spacing.xs, borderRadius: radius.sm },
 
   barChart: {
     height: CHART_HEIGHT + 24,
@@ -500,7 +619,7 @@ function getStyles(colors) { return StyleSheet.create({
   },
   barInactive: { opacity: 0.2 },
   barActive:   { opacity: 1   },
-  barLabel: { fontSize: 12, color: colors.textSecondary },
+  barLabel:       { fontSize: 12, color: colors.textSecondary },
   barLabelActive: { color: colors.textPrimary, fontWeight: '700' },
 
   // Daily goal card
@@ -512,7 +631,7 @@ function getStyles(colors) { return StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'flex-end',
   },
-  goalPct: { fontSize: 40, fontWeight: '700', color: colors.textPrimary },
+  goalPct:    { fontSize: 40, fontWeight: '700', color: colors.textPrimary },
   goalTarget: { fontSize: 12, color: colors.textSecondary, marginBottom: 4 },
   progressTrack: {
     height: 12,
@@ -525,11 +644,18 @@ function getStyles(colors) { return StyleSheet.create({
     backgroundColor: colors.accentLight,
     borderRadius: 6,
   },
-  goalNote: { fontSize: 16, color: colors.textPrimary },
+  goalNote: { fontSize: 14, color: colors.textPrimary },
+  noGoalRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    marginTop: spacing.sm,
+  },
+  noGoalText: { fontSize: 13, color: colors.textSecondary },
 
   // ── Session history ───────────────────────────────────────────
   section: { gap: spacing.lg },
-  sectionTitle: { fontSize: 24, fontWeight: '600', color: colors.textPrimary },
+  sectionTitle: { fontSize: 20, fontWeight: '600', color: colors.textPrimary },
 
   historyHeader: {
     flexDirection: 'row',
@@ -547,10 +673,10 @@ function getStyles(colors) { return StyleSheet.create({
   filterTab: {
     paddingHorizontal: spacing.lg,
     paddingVertical: 6,
-    borderRadius: radius.xs,
+    borderRadius: radius.sm,
   },
   filterTabActive: { backgroundColor: colors.accentPrimary },
-  filterTabText: { fontSize: 14, fontWeight: '500', color: colors.textSecondary },
+  filterTabText:       { fontSize: 14, fontWeight: '500', color: colors.textSecondary },
   filterTabTextActive: { fontSize: 14, fontWeight: '500', color: colors.textPrimary },
 
   sessionGroup: { gap: spacing.md },
@@ -576,7 +702,7 @@ function getStyles(colors) { return StyleSheet.create({
     justifyContent: 'space-between',
     padding: spacing.lg,
   },
-  sessionTitle: { fontSize: 18, fontWeight: '600', color: colors.textPrimary },
+  sessionTitle: { fontSize: 16, fontWeight: '600', color: colors.textPrimary },
   sessionTime:  { fontSize: 12, color: colors.textSecondary, marginTop: 2 },
   notePreviewRow: {
     flexDirection: 'row',
@@ -594,43 +720,6 @@ function getStyles(colors) { return StyleSheet.create({
     fontWeight: '700',
     color: colors.accentLight,
   },
-
-  // ── Notes ─────────────────────────────────────────────────────
-  noteCard: {
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: radius.xl,
-    padding: spacing.xxl,
-    gap: spacing.md,
-  },
-  noteTop: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-  },
-  noteTag: {
-    backgroundColor: colors.surfaceBlue,
-    paddingHorizontal: spacing.md,
-    paddingVertical: 4,
-    borderRadius: 20,
-  },
-  noteTagText: {
-    fontSize: 10,
-    fontWeight: '700',
-    color: colors.accentLight,
-    letterSpacing: 1,
-    textTransform: 'uppercase',
-  },
-  noteTitle: { fontSize: 18, fontWeight: '700', color: colors.textPrimary },
-  noteExcerpt: { fontSize: 12, color: colors.textSecondary, lineHeight: 18 },
-  noteDivider: { height: 1, backgroundColor: colors.border },
-  noteFooter: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  noteDate: { fontSize: 12, color: colors.textSecondary, fontStyle: 'italic' },
 
   emptyState: {
     alignItems: 'center',

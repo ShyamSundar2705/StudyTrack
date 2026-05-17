@@ -21,6 +21,7 @@ export default function JoinGroupSheet({ visible, onClose, onJoined, initialTab 
 
   const slideAnim = useRef(new Animated.Value(600)).current;
   const searchTimerRef = useRef(null);
+  const [kbHeight, setKbHeight] = useState(0);
 
   useEffect(() => {
     if (visible) {
@@ -40,6 +41,12 @@ export default function JoinGroupSheet({ visible, onClose, onJoined, initialTab 
       slideAnim.setValue(600);
     }
   }, [visible]);
+
+  useEffect(() => {
+    const show = Keyboard.addListener('keyboardDidShow', e => setKbHeight(e.endCoordinates.height));
+    const hide = Keyboard.addListener('keyboardDidHide', () => setKbHeight(0));
+    return () => { show.remove(); hide.remove(); };
+  }, []);
 
   const handleClose = () => {
     Keyboard.dismiss();
@@ -113,7 +120,7 @@ export default function JoinGroupSheet({ visible, onClose, onJoined, initialTab 
   return (
     <Modal visible={visible} transparent animationType="none" onRequestClose={handleClose}>
       <TouchableOpacity style={styles.overlay} activeOpacity={1} onPress={handleClose} />
-      <Animated.View style={[styles.sheet, { transform: [{ translateY: slideAnim }] }]}>
+      <Animated.View style={[styles.sheet, { transform: [{ translateY: slideAnim }], bottom: kbHeight }]}>
         {/* Handle bar */}
         <View style={styles.handleContainer}>
           <View style={styles.handle} />

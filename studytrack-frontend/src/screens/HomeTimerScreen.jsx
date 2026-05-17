@@ -53,7 +53,7 @@ function fmtSessionTime(isoStart, elapsedSeconds) {
   return `${start.toLocaleTimeString([], opts)} – ${end.toLocaleTimeString([], opts)}`;
 }
 
-export default function HomeTimerScreen({ navigation }) {
+export default function HomeTimerScreen({ navigation, route }) {
   const { colors } = useTheme();
   const styles = getStyles(colors);
   const subjects              = useSubjectStore((s) => s.subjects);
@@ -75,6 +75,11 @@ export default function HomeTimerScreen({ navigation }) {
   const getCurrentPhaseDuration = usePomodoroStore((s) => s.getCurrentPhaseDuration);
 
   const [selectedId, setSelectedId] = useState(subjects[0]?.id ?? '1');
+
+  useEffect(() => {
+    const preId = route.params?.preSelectSubjectId;
+    if (preId && subjects.some(s => s.id === preId)) setSelectedId(preId);
+  }, [route.params?.preSelectSubjectId, subjects]);
   const [showManualLog, setShowManualLog] = useState(false);
   const [showAddSubject, setShowAddSubject] = useState(false);
 

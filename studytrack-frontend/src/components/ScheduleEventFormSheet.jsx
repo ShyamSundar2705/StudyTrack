@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react'
 import {
   Modal, View, Text, TextInput, TouchableOpacity,
-  ScrollView, Animated, Keyboard, KeyboardAvoidingView,
-  Platform, StyleSheet
+  ScrollView, Animated, Keyboard,
+  StyleSheet
 } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
 import { spacing, radius } from '../constraints/theme'
@@ -44,6 +44,7 @@ export default function ScheduleEventFormSheet({ visible, event, defaultDate, on
   const [showTimePicker, setShowTimePicker] = useState(false)
 
   const slideAnim = useRef(new Animated.Value(400)).current
+  const [kbHeight, setKbHeight] = useState(0)
 
   useEffect(() => {
     if (visible) {
@@ -62,6 +63,12 @@ export default function ScheduleEventFormSheet({ visible, event, defaultDate, on
       slideAnim.setValue(400)
     }
   }, [visible])
+
+  useEffect(() => {
+    const show = Keyboard.addListener('keyboardDidShow', e => setKbHeight(e.endCoordinates.height))
+    const hide = Keyboard.addListener('keyboardDidHide', () => setKbHeight(0))
+    return () => { show.remove(); hide.remove() }
+  }, [])
 
   const handleClose = () => {
     Keyboard.dismiss()
@@ -123,8 +130,8 @@ export default function ScheduleEventFormSheet({ visible, event, defaultDate, on
   return (
     <Modal visible={visible} transparent animationType="none" onRequestClose={handleClose}>
       <TouchableOpacity style={styles.overlay} activeOpacity={1} onPress={handleClose} />
-      <Animated.View style={[styles.sheet, { transform: [{ translateY: slideAnim }] }]}>
-        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+      <Animated.View style={[styles.sheet, { transform: [{ translateY: slideAnim }], marginBottom: kbHeight }]}>
+        <View>
 
           {/* Handle bar */}
           <View style={styles.handleContainer}>
@@ -229,7 +236,7 @@ export default function ScheduleEventFormSheet({ visible, event, defaultDate, on
           ) : null}
 
           <View style={styles.bottomPad} />
-        </KeyboardAvoidingView>
+        </View>
       </Animated.View>
 
       {/* TimePickerModal — mounted inside Modal but outside Animated.View

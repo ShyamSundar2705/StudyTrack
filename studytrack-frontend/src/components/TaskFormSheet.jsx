@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react'
 import {
   Modal, View, Text, TextInput, TouchableOpacity,
-  ScrollView, Animated, Keyboard, KeyboardAvoidingView,
-  Platform, StyleSheet, Switch
+  ScrollView, Animated, Keyboard,
+  StyleSheet, Switch
 } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
 import { spacing, radius } from '../constraints/theme'
@@ -25,6 +25,7 @@ export default function TaskFormSheet({ visible, task, defaultDate, onSave, onCl
   const dayPillAnim = useRef(new Animated.Value(0)).current
 
   const slideAnim = useRef(new Animated.Value(400)).current
+  const [kbHeight, setKbHeight] = useState(0)
 
   // Reset form when sheet opens
   useEffect(() => {
@@ -45,6 +46,12 @@ export default function TaskFormSheet({ visible, task, defaultDate, onSave, onCl
       slideAnim.setValue(400)
     }
   }, [visible])
+
+  useEffect(() => {
+    const show = Keyboard.addListener('keyboardDidShow', e => setKbHeight(e.endCoordinates.height))
+    const hide = Keyboard.addListener('keyboardDidHide', () => setKbHeight(0))
+    return () => { show.remove(); hide.remove() }
+  }, [])
 
   useEffect(() => {
     Animated.timing(dayPillAnim, {
@@ -115,11 +122,9 @@ export default function TaskFormSheet({ visible, task, defaultDate, onSave, onCl
     <Modal visible={visible} transparent animationType="none" onRequestClose={handleClose}>
       <TouchableOpacity style={styles.overlay} activeOpacity={1} onPress={handleClose} />
       <Animated.View
-        style={[styles.sheet, { transform: [{ translateY: slideAnim }] }]}
+        style={[styles.sheet, { transform: [{ translateY: slideAnim }], marginBottom: kbHeight }]}
       >
-        <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        >
+        <View>
           {/* Handle bar */}
           <View style={styles.handleContainer}>
             <View style={styles.handle} />
@@ -258,9 +263,9 @@ export default function TaskFormSheet({ visible, task, defaultDate, onSave, onCl
             </View>
           ) : null}
 
-          {/* Bottom keyboard padding */}
+          {/* Bottom padding */}
           <View style={styles.bottomPad} />
-        </KeyboardAvoidingView>
+        </View>
       </Animated.View>
     </Modal>
   )

@@ -33,9 +33,9 @@ const DEFAULT_LIFETIME = [
 ];
 
 const ACCOUNT_ROWS = [
-  { icon: 'notifications-outline', label: 'Notifications',    danger: false },
-  { icon: 'alarm-outline',          label: 'Reminders',        danger: false },
-  { icon: 'shield-outline',         label: 'Privacy & Security', danger: false },
+  { icon: 'notifications-outline', label: 'Notifications',    scrollToSection: 'notifications' },
+  { icon: 'alarm-outline',          label: 'Reminders',        scrollToSection: 'reminders'     },
+  { icon: 'shield-outline',         label: 'Privacy & Security', scrollToSection: 'privacy'     },
 ];
 
 export default function ProfileScreen({ navigation }) {
@@ -191,7 +191,7 @@ export default function ProfileScreen({ navigation }) {
                 <Text style={styles.identityName}>{user.name}</Text>
                 {loading && <ActivityIndicator color="rgba(255,255,255,0.7)" size="small" />}
               </View>
-              <Text style={styles.identityHandle}>@{user.handle}</Text>
+              <Text style={styles.identityHandle}>{user.handle?.startsWith('@') ? user.handle : `@${user.handle}`}</Text>
               <Text style={styles.identityMember}>Member since Sept 2023</Text>
             </View>
           </View>
@@ -339,6 +339,7 @@ export default function ProfileScreen({ navigation }) {
               key={row.label}
               style={[styles.accountRow, idx < ACCOUNT_ROWS.length - 1 && styles.accountRowBorder]}
               activeOpacity={0.7}
+              onPress={() => navigation.navigate('AppSettings', { scrollToSection: row.scrollToSection })}
             >
               <View style={styles.accountRowLeft}>
                 <Ionicons name={row.icon} size={20} color={colors.textSecondary} />

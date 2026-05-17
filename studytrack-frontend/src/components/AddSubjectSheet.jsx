@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import {
   Modal, View, Text, TextInput, TouchableOpacity,
-  Animated, StyleSheet, Dimensions, ActivityIndicator, Alert,
+  Animated, StyleSheet, Dimensions, ActivityIndicator, Alert, Keyboard,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -31,6 +31,13 @@ export default function AddSubjectSheet({ visible, onClose, onAdded }) {
   const [name, setName] = useState('');
   const [selectedColor, setSelectedColor] = useState(SWATCH_COLORS[0]);
   const [saving, setSaving] = useState(false);
+  const [kbHeight, setKbHeight] = useState(0);
+
+  useEffect(() => {
+    const show = Keyboard.addListener('keyboardDidShow', e => setKbHeight(e.endCoordinates.height));
+    const hide = Keyboard.addListener('keyboardDidHide', () => setKbHeight(0));
+    return () => { show.remove(); hide.remove(); };
+  }, []);
 
   useEffect(() => {
     if (visible) {
@@ -73,7 +80,7 @@ export default function AddSubjectSheet({ visible, onClose, onAdded }) {
     <Modal visible={visible} transparent animationType="none" onRequestClose={onClose}>
       <TouchableOpacity style={styles.overlay} activeOpacity={1} onPress={onClose} />
       <Animated.View
-        style={[styles.sheet, { transform: [{ translateY }], paddingBottom: insets.bottom + 32 }]}
+        style={[styles.sheet, { transform: [{ translateY }], paddingBottom: insets.bottom + 32, bottom: kbHeight }]}
       >
         <View style={styles.handle} />
 
