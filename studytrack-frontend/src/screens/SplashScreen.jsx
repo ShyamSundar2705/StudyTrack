@@ -101,15 +101,17 @@ export default function SplashScreen({ navigation }) {
       // the Supabase token with an old value before we reach the exchange endpoint.
       await SecureStore.deleteItemAsync(TOKEN_KEY);
 
-      // ── Pre-flight: verify the backend is reachable ────────────────────────
-      try {
-        await client.get('/health', { timeout: 5000 });
-      } catch (e) {
-        Alert.alert(
-          'Cannot reach server',
-          'Make sure the backend is running and your phone is on the same WiFi as your computer.'
-        );
-        return;
+      // Dev-only pre-flight: skipped in production (Railway is always reachable via HTTPS)
+      if (__DEV__) {
+        try {
+          await client.get('/health', { timeout: 5000 });
+        } catch (e) {
+          Alert.alert(
+            'Cannot reach server',
+            'Make sure the backend is running and your phone is on the same WiFi as your computer.'
+          );
+          return;
+        }
       }
 
       const response = await client.post('/auth/supabase', {}, {
