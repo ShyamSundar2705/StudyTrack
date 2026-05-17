@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import {
   View, Text, TouchableOpacity, StyleSheet, ActivityIndicator, Alert,
 } from 'react-native';
+import * as Linking from 'expo-linking';
 import * as WebBrowser from 'expo-web-browser';
 import * as SecureStore from 'expo-secure-store';
 import { Ionicons } from '@expo/vector-icons';
@@ -27,19 +28,51 @@ export default function SplashScreen({ navigation }) {
   const setUser = useUserStore((s) => s.setUser);
 
   useEffect(() => {
-    // Warm up browser
     WebBrowser.warmUpAsync();
 
-    // Check existing session
+    // Guards against double-navigation when multiple listeners fire together
+    const triggered = { current: false };
+
+    const handleUrl = async ({ url }) => {
+      if (!url || !url.includes('auth/callback') || triggered.current) return;
+      const { data, error } = await supabase.auth.getSessionFromUrl({ url });
+      if (!error && data?.session) {
+        triggered.current = true;
+        setChecking(false);
+        await handleSupabaseSession(data.session);
+      }
+    };
+
+    // Cold-start: app was launched by the deep link
+    Linking.getInitialURL().then((url) => { if (url) handleUrl({ url }); });
+
+    // Foreground: app was already open when OAuth redirected back
+    const linkingSub = Linking.addEventListener('url', handleUrl);
+
+    // Fallback: covers cases where Linking misses the URL (e.g. some Android variants)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === 'SIGNED_IN' && session && !triggered.current) {
+        triggered.current = true;
+        setChecking(false);
+        await handleSupabaseSession(session);
+      }
+    });
+
+    // Returning users: restore existing session on launch
     supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) {
+      if (session && !triggered.current) {
+        triggered.current = true;
         handleSupabaseSession(session).finally(() => setChecking(false));
-      } else {
+      } else if (!session) {
         setChecking(false);
       }
     }).catch(() => setChecking(false));
 
-    return () => { WebBrowser.coolDownAsync(); };
+    return () => {
+      WebBrowser.coolDownAsync();
+      linkingSub.remove();
+      subscription.unsubscribe();
+    };
   }, []);
 
   const exchangeAndNavigate = async (supabaseAccessToken) => {
