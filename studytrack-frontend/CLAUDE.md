@@ -142,13 +142,14 @@ Fields: `subjects` — `[{ id, name, color, totalSeconds }]`
 Actions: `addSubject`, `removeSubject`, `updateSubject`, `setSubjects`
 
 ### `useSessionStore`
-Fields: `activeSession` — `{ subjectId, backendSessionId, startedAt, elapsedSeconds, isPaused, pausedAt }` (null if none); `todaySessions` — `[{ id, subjectId, subjectName, startedAt, elapsedSeconds }]`
-Actions: `startSession(subjectId, backendSessionId?)`, `pauseSession`, `resumeSession`, `stopSession`, `logSession`, `addSession`, `setTodaySessions`, `abandonSession` (null without saving), `switchSubject` (updates subjectId in-place)
+Fields: `activeSession` — `{ subjectId, backendSessionId, startedAt, elapsedSeconds, isPaused, pausedAt }` (null if none); `todaySessions` — `[{ id, subjectId, subjectName, startedAt, elapsedSeconds }]`; `backgroundThreshold: 900` (15-minute auto-complete threshold in seconds, read-only constant)
+Actions: `startSession(subjectId, backendSessionId?)`, `pauseSession`, `resumeSession`, `stopSession`, `logSession`, `addSession`, `setTodaySessions`, `abandonSession` (null without saving), `switchSubject` (updates subjectId in-place), `handleForeground(backgroundedAt, navigation)` — computes elapsed since backgroundedAt; if < 900s calls `addElapsedSeconds`; if ≥ 900s calls `logSession`, `resetTimer`, clears AsyncStorage interrupted-session key, and replaces to `SessionComplete`
 
 ### `useTimerStore`
-Fields: `isRunning`, `elapsedSeconds`, `isCountdown`, `totalSeconds`, `intervalId`, `tickIntervalId`
-Actions: `startTimer(isCountdown?, totalSeconds?)`, `pauseTimer`, `resetTimer`, `setElapsedSeconds`
+Fields: `isRunning`, `elapsedSeconds`, `isCountdown`, `totalSeconds`, `intervalId`, `tickIntervalId`, `backgroundedAt` (ms timestamp set when app backgrounds while timer is running, null otherwise)
+Actions: `startTimer(isCountdown?, totalSeconds?)`, `pauseTimer`, `resetTimer`, `setElapsedSeconds`, `setBackgroundedAt(ts)` (saves/clears AsyncStorage key `studytrack_backgrounded_at`), `addElapsedSeconds(seconds)` (adds to elapsed without touching the interval)
 `startTimer()` runs a 1-second UI tick + 30-second socket `session_tick`. In countdown mode, reaching zero calls `advancePhase()`. In normal mode, each tick calls `checkAndFireMilestone` (alerts at 30m/1h/2h/daily goal).
+`resetTimer()` also clears `backgroundedAt` and removes the AsyncStorage background key.
 
 ### `usePomodoroStore`
 Fields: `config` — `{ focusMinutes, shortBreakMinutes, longBreakMinutes, longBreakAfter, autoStartBreaks }`; `isPomoMode`, `currentPhase` (`focus|short_break|long_break`), `currentRound`, `completedRounds`
@@ -268,6 +269,13 @@ useEffect(() => {
 
 - **`expo-crypto` enum name:** In SDK 54 use `CryptoEncoding.BASE64`, not `EncodingType.Base64`.
 - **`studytrack://` scheme not intercepted in Expo Go:** Use `exp://192.168.0.106:8081` as `redirectTo`.
+
+## 2026-05-18 Background Timer Handling — APPLIED ✅
+
+- `useTimerStore`: added `backgroundedAt` state, `setBackgroundedAt(ts)` (AsyncStorage-persisted), `addElapsedSeconds(seconds)`, and `resetTimer` now also clears `backgroundedAt`
+- `useSessionStore`: added `backgroundThreshold: 900`, `handleForeground(backgroundedAt, navigation)` action (< 15 min → add elapsed; ≥ 15 min → auto-complete session and navigate to SessionComplete)
+- `SessionActiveScreen`: AppState listener sets `backgroundedAt` on background, calls `handleForeground` on foreground; mount effect reads AsyncStorage for OS-kill recovery
+- Pomodoro break phases are safe: `activeSession` is null during breaks so `handleForeground` exits early
 
 ## 2026-05-18 APK Bug-Fix Batch — APPLIED ✅
 

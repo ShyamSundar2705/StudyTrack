@@ -32,6 +32,7 @@ backend/             ← Fastify + Prisma REST API + Socket.io
 - **Daily Planner** — Task list per day with completion toggles
 - **Study Groups** — Real-time group presence (Socket.io): see who's studying live, activity feed, leaderboard
 - **Interrupted session resume** — Session state persisted to AsyncStorage; resume prompt on next launch
+- **Background timer handling** — AppState listener saves a timestamp when the app backgrounds; on foreground, elapsed time is added to the timer (< 15 min) or the session is auto-completed and the user is taken to the summary screen (≥ 15 min); AsyncStorage persistence survives OS kills
 
 ## Getting Started
 
