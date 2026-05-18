@@ -1,8 +1,11 @@
 import { create } from 'zustand';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getGroupSocket } from '../api/socket';
 import useSessionStore from './useSessionStore';
 import useUserStore from './useUserStore';
 import useSubjectStore from './useSubjectStore';
+
+const BG_KEY = 'studytrack_backgrounded_at';
 
 const useTimerStore = create((set, get) => ({
   // State
@@ -10,6 +13,7 @@ const useTimerStore = create((set, get) => ({
   elapsedSeconds: 0,
   intervalId:     null,
   tickIntervalId: null,
+  backgroundedAt: null,
 
   // Pomodoro countdown fields
   isCountdown:  false,
@@ -100,6 +104,7 @@ const useTimerStore = create((set, get) => ({
     const { intervalId, tickIntervalId } = get();
     if (intervalId)     clearInterval(intervalId);
     if (tickIntervalId) clearInterval(tickIntervalId);
+    AsyncStorage.removeItem(BG_KEY).catch(() => {});
     set({
       isRunning:      false,
       elapsedSeconds: 0,
@@ -107,11 +112,24 @@ const useTimerStore = create((set, get) => ({
       tickIntervalId: null,
       isCountdown:    false,
       totalSeconds:   0,
+      backgroundedAt: null,
     });
   },
 
   // Used when resuming an interrupted session from AsyncStorage
   setElapsedSeconds: (seconds) => set({ elapsedSeconds: seconds }),
+
+  setBackgroundedAt: (ts) => {
+    if (ts === null) {
+      AsyncStorage.removeItem(BG_KEY).catch(() => {});
+    } else {
+      AsyncStorage.setItem(BG_KEY, String(ts)).catch(() => {});
+    }
+    set({ backgroundedAt: ts });
+  },
+
+  addElapsedSeconds: (seconds) =>
+    set((state) => ({ elapsedSeconds: state.elapsedSeconds + seconds })),
 }));
 
 export default useTimerStore;

@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useKeepAwake } from 'expo-keep-awake';
-import { View, Text, TouchableOpacity, StyleSheet, Platform, Alert } from 'react-native';
+import { AppState, View, Text, TouchableOpacity, StyleSheet, Platform, Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Svg, { Circle, Defs, LinearGradient, Stop } from 'react-native-svg';
 import { Ionicons } from '@expo/vector-icons';
@@ -116,6 +116,42 @@ export default function SessionActiveScreen({ navigation, route }) {
     : `Focus Session • Started ${startTimeLabel}`;
 
   const todayTotal = todaySessions.reduce((sum, s) => sum + s.elapsedSeconds, 0);
+
+  // ── Background timer handling ────────────────────────────────────
+
+  useEffect(() => {
+    const handleAppStateChange = (nextState) => {
+      if (nextState === 'background') {
+        if (useTimerStore.getState().isRunning) {
+          useTimerStore.getState().setBackgroundedAt(Date.now());
+        }
+      } else if (nextState === 'active') {
+        const { backgroundedAt, isRunning } = useTimerStore.getState();
+        if (backgroundedAt !== null && isRunning) {
+          useSessionStore.getState().handleForeground(backgroundedAt, navigation);
+          useTimerStore.getState().setBackgroundedAt(null);
+        }
+      }
+    };
+
+    const subscription = AppState.addEventListener('change', handleAppStateChange);
+    return () => subscription.remove();
+  }, [navigation]);
+
+  // Recover from OS kill: if backgroundedAt was persisted and a session is active, resume
+  useEffect(() => {
+    AsyncStorage.getItem('studytrack_backgrounded_at')
+      .then((val) => {
+        if (val === null) return;
+        const ts = parseInt(val, 10);
+        if (isNaN(ts)) return;
+        const { activeSession } = useSessionStore.getState();
+        if (!activeSession) return;
+        useSessionStore.getState().handleForeground(ts, navigation);
+        useTimerStore.getState().setBackgroundedAt(null);
+      })
+      .catch(() => {});
+  }, []);
 
   // ── Handlers ────────────────────────────────────────────────────
 
